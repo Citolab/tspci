@@ -3,7 +3,7 @@
 </h1>
 
 <p align="center">
-  <img src="https://github.com/Citolab/tspci/lib/tspci/tspci-development.png" alt="Typescript Pci Builder">
+  <img src="https://github.com/Citolab/tspci/blob/main/lib/tspci/tspci-development.png" alt="Typescript Pci Builder">
 </p>
 
 [Release notes](https://github.com/Citolab/tspci/lib/tspci/release-notes.md)

@@ -76,10 +76,10 @@ class App implements IMSpci<PropTypes>, TAOpci {
   - CUSTOM: "CUSTOM" allows to add custom response processing in TAO. This is needed if a string comparison is not possible. The item author cannot interact with the PCI to provided the correct answer. The correct answer should in the response processing template.
   - NONE: if the PCI is used as a tool and/or scoring is not needed the scoring method should be set to NONE.
 
-![provide scoring for the PCI in TAO](https://github.com/Citolab/tspci/lib/tspci-tao/readme-images/score.png)
+![provide scoring for the PCI in TAO](https://github.com/Citolab/tspci/blob/main/lib/tspci-tao/readme-images/score.png)
 
 ## icon
 
 Add a svg file with the name {typeIdentifier}.svg in the root of the PCI directory to have a custom icon for the PCI in TAO.
 
-![custom icon](https://github.com/Citolab/tspci/lib/tspci-tao/readme-images/icon.png)
+![custom icon](https://github.com/Citolab/tspci/blob/main/lib/tspci-tao/readme-images/icon.png)
