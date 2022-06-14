@@ -1,0 +1,23 @@
+{
+  "name": "@citolab/preact-store",
+  "version": "1.0.0",
+  "description": "simple preact store",
+  "author": "patrick <patrick.deklein@cito.nl>, marcel  <marcel.hoekstra@cito.nl>",
+  "homepage": "",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "peerDependencies": {
+    "preact": ">= 10.0.0"
+  },
+  "devDependencies": {
+    "preact": "^10.6.4"
+  },
+  "scripts": {
+    "dev": "tsc --watch",
+    "watch": "tsc --watch",
+    "prod": "tsc --build",
+    "publish": "npm run build && npm publish",
+    "publish:global": "npm publish --@citolab:registry=https://registry.npmjs.org/ --access public"
+  }
+}

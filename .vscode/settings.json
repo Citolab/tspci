@@ -1,0 +1,23 @@
+{
+    "npm.exclude": "**/app/lib/**",
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#2da56f",
+        "activityBar.activeBorder": "#e1cdf1",
+        "activityBar.background": "#2da56f",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#e1cdf1",
+        "activityBarBadge.foreground": "#15202b",
+        "sash.hoverBorder": "#2da56f",
+        "statusBar.background": "#227d54",
+        "statusBar.foreground": "#e7e7e7",
+        "statusBarItem.hoverBackground": "#2da56f",
+        "statusBarItem.remoteBackground": "#227d54",
+        "statusBarItem.remoteForeground": "#e7e7e7",
+        "titleBar.activeBackground": "#227d54",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveBackground": "#227d5499",
+        "titleBar.inactiveForeground": "#e7e7e799"
+    },
+    "peacock.color": "#227d54"
+}

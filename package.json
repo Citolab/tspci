@@ -1,0 +1,58 @@
+{
+  "name": "qti-pci-bundler",
+  "description": "Citolab custom pci builder for IMS pcis and TAO",
+  "keywords": [
+    "QTI",
+    "render",
+    "item",
+    "IMS Global",
+    "TAO",
+    "PCI",
+    "React",
+    "Preact",
+    "Tailwind"
+  ],
+  "homepage": "https://github.com/Citolab",
+  "bugs": {
+    "url": "https://github.com/Citolab/qti-pci-bundler/issues"
+  },
+  "license": "MIT",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Citolab/qti-pci-bundler"
+  },
+  "scripts": {
+    "lerna clean": "lerna clean",
+    "lerna bootstrap": "lerna bootstrap",
+    "prod": "lerna run prod",
+    "link": "lerna link",
+    "watch": "lerna run watch --parallel",
+    "package-tao": "lerna run package-tao",
+    "publish": "lerna run publish"
+  },
+  "contributors": [
+    {
+      "name": "Patrick de Klein",
+      "email": "patrick.deklein@cito.nl"
+    },
+    {
+      "name": "Marcel Hoekstra",
+      "email": "marcel.hoekstra@cito.nl"
+    },
+    {
+      "name": "Tjeerd Hans Terpstra",
+      "email": "tjeerdhans.terpstra@cito.nl"
+    }
+  ],
+  "devDependencies": {
+    "lerna": "^4.0.0",
+    "postcss": "^8.4.6",
+    "postcss-import": "^14.0.2",
+    "tailwindcss": "^3.0.21",
+    "typescript": "4.5.5"
+  },
+  "dependencies": {
+    "cross-env": "^7.0.3"
+  }
+}

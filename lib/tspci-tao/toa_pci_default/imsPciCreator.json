@@ -1,0 +1,42 @@
+{
+    "model" : "IMSPCI",
+    "typeIdentifier": "##typeIdentifier##",
+    "label": "##label##",
+    "short": "##short##",
+    "description": "##description##",
+    "version": "##version##",
+    "author": "Citolab",
+    "email": "getinspiredbycitolab@gmail.com",
+    "tags": [
+        "pci"
+    ],
+    "response": {
+        "baseType": "string",
+        "cardinality": "single"
+    },
+    "runtime" : {
+        "hook" : "interaction/runtime/js/index.js",
+        "modules" : {
+            "##typeIdentifier##/interaction/runtime/js/index" : [
+                "interaction/runtime/js/index.js"
+            ]
+        },
+        "src" : [
+            "./interaction/runtime/js/index.js"
+        ]
+    },
+    "creator" : {
+        "icon": "./interaction/creator/img/icon.svg",
+        "hook": "./imsPciCreator.js",
+        "src" : [
+            "./imsPciCreator.js",
+            "./interaction/creator/tpl/markup.tpl",
+            "./interaction/creator/tpl/propertiesForm.tpl",
+            "./interaction/creator/widget/Widget.js",
+            "./interaction/creator/widget/states/Question.js",
+            "./interaction/creator/widget/states/Answer.js",
+            "./interaction/creator/widget/states/Correct.js",
+            "./interaction/creator/widget/states/states.js"
+        ]
+    }
+}

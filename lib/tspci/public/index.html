@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Hello RequireJS</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor"
+      crossorigin="anonymous"
+    />
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2"
+      crossorigin="anonymous"
+    ></script>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"
+      integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <style>
+      html {
+        font-size: 100%;
+      }
+      #pciContainer {
+        width: 100%;
+        /* min-width: 800px; */
+        max-width: 1024px;
+        height: 600px;
+        min-height: 600px;
+        /* max-height: 600px; */
+        border: 1px solid #eeeeee;
+        overflow: hidden;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 10px;
+        margin-top: 1rem;
+      }
+      #devtools {
+        max-width: 1024px;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body class="bg-light">
+    <div class="container">
+      <div
+        class="alert alert-danger position-fixed mx-auto bottom-0"
+        style="display: none"
+        role="alert"
+        id="noresponse"
+      >
+        user has not yet interacted yet, getResponse should return undefined.
+      </div>
+
+      <div id="pciContainer" class="shadow-sm">
+        <div id="loading" class="text-muted mx-auto p-4">Loading...</div>
+      </div>
+      <div id="devtools"></div>
+    </div>
+
+    <script type="module">
+      import { h, Component, render } from "https://unpkg.com/preact@latest?module";
+      import { useState, useEffect } from "https://unpkg.com/preact@latest/hooks/dist/hooks.module.js?module";
+      import htm from "https://unpkg.com/htm?module";
+      // Initialize htm with Preact
+      const html = htm.bind(h);
+
+      function App({ item }) {
+        const [show, setShow] = useState(false);
+        const [response, setResponse] = useState(undefined);
+
+        useEffect(() => {
+          localStorage.getItem(item.typeIdentifier + "_response");
+        }, []);
+
+        useEffect(() => {
+          if (response !== undefined) {
+            localStorage.setItem(item.typeIdentifier + "_response", item.getResponse().base.string);
+          } else {
+            localStorage.removeItem(item.typeIdentifier + "_response");
+            item.resetResponse && item.resetResponse();
+          }
+        }, [response]);
+
+        let keyArray = [];
+        if (item.config && item.config.properties) {
+          keyArray = Object.keys(item.config.properties).map((keyName, keyIndex) => ({
+            key: keyName,
+            value: item.config.properties[keyName],
+          }));
+        }
+
+        function resetlocalstorage() {
+          localStorage.removeItem(item.typeIdentifier + "_state");
+          localStorage.removeItem(item.typeIdentifier + "_props");
+          setResponse(undefined);
+        }
+
+        function reset() {
+          resetlocalstorage();
+          location.reload();
+        }
+
+        function storeResponse() {
+          if (item.getResponse() !== undefined) {
+            setResponse(item.getResponse().base.string);
+          }
+        }
+
+        function compareResponse() {
+          const response = localStorage.getItem(item.typeIdentifier + "_response");
+          if (!response) {
+            alert("no response stored");
+            return;
+          }
+          if (response === item.getResponse().base.string) {
+            alert("same");
+          } else {
+            alert("different");
+          }
+        }
+
+        function resetResponse() {
+          setResponse(undefined);
+        }
+
+        function setStoredResponse() {
+          item.setResponse &&
+            item.setResponse({
+              base: {
+                string: response,
+              },
+            });
+        }
+
+        function reload() {
+          const state = item.getState();
+          localStorage.setItem(item.typeIdentifier + "_state", JSON.stringify(state));
+          location.reload();
+        }
+
+        function changeConfig(key, value) {
+          item.config.properties[key] = value;
+          item.trigger(`change${key}`, value);
+        }
+
+        function reConfig(key, value) {
+          localStorage.setItem(item.typeIdentifier + "_props", JSON.stringify(item.config.properties));
+          location.reload();
+        }
+
+        function unload() {
+          item.destroy && item.destroy();
+          item.oncompleted && item.oncompleted();
+          var name = require.undef("index.js");
+          loadItem();
+        }
+
+        return html`
+          <div>
+            <div style="width:300px" class="shadow offcanvas offcanvas-end ${show ? "show visible" : ""}">
+              <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="offcanvasExampleLabel">properties</h5>
+                <button
+                  type="button"
+                  onClick="${() => setShow(false)}"
+                  disabled="${!item.config}"
+                  class="btn-close text-reset"
+                ></button>
+              </div>
+              <div class="offcanvas-body">
+                <ul class="card-body">
+                  ${keyArray.map(
+                    ({ key, value }) => html`<div>
+                      <div>${key}</div>
+                      <input
+                        type="text"
+                        class="form-control"
+                        value="${value}"
+                        onkeyup="${(e) => changeConfig(key, e.target.value)}"
+                      />
+                    </div>`
+                  )}
+                </ul>
+                <button class="btn btn-primary" onClick="${() => reConfig()}">save and reload</button>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-start mt-3" role="toolbar" aria-label="Toolbar with button groups">
+              <div>
+                <small class="text-muted">configuration</small>
+                <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
+                  <button class="btn btn-outline-secondary" onClick="${() => setShow(true)}">props</button>
+                  <button
+                    class="btn btn-outline-secondary"
+                    onClick="${() => alert(JSON.stringify(item.config), null, 4)}"
+                  >
+                    config
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <small class="text-muted">data</small>
+                <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
+                  <button
+                    class="btn btn-outline-secondary"
+                    onClick="${() => alert(JSON.stringify(item.getResponse(), null, 4))}"
+                  >
+                    getResponse
+                  </button>
+                  <button class="btn btn-outline-secondary" onClick="${() => alert(item.getState())}">getState</button>
+                </div>
+              </div>
+
+              <div>
+                <small class="text-muted">state</small>
+                <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
+                  <button
+                    class="btn btn-outline-secondary"
+                    data-bs-placement="bottom"
+                    data-bs-toggle="tooltip"
+                    data-bs-html="true"
+                    title="<ol class="m-0"><li class="text-start">state in localstorage</li><li>reload page</li><li>load state</li><li>remove localstorage</li></ol>"
+                    onClick="${() => reload()}"
+                  >
+                    reload
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <small class="text-muted">response</small>
+                <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
+                  <button class="btn btn-outline-secondary" data-bs-placement="bottom"
+                    data-bs-toggle="tooltip"
+                    data-bs-html="true"
+                    title="Save response in localstorage" onClick="${() => storeResponse()}">store</button>
+                  <button class="btn btn-outline-secondary" data-bs-placement="bottom"
+                    data-bs-toggle="tooltip"
+                    data-bs-html="true"
+                    title="Compare current response with response in localstorage" onClick="${() =>
+                      compareResponse()}">compare</button>
+                  <button class="btn btn-outline-secondary" data-bs-placement="bottom"
+                    data-bs-toggle="tooltip"
+                    data-bs-html="true"
+                    title="set stored response back into item with setResponse (*TAO PCI only)" disabled="${!item.setResponse}" onClick="${() =>
+          setStoredResponse()}">set</button>
+                  <button class="btn btn-outline-secondary" data-bs-placement="bottom"
+                    data-bs-toggle="tooltip"
+                    data-bs-html="true"
+                    title="reset reponse in item (*TAO PCI only)" disabled="${!item.resetResponse}" onClick="${() =>
+          resetResponse()}">reset</button>
+                </div>
+                <div>${response}</div>
+              </div>
+
+
+
+
+              <div>
+                <small class="text-muted">ㅤ</small>
+                <div class="d-flex">
+                  <button data-bs-toggle="tooltip"
+                    disabled="${!(item.destroy || item.oncompleted)}"
+                    data-bs-html="true"
+                    title="reset everything in localstorage (config/state/response) and reload" class="btn bg-light shadow-sm btn-outline-danger me-2" onClick="${() => unload()}">
+                    unload
+                  </button>
+                  <button data-bs-toggle="tooltip"
+                    data-bs-html="true"
+                    title="reset everything in localstorage (config/state/response) and reload" class="btn bg-light shadow-sm btn-outline-danger" onClick="${() => reset()}">reset</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function register(item) {
+        let state = undefined;
+        const localStorageState = localStorage.getItem(item.typeIdentifier + "_state");
+        if (localStorageState) {
+          state = JSON.parse(localStorageState);
+        }
+        let props = {};
+        const localStorageProps = localStorage.getItem(item.typeIdentifier + "_props");
+        if (localStorageProps) {
+          props = JSON.parse(localStorageProps);
+        }
+        const dom = document.getElementById("pciContainer");
+        const config = {
+          onready: () => {
+            document.getElementById("loading").innerHTML = "";
+          },
+          properties: props,
+        };
+
+        item.getInstance(dom, config, state);
+
+        if (item.getResponse() !== undefined) {
+          document.getElementById("noresponse").style.display = "block";
+        }
+
+        localStorage.removeItem(item.typeIdentifier + "_state");
+      }
+
+      define("qtiCustomInteractionContext", (qtiCustomInteractionContext) => {
+        return { register: (ctxA) => register(ctxA) };
+      });
+
+      function loadItem() {
+        requirejs(["index.js"], (itemInstance) => {
+          render(html`<${App} item="${itemInstance}" />`, document.getElementById("devtools"));
+          // enable tooltips
+          var tooltipList = [].slice
+            .call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            .map(function (tooltipTriggerEl) {
+              return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+      }
+      window.onload = () => loadItem();
+    </script>
+
+    <h3 style="margin-top: 12rem">checklist</h3>
+    <ul style="margin-bottom: 10rem">
+      <li>Is the css scoped to the item?</li>
+      <li>Is the css/item somewhat responsive on smaller screens</li>
+      <li>Can you reset the item to its initial state</li>
+      <li>Can it restore its state ( reload )</li>
+      <li>Can you change the config</li>
+      <li>Colorblind</li>
+      <li>Touch/Mouse friendly</li>
+      <li>Works in older browser like IE11</li>
+      <li>Destroys itself correctly, removing event listeners</li>
+      <li>No objects or variables on global scope</li>
+      <li>Triggers correctly on changed config properties</li>
+      <li>Implements on off() methods of tao?</li>
+      <li>Response type and response correct</li>
+      <li>getResponse() should give undefined when user has not done anything</li>
+      <li>For TAO to enter response is the entered comparable by the response given</li>
+    </ul>
+  </body>
+</html>

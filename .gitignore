@@ -1,0 +1,8 @@
+app/lib
+node_modules
+/nbproject
+tmp
+tao_pci/tmp
+**/tao_pci/*.zip
+dist
+*.log
