@@ -1,6 +1,6 @@
 {
   "packages": [
-    "packages/*",
+    "pcis/*",
     "lib/*"
   ],
   "version": "0.0.0"
