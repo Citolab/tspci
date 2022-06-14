@@ -1,13 +1,13 @@
 {
   "name": "@citolab/tspci-tao",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "create a zip file that can be imported into TAO",
   "author": "patrick <patrick.deklein@cito.nl>, Marcel Hoekstra <marcel.hoekstra@cito.nl>",
   "repository": "",
   "type": "module",
   "types": "types/index.d.ts",
   "peerDependencies": {
-    "@citolab/tspci": ">= 1.0.0"
+    "@citolab/tspci": ">= 2.0.0"
   },
   "devDependencies": {
   },
@@ -15,7 +15,7 @@
     "archiver": "^5.3.0"
   },
   "scripts": {
-    "publish": "npm publish",
-    "publish:global": "npm publish --@citolab:registry=https://registry.npmjs.org/  --access public"
+    "publish": "lerna publish",
+    "publish:global": "lerna publish --@citolab:registry=https://registry.npmjs.org/  --access public"
   }
 }

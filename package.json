@@ -1,5 +1,6 @@
 {
   "name": "qti-pci-bundler",
+  "version": "2.0.0",
   "description": "Citolab custom pci builder for IMS pcis and TAO",
   "keywords": [
     "QTI",
@@ -17,7 +18,6 @@
     "url": "https://github.com/Citolab/qti-pci-bundler/issues"
   },
   "license": "MIT",
-  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/Citolab/qti-pci-bundler"
