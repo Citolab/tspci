@@ -1,13 +1,12 @@
 {
   "name": "@citolab/tspci-questify",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "create a zip file that can be imported into Questify",
   "author": "patrick <patrick.deklein@cito.nl>, Marcel Hoekstra <marcel.hoekstra@cito.nl>",
   "repository": "",
   "type": "module",
   "types": "types/index.d.ts",
   "peerDependencies": {
-    "@citolab/tspci": ">= 2.0.0"
   },
   "devDependencies": {
   },
