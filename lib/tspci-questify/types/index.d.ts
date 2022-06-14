@@ -1,6 +1,4 @@
 export interface CES {
-  typeIdentifier: string;
-
   /** @access public
    * Sets the candidate response ‘as is’ (the format of the response and its state is the responsibility of the implementation).
    * @method setResponse
@@ -35,3 +33,22 @@ export interface CES {
    */
   setStageHeight: ([NumberverticalMargin]) => void;
 }
+
+export interface CI<ConfigProperties> {
+  typeIdentifier: string;
+
+  /** @access public
+   *  @method getInstance Create a new instance of this portable custom interaction
+   *  Will be called by the qtiCustomInteractionContext
+   *  @param {DOM Element} dom - the DOM Element this PCI is being added to
+   *  @param {Object} configuration - the configuration to apply to this PCI
+   *  @param {String} state - a previous saved state to apply to this instance.
+   *  This must have been obtained from a prior call to getState on an
+   *  instance of this type (same typeIdentifier)
+   */
+   getInstance: (dom: HTMLElement, configuration: Configuration<ConfigProperties>, state: string) => void;
+}
+
+export declare type Configuration<T> = {
+  properties: T;
+};
