@@ -116,7 +116,7 @@ Add a `tsconfig.json` to your project for type checking
 }
 ```
 
-3️⃣ **Try it out** by running `tspci --dev`.
+**Try it out** by running `tspci --dev`.
 
 ### All CLI Options
 
@@ -271,8 +271,8 @@ dispatch<{ x: number }>("ADD_ACTION", { x: +inputValue });
 ### Let authors configure your PCI in QTI
 Use properties in config.json to let authors configure your PCI
 Also used in the TAO export for configuring PCIs in TAO
-```json
 `// src/config.json`
+```json
 {
   "buttonText": "Calculate",
   "sum1" : "$1 * 14 + 1",
