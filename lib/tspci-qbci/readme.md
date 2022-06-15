@@ -1,10 +1,10 @@
-## @citolab/questify
+## @citolab/qbci
 
-Create a zip of the PCI to import into Questify
+Create a .ci to import into Questify
 
 # run
 ``` sh 
-tspci --target questify 
+tspci --target qbci 
 ``` 
 
 ## config options

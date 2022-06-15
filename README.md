@@ -9,7 +9,7 @@ A modern QTI-PCI development environment creating and testing portable custom in
 
 ### Specific implementations
 - [TAO](./lib/tspci-tao/)
-- [Questify](./lib/tspci-questify/)
+- [Questify CI](./lib/tspci-qbci/)
 
 ### Managing state:
 - [preact-store](./lib/preact-store//)
