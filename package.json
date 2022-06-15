@@ -28,8 +28,7 @@
     "publish": "lerna publish",
     "diff": "lerna diff",
     "list": "lerna list",
-    "changed": "lerna changed",
-    "version": "lerna version"
+    "changed": "lerna changed"
   },
   "contributors": [
     {
