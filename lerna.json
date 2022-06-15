@@ -7,7 +7,7 @@
         "*.md"
       ],
       "message": "chore(release): publish",
-      "registry": "https://citolab.pkgs.visualstudio.com/_packaging/CitolabNuget/npm/registry/"
+      "registry": "https://registry.npmjs.org/"
     },
     "bootstrap": {
       "ignore": "component-*",
