@@ -10,7 +10,7 @@
     "archiver": "^5.3.0"
   },
   "scripts": {},
-  "gitHead": "6712ccb63437c0c37cc3be01146dc525fe778db1",
+  "gitHead": "a1c0e67ca6e16f72c49a19b89a60e690168f792b",
   "publishConfig": {
     "access": "public"
   }
