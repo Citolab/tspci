@@ -1,6 +1,17 @@
 {
   "version": "2.0.0",
   "npmClient": "npm",
+  "command": {
+    "publish": {
+      "ignoreChanges": ["*.md"],
+      "message": "chore(release): publish",
+      "registry": "https://citolab.pkgs.visualstudio.com/_packaging/CitolabNuget/npm/registry/"
+    },
+    "bootstrap": {
+      "ignore": "component-*",
+      "npmClientArgs": ["--no-package-lock"]
+    }
+  },
   "packages": [
     "pcis/*",
     "lib/*"

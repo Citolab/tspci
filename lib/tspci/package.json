@@ -63,7 +63,5 @@
     "@types/node": "^17.0.42"
   },
   "scripts": {
-    "publish": "lerna publish",
-    "publish:global": "lerna publish --@citolab:registry=https://registry.npmjs.org/  --access public"
   }
 }

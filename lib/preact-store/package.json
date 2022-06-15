@@ -15,9 +15,6 @@
   },
   "scripts": {
     "dev": "tsc --watch",
-    "watch": "tsc --watch",
-    "prod": "tsc --build",
-    "publish": "lerna run build && npm publish",
-    "publish:global": "lerna publish --@citolab:registry=https://registry.npmjs.org/ --access public"
+    "prepublish": "tsc --build"
   }
 }
