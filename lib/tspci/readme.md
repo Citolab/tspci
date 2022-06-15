@@ -6,7 +6,7 @@
   <img src="https://github.com/Citolab/tspci/blob/main/lib/tspci/tspci-development.png" alt="Typescript Pci Builder">
 </p>
 
-[Release notes](https://github.com/Citolab/tspci/lib/tspci/release-notes.md)
+[Release notes](https://github.com/Citolab/tspci/blob/main/lib/tspci/release-notes.md)
 
 ## ✨ Features <a name="features"></a>
 
@@ -139,7 +139,7 @@ Examples package.json scripts
 
 ## 🛣 What's next
 
-Use one of the [examples](https://github.com/Citolab/tspci-helloworld) to get a headstart 
+Use one of the [examples](https://github.com/Citolab/tspci-examples) to get a headstart 
 
 Or read further how we build our PCIs 
 
@@ -319,7 +319,7 @@ export const useMousePosition = () => {
 Tao adds some lifecycle methods which you can implement and we supply an extended interfaee on top of the IMS one. 
 
 More info, see our extension 
-- [github](../tspci-tao)
+- [github](https://github.com/Citolab/tspci/blob/main/lib/tspci-tao)
 - [@citolab/tspci-tao](https://www.npmjs.com/package/@citolab/tspci-tao)
 
 
@@ -335,4 +335,4 @@ If you want your platform to be support,  [contact us](mailto://getinspiredbycit
 
 ## License
 
- [GPLv3](./LICENSE)
+ [GPLv3](https://github.com/Citolab/tspci/blob/main/LICENSE)

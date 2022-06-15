@@ -2,7 +2,7 @@
 
 # @citolab/tspci-tao
 
-[release notes](https://github.com/Citolab/tspci/lib/tspci-tao/release-notes.md)
+[release notes](https://github.com/Citolab/tspci/blob/main/lib/tspci-tao/release-notes.md)
 
 ## Features
   - building a package(.zip) to import in TAO
