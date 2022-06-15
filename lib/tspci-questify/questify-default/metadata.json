@@ -3,18 +3,5 @@
     "typeIdentifier": "###___typeIdentifier___###",
     "width": 500,
     "height": 500,
-    "scalable": true,
-    "scoring": [
-		{
-			"string": {
-				"label": "Correct answer"
-			}
-		}
-	],
-    "modules" : [
-        {
-            "id" : "index",
-            "primaryPath" : "index.js"	
-        }
-    ]	
+    "scalable": true
 }
