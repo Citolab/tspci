@@ -33,6 +33,8 @@ export function useStore<S, A>(
     callback && callback(action.type, payload);
     const newState = action.action(globalState as S, payload);
 
+    globalState = { ...globalState, ...newState };
+
     if (!bypasslisteners) {
       if (actionSubscription) {
         actionSubscription({
@@ -41,9 +43,6 @@ export function useStore<S, A>(
         });
       }
     }
-
-    globalState = { ...globalState, ...newState };
-    // console.log(`new state: ${JSON.stringify(globalState)}`);
 
     for (const listener of listeners) {
       listener(globalState);

@@ -1,3 +1,10 @@
+## 2.0.0
+
+- added customized development templates in plugins
+- removed tooltips development environment pci
+- fixed storing and comparing responses
+- fixed reload test and restoring state
+
 # 1.5.9
 
 - fixed broken images in readme

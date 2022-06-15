@@ -6,6 +6,10 @@
     {
       "name": "lib",
       "path": "lib"
+    },
+    {
+      "name": "pcis",
+      "path": "pcis"
     }
   ],
   "settings": {

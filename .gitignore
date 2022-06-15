@@ -6,3 +6,4 @@ tao_pci/tmp
 **/tao_pci/*.zip
 dist
 *.log
+pcis/**/*

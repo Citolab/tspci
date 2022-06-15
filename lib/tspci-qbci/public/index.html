@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Hello RequireJS</title>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"
+      integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <!-- <link rel="stylesheet" class="bootswatcher" href="//bootswatch.com/5/lumen/bootstrap.min.css" /> -->
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" />
+
+    <style>
+      html {
+        font-size: 100%;
+      }
+      #pciContainer {
+        display:block;
+        width: 100%;
+        /* min-width: 800px; */
+        max-width: 1024px;
+        height: 600px;
+        min-height: 600px;
+        /* max-height: 600px; */
+        border: 1px solid #eeeeee;
+        overflow: hidden;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 10px;
+        margin-top: 1rem;
+      }
+      #devtools {
+        max-width: 1024px;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body class="bg-light">
+    <div class="container">
+      <iframe id="pciContainer" class="shadow-sm"> </iframe>
+      <div id="devtools"></div>
+    </div>
+
+    <script type="module">
+      import { h, Component, render } from "https://unpkg.com/preact@latest?module";
+      import { useState, useEffect } from "https://unpkg.com/preact@latest/hooks/dist/hooks.module.js?module";
+      import htm from "https://unpkg.com/htm?module";
+      // Initialize htm with Preact
+      const html = htm.bind(h);
+
+      function App() {
+        const [show, setShow] = useState(false);
+
+        function resetlocalstorage() {
+          localStorage.removeItem(item.typeIdentifier + "_props");
+          localStorage.removeItem(item.typeIdentifier + "_response");
+        }
+
+        function reload() {
+          const response = window["CES"].getResponse();
+          localStorage.setItem("ci_response", response);
+          location.reload();
+        }
+
+        function changeConfig(key, value) {
+          item.config.properties[key] = value;
+          item.trigger(`change${key}`, value);
+        }
+
+        function reConfig(key, value) {
+          localStorage.setItem(item.typeIdentifier + "_props", JSON.stringify(item.config.properties));
+          location.reload();
+        }
+
+        return html`
+          <div>
+            <div class="d-flex justify-content-start mt-3" role="toolbar" aria-label="Toolbar with button groups">
+              <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
+                <button class="btn btn-outline-secondary" onClick="${() => reload()}">reload</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      const localStorageResponse = localStorage.getItem("ci_response");
+      let response;
+      if (localStorageResponse) {
+        response = localStorageResponse;
+      }
+
+      window["CES"] = {
+        response: response,
+        setResponse: (data) => {
+          console.log("setting the data", data)
+          response = data;
+        },
+        getResponse: () => {
+          console.log("getting the data");
+          return response;
+        },
+      };
+      var iframe = document.getElementById("pciContainer"),
+        iframeWin = iframe.contentWindow || iframe,
+        iframeDoc = iframe.contentDocument || iframeWin.document;
+
+      iframe.onload = () => {
+        render(html`<${App} />`, document.getElementById("devtools"));
+      };
+
+      iframeDoc.open();
+      iframeDoc.write("\<html>\<head>\<script src='index.js'>\<\/script>\<\/head>\<body>\<\/body>\<\/html>");
+      iframeDoc.close();
+
+      localStorage.removeItem("ci_response");
+    </script>
+
+    <h3 style="margin-top: 12rem">checklist</h3>
+    <ul style="margin-bottom: 10rem">
+      <li>Is the css scoped to the item?</li>
+      <li>Is the css/item somewhat responsive on smaller screens</li>
+      <li>Can you reset the item to its initial state</li>
+      <li>Can it restore its state ( reload )</li>
+      <li>Can you change the config</li>
+      <li>Colorblind</li>
+      <li>Touch/Mouse friendly</li>
+      <li>Works in older browser like IE11</li>
+      <li>Destroys itself correctly, removing event listeners</li>
+      <li>No objects or variables on global scope</li>
+      <li>Triggers correctly on changed config properties</li>
+      <li>Implements on off() methods of tao?</li>
+      <li>Response type and response correct</li>
+      <li>getResponse() should give undefined when user has not done anything</li>
+      <li>For TAO to enter response is the entered comparable by the response given</li>
+    </ul>
+  </body>
+</html>

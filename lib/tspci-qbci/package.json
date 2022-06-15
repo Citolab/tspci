@@ -1,7 +1,7 @@
 {
-  "name": "@citolab/tspci-tao",
+  "name": "@citolab/tspci-qbci",
   "version": "2.0.7",
-  "description": "create a zip file that can be imported into TAO",
+  "description": "create a .ci file that can be imported into Questify",
   "author": "patrick <patrick.deklein@cito.nl>, Marcel Hoekstra <marcel.hoekstra@cito.nl>",
   "repository": "",
   "type": "module",
@@ -10,5 +10,8 @@
     "archiver": "^5.3.0"
   },
   "scripts": {},
-  "gitHead": "6712ccb63437c0c37cc3be01146dc525fe778db1"
+  "gitHead": "6712ccb63437c0c37cc3be01146dc525fe778db1",
+  "publishConfig": {
+    "access": "public"
+  }
 }

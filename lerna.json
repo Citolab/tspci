@@ -1,7 +1,24 @@
 {
+  "version": "2.0.7",
+  "npmClient": "npm",
+  "command": {
+    "publish": {
+      "ignoreChanges": [
+        "*.md"
+      ],
+      "message": "chore(release): publish",
+      "registry": "https://registry.npmjs.org/",
+      "access": "public"
+    },
+    "bootstrap": {
+      "ignore": "component-*",
+      "npmClientArgs": [
+        "--no-package-lock"
+      ]
+    }
+  },
   "packages": [
-    "packages/*",
+    "pcis/*",
     "lib/*"
-  ],
-  "version": "0.0.0"
+  ]
 }

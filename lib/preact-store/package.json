@@ -1,6 +1,6 @@
 {
   "name": "@citolab/preact-store",
-  "version": "1.0.0",
+  "version": "2.0.7",
   "description": "simple preact store",
   "author": "patrick <patrick.deklein@cito.nl>, marcel  <marcel.hoekstra@cito.nl>",
   "homepage": "",
@@ -15,9 +15,7 @@
   },
   "scripts": {
     "dev": "tsc --watch",
-    "watch": "tsc --watch",
-    "prod": "tsc --build",
-    "publish": "npm run build && npm publish",
-    "publish:global": "npm publish --@citolab:registry=https://registry.npmjs.org/ --access public"
-  }
+    "prepublish": "tsc --build"
+  },
+  "gitHead": "6712ccb63437c0c37cc3be01146dc525fe778db1"
 }

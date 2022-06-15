@@ -9,7 +9,7 @@ A modern QTI-PCI development environment creating and testing portable custom in
 
 ### Specific implementations
 - [TAO](./lib/tspci-tao/)
-- [Questify](./lib/tspci-questify/)
+- [Questify CI](./lib/tspci-qbci/)
 
 ### Managing state:
 - [preact-store](./lib/preact-store//)
@@ -19,6 +19,7 @@ A modern QTI-PCI development environment creating and testing portable custom in
 ```sh
 npm install
 npm run lerna bootstrap
+npm run lerna run prod
 ```
 
 run any of the packages by running scripts in package.json

@@ -1,7 +1,6 @@
-# 1.0.3
+# 2.0.0
 
-- fixed broken images in readme
-
+- synchronized versions across tspci libraries
 # 1.0.2
 
 - fixed error when trying to remove a folder that did not exist
