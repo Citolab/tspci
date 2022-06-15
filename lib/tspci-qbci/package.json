@@ -1,18 +1,13 @@
 {
   "name": "@citolab/tspci-qbci",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "create a .ci file that can be imported into Questify",
   "author": "patrick <patrick.deklein@cito.nl>, Marcel Hoekstra <marcel.hoekstra@cito.nl>",
   "repository": "",
   "type": "module",
   "types": "types/index.d.ts",
-  "peerDependencies": {
-  },
-  "devDependencies": {
-  },
   "dependencies": {
     "archiver": "^5.3.0"
   },
-  "scripts": {
-  }
+  "scripts": {}
 }
