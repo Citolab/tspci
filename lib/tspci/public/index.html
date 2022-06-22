@@ -174,7 +174,7 @@
             <div class="d-flex justify-content-start mt-3" role="toolbar" aria-label="Toolbar with button groups">
               <div>
                 <small class="text-muted">configuration</small>
-                <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
+                <div class="btn-group me-2 shadow-sm" role="group">
                   <button class="btn btn-outline-secondary" onClick="${() => setShow(true)}">props</button>
                   <button
                     class="btn btn-outline-secondary"
@@ -187,7 +187,7 @@
 
               <div>
                 <small class="text-muted">data</small>
-                <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
+                <div class="btn-group me-2 shadow-sm" role="group">
                   <button
                     class="btn btn-outline-secondary"
                     onClick="${() => alert(JSON.stringify(item.getResponse(), null, 4))}"
@@ -200,17 +200,19 @@
 
               <div>
                 <small class="text-muted">state</small>
-                <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
+                <div class="btn-group me-2 shadow-sm" role="group">
                   <button class="btn btn-outline-secondary" onClick="${() => reload()}">reload</button>
+                  <button class="btn btn-outline-secondary" disabled="${!(item.replay)}" onClick="${() => item.replay()}">replay</button>
+
                 </div>
               </div>
               <div>
                 <small class="text-muted">responses</small>
-                <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
+                <div class="btn-group me-2 shadow-sm" role="group">
                   <button class="btn btn-outline-secondary" onClick="${() => saveResponse()}">store</button>
                   <button class="btn btn-outline-secondary" onClick="${() => compareResponse()}">compare</button>
                   <button class="btn btn-outline-secondary" onClick="${() => setResponse()}">set</button>
-                  <button class="btn btn-outline-secondary"  disabled="${!item.resetResponse}" onClick="${() => resetResponse()}">reset</button>
+                  <button class="btn btn-outline-secondary" disabled="${!item.resetResponse}" onClick="${() => resetResponse()}">reset</button>
                 </div>
               </div>
 
