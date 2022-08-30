@@ -23,6 +23,7 @@
     "url": "https://github.com/Citolab/qti-pci-bundler"
   },
   "scripts": {
+    "lerna": "lerna",
     "clean": "lerna clean",
     "bootstrap": "lerna bootstrap",
     "publish": "lerna publish",
