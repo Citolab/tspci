@@ -1,6 +1,7 @@
 {
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+  "useWorkspaces": true,
   "version": "2.0.10",
-  "npmClient": "npm",
   "command": {
     "publish": {
       "ignoreChanges": [
@@ -16,9 +17,6 @@
         "--no-package-lock"
       ]
     }
-  },
-  "packages": [
-    "pcis/*",
-    "lib/*"
-  ]
+  }
 }
+

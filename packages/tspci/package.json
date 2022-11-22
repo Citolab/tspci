@@ -1,0 +1,44 @@
+{
+  "name": "@citolab/tspci",
+  "version": "2.0.9",
+  "description": "an opiniated typescript ims-pci builder with tao integration",
+  "author": "patrick <patrick.deklein@cito.nl>",
+  "repository": "@citolab/tspci",
+  "bin": {
+    "tspci": "src/cli.js"
+  },
+  "type": "module",
+  "types": "types/index.d.ts",
+  "devDependencies": {
+    "@rollup/plugin-alias": "^4.0.2",
+    "@rollup/plugin-babel": "^6.0.2",
+    "@rollup/plugin-commonjs": "^23.0.2",
+    "@rollup/plugin-image": "^3.0.1",
+    "@rollup/plugin-json": "^5.0.1",
+    "@rollup/plugin-node-resolve": "15.0.1",
+    "@rollup/plugin-replace": "^5.0.1",
+    "@rollup/plugin-typescript": "^9.0.2",
+    "@testing-library/dom": "^8.19.0",
+    "@types/node": "^18.11.9",
+    "@typescript-eslint/eslint-plugin": "^5.44.0",
+    "@typescript-eslint/parser": "^5.44.0",
+    "live-server": "^1.2.2",
+    "postcss": "^8.4.19",
+    "postcss-import": "^15.0.0",
+    "rollup": "^3.4.0",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-live-server": "^2.0.0",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-postcss": "^4.0.2",
+    "rollup-plugin-string": "^3.0.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-watch-assets": "^1.0.1"
+  },
+  "dependencies": {
+    "caching": "^0.1.4",
+    "tailwindcss": "^3.1.3"
+  },
+  "scripts": {},
+  "gitHead": "a1c0e67ca6e16f72c49a19b89a60e690168f792b"
+}

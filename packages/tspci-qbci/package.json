@@ -7,7 +7,8 @@
   "type": "module",
   "types": "types/index.d.ts",
   "dependencies": {
-    "archiver": "^5.3.0"
+    "archiver": "^5.3.1",
+    "caching": "^0.1.4"
   },
   "scripts": {},
   "gitHead": "a1c0e67ca6e16f72c49a19b89a60e690168f792b",

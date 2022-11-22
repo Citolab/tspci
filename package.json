@@ -13,6 +13,9 @@
     "Preact",
     "Tailwind"
   ],
+  "workspaces": [
+    "packages/*"
+  ],
   "homepage": "https://github.com/Citolab",
   "bugs": {
     "url": "https://github.com/Citolab/qti-pci-bundler/issues"
@@ -26,7 +29,8 @@
     "lerna": "lerna",
     "clean": "lerna clean",
     "bootstrap": "lerna bootstrap",
-    "publish": "lerna publish",
+    "publish": "lerna run publish",
+    "build": "lerna run build",
     "diff": "lerna diff",
     "list": "lerna list",
     "changed": "lerna changed"
@@ -46,11 +50,11 @@
     }
   ],
   "devDependencies": {
-    "lerna": "^5.1.2",
-    "postcss": "^8.4.6",
-    "postcss-import": "^14.0.2",
-    "tailwindcss": "^3.0.21",
-    "typescript": "4.5.5",
-    "autoprefixer": "^10.4.7"
+    "lerna": "^6.0.3",
+    "postcss": "^8.4.19",
+    "postcss-import": "^15.0.0",
+    "tailwindcss": "^3.2.4",
+    "typescript": "4.9.3",
+    "autoprefixer": "^10.4.13"
   }
 }
