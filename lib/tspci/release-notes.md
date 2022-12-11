@@ -1,4 +1,8 @@
 
+# 2.1.1
+
+- fixed production build
+
 # 2.1.0
 
 - tailwind picks up correct class changes
