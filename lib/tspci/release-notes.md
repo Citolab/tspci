@@ -1,4 +1,11 @@
-## 2.0.0
+
+# 2.1.0
+
+- tailwind picks up correct class changes
+- added ROLLUP_WATCH=true to watch task in rollup
+- upgraded nearly all packages
+
+# 2.0.0
 
 - added customized development templates in plugins
 - removed tooltips development environment pci
