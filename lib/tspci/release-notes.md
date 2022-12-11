@@ -1,7 +1,11 @@
 
+# 2.1.2
+
+- fixed production build, terser not imported correctly
+
 # 2.1.1
 
-- fixed production build
+- fixed production build, import rollup.config needed extension .js
 
 # 2.1.0
 
