@@ -1,4 +1,8 @@
 
+# 2.1.3
+- added workaround for bug in new @rollup/plugin-terser
+  see https://github.com/rollup/plugins/issues/1366#issuecomment-1345358157
+
 # 2.1.2
 
 - fixed production build, terser not imported correctly
