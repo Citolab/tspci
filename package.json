@@ -43,9 +43,13 @@
     {
       "name": "Tjeerd Hans Terpstra",
       "email": "tjeerdhans.terpstra@cito.nl"
+    },
+    {
+      "name": "Sander Looise",
+      "email": "sander.looise@cito.nl"
     }
   ],
   "devDependencies": {
-    "lerna": "^6.1.0"
+    "lerna": "^6.6.2"
   }
 }

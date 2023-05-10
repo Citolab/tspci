@@ -7,3 +7,4 @@ tao_pci/tmp
 dist
 *.log
 pcis/**/*
+*.DS_Store

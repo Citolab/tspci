@@ -1,0 +1,22 @@
+{
+  "name": "###___PROJECT_NAME___###",
+  "typeIdentifier": "###___PCI_NAME___###",
+  "score": [ "NONE", "MATCH_CORRECT" ],
+  "label": "###___LABEL___###",
+  "short": "###___SHORT___###",
+  "description": "Here your PCI description",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/types.d.ts",
+  "dependencies": {},
+  "devDependencies": {
+    "@citolab/tspci": "^2.0.10",
+    "@citolab/tspci-tao": "^2.0.10"
+  },
+  "scripts": {
+    "dev": "tspci --dev",
+    "package-tao": "tspci --target tao",
+    "prod": "tspci"
+  },
+  "source": "src/index.ts"
+}
