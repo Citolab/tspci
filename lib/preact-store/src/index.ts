@@ -4,6 +4,7 @@ let globalState = {};
 let listeners = [];
 let actions: IAction<unknown, unknown, unknown>[] = [];
 let actionSubscription = undefined;
+let triggerReplay = 0;
 
 export function useStore<S, A>(
   callback?: (actionIdentifier: A, payload) => void
@@ -11,14 +12,21 @@ export function useStore<S, A>(
   S,
   <P>(actionIdentifier: A, payload: P) => void,
   (
-    action: {
+    action?: {
       type: string;
       payload: unknown;
+      timestamp?: number;
     }[],
-    delayMs: number
+    delayMs?: number
   ) => Promise<void>
 ] {
   const setState = useState(globalState)[1];
+
+  useEffect(() => {
+    if (triggerReplay > 0) {
+      replay(actions as any[])
+    }
+  }, [triggerReplay])
 
   useEffect(() => {
     listeners.push(setState);
@@ -30,6 +38,10 @@ export function useStore<S, A>(
   function dispatch<P>(actionIdentifier: A, payload: P, bypasslisteners = false) {
     const typeActions = actions as IAction<S, unknown, A>[];
     const action = typeActions.find((a) => a.type.toString() === actionIdentifier.toString());
+    debugger;
+    // get date now in ms
+    const timestamp = new Date().getTime();
+    payload = { ...payload, timestamp };
     callback && callback(action.type, payload);
     const newState = action.action(globalState as S, payload);
 
@@ -49,9 +61,17 @@ export function useStore<S, A>(
     }
   }
 
-  async function replay(replayActions: { type: string; payload: unknown }[], delayMs: number) {
+  async function replay(replayActions: { type: string; payload: unknown; timestamp?: number }[], speed?: number) {
     for (const action of replayActions) {
-      await timeout(delayMs);
+      if (action.timestamp) {
+        // get difference the action.timestamp and the previous action.timestamp
+        const delayMs = action.timestamp - (replayActions[replayActions.indexOf(action) - 1]?.timestamp || 0);
+        if (speed) {
+          await timeout(delayMs / speed);
+        } else {
+          await timeout(delayMs);
+        }
+      }
       dispatch(action.type as unknown as A, action.payload, true);
     }
   }
@@ -72,20 +92,24 @@ export function cleanupStore() {
 export interface Store<S> {
   cleanup: () => void;
   getState: () => S;
+  replay: () => void;
 }
 
-export function initStore<S> (
+export function initStore<S>(
   userActions: IAction<S, unknown, unknown>[],
   initialState: S,
   subscribe?: (action) => void
-):Store<S> {
+): Store<S> {
   if (initialState) {
     globalState = { ...globalState, ...initialState };
   }
   actions = [...new Set([...actions, ...userActions])] as IAction<unknown, unknown, unknown>[];
 
   actionSubscription = subscribe;
-  return { getState: () => globalState as S, cleanup: () => cleanupStore() };
+  return { getState: () => globalState as S, cleanup: () => cleanupStore(), replay: () => {
+    globalState = {...initialState};
+    triggerReplay++ 
+  }};
 }
 
 export interface IAction<S, P, A> {

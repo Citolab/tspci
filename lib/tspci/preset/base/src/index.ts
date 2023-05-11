@@ -24,18 +24,16 @@ class Pci implements IMSpci<PropTypes> {
     this.state = state ? state : "";
 
     this.shadowdom = dom.attachShadow({ mode: "closed" });
-
-    this.shadowdom.addEventListener("change", (e: Event) => {
-      const value = (e.target as HTMLInputElement).value;
-      this.state = value;
-    });
-
     this.render();
 
     config.onready(this);
   };
 
   private render = () => {
+    this.shadowdom.addEventListener("change", (e: Event) => {
+      const value = (e.target as HTMLInputElement).value;
+      this.state = value;
+    });
     this.shadowdom.innerHTML = `<div class="pci-container">
       <h1>${this.config.properties.title}</h1>
       <div class="body">
@@ -49,11 +47,6 @@ class Pci implements IMSpci<PropTypes> {
     const css = document.createElement("style");
     css.innerHTML = style;
     this.shadowdom.appendChild(css);
-  };
-
-  trigger = (event: string, value: any) => {
-    this.config.properties[event] = value;
-    this.render();
   };
 
   getResponse = () => {
