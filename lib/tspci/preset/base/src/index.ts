@@ -1,4 +1,4 @@
-import { Configuration, IMSpci } from "@citolab/tspci";
+import { Configuration, IMSpci, QtiVariableJSON } from "@citolab/tspci";
 import * as ctx from "qtiCustomInteractionContext";
 import configProps from "./config.json";
 import style from "./styles.css"; // import and bundle this style file ( you can use tailwind and nested css )
@@ -50,8 +50,8 @@ class Pci implements IMSpci<PropTypes> {
   };
 
   getResponse = () => {
-    const response = { base: { string: this.state ? JSON.stringify(this.state) : undefined } };
-    return this.state ? response : undefined;
+    const response = (this.state === null || this.state === undefined) ? undefined : { base: { integer: this.state }} as QtiVariableJSON;
+    return response;
   };
 
   getState = () => this.state.toString();
