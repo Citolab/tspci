@@ -48,7 +48,6 @@
         user has not yet interacted yet, getResponse should return undefined.
       </div>
 
-      
       <div id="pciContainer" class="shadow-sm">
         <div id="loading" class="text-muted mx-auto p-4">Loading...</div>
       </div>
@@ -123,6 +122,11 @@
           const state = item.getState();
           localStorage.setItem(item.typeIdentifier + "_state", JSON.stringify(state));
           location.reload();
+        }
+
+        function playState() {
+          const state = item.getState();
+          item.store.replay(state.log); // state.log
         }
 
         function changeConfig(key, value) {
@@ -211,20 +215,44 @@
                   <button class="btn btn-outline-secondary" onClick="${() => saveResponse()}">store</button>
                   <button class="btn btn-outline-secondary" onClick="${() => compareResponse()}">compare</button>
                   <button class="btn btn-outline-secondary" onClick="${() => setResponse()}">set</button>
-                  <button class="btn btn-outline-secondary"  disabled="${!item.resetResponse}" onClick="${() => resetResponse()}">reset</button>
+                  <button
+                    class="btn btn-outline-secondary"
+                    disabled="${!item.resetResponse}"
+                    onClick="${() => resetResponse()}"
+                  >
+                    reset
+                  </button>
                 </div>
               </div>
 
               <div>
                 <small class="text-muted">ㅤ</small>
                 <div class="d-flex">
-                <button class="btn bg-light shadow-sm btn-outline-danger me-2"  disabled="${!(item.destroy || item.oncompleted)}" onClick="${() => unload()}">
-                  unload
-                </button>
-                <button class="btn bg-light shadow-sm btn-outline-danger" onClick="${() => reset()}">reset</button>
+                  <button
+                    class="btn bg-light shadow-sm btn-outline-danger me-2"
+                    disabled="${!(item.destroy || item.oncompleted)}"
+                    onClick="${() => unload()}"
+                  >
+                    unload
+                  </button>
+                  <button class="btn bg-light shadow-sm btn-outline-danger" onClick="${() => reset()}">reset</button>
                 </div>
               </div>
             </div>
+
+            <div class="mt-2 d-flex gap-2">
+              <button class="btn btn-outline-secondary" onClick="${() => playState()}">play</button>
+              <input
+                class="form-control-range flex-grow-1"
+                type="range"
+                min="0"
+                max="${JSON.parse(item.getState()).log.length}"
+                value=${range}
+                onChange=${(e) => setRange(e.target.value)}
+                step="1"
+              />
+            </div>
+            
           </div>
         `;
       }
@@ -268,8 +296,8 @@
       window.onload = () => loadItem();
     </script>
 
-    <h3 style="margin-top: 12rem;">checklist</h3>
-    <ul style="margin-bottom:10rem;">
+    <h3 style="margin-top: 12rem">checklist</h3>
+    <ul style="margin-bottom: 10rem">
       <li>Is the css scoped to the item?</li>
       <li>Is the css/item somewhat responsive on smaller screens</li>
       <li>Can you reset the item to its initial state</li>

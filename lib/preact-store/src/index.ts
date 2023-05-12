@@ -24,7 +24,7 @@ export function useStore<S, A>(
 
   useEffect(() => {
     if (triggerReplay > 0) {
-      replay(actions as any[])
+      replay((globalState as any).log)
     }
   }, [triggerReplay])
 
@@ -38,7 +38,6 @@ export function useStore<S, A>(
   function dispatch<P>(actionIdentifier: A, payload: P, bypasslisteners = false) {
     const typeActions = actions as IAction<S, unknown, A>[];
     const action = typeActions.find((a) => a.type.toString() === actionIdentifier.toString());
-    debugger;
     // get date now in ms
     const timestamp = new Date().getTime();
     payload = { ...payload, timestamp };
@@ -63,9 +62,9 @@ export function useStore<S, A>(
 
   async function replay(replayActions: { type: string; payload: unknown; timestamp?: number }[], speed?: number) {
     for (const action of replayActions) {
-      if (action.timestamp) {
+      if ((action.payload as any).timestamp) {
         // get difference the action.timestamp and the previous action.timestamp
-        const delayMs = action.timestamp - (replayActions[replayActions.indexOf(action) - 1]?.timestamp || 0);
+        const delayMs = (action.payload as any).timestamp - (replayActions[replayActions.indexOf(action) - 1]?.timestamp || 0);
         if (speed) {
           await timeout(delayMs / speed);
         } else {
@@ -92,7 +91,7 @@ export function cleanupStore() {
 export interface Store<S> {
   cleanup: () => void;
   getState: () => S;
-  replay: () => void;
+  replay: (actions: IAction<unknown, unknown, unknown>[]) => void;
 }
 
 export function initStore<S>(
@@ -106,8 +105,10 @@ export function initStore<S>(
   actions = [...new Set([...actions, ...userActions])] as IAction<unknown, unknown, unknown>[];
 
   actionSubscription = subscribe;
-  return { getState: () => globalState as S, cleanup: () => cleanupStore(), replay: () => {
-    globalState = {...initialState};
+  return { getState: () => globalState as S, cleanup: () => cleanupStore(), replay: (logActions: IAction<unknown, unknown, unknown>[]) => {
+
+    // globalState = {...initialState};
+    globalState = {...initialState, log: logActions}
     triggerReplay++ 
   }};
 }
