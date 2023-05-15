@@ -11,7 +11,8 @@
   },
   "scripts": {
     "dev": "tspci --dev",
-    "prod": "tspci"
+    "prod": "tspci",
+    "tspci": "tspci"
   },
   "config": {
     "tspci": {
