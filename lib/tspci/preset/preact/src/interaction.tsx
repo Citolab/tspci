@@ -23,6 +23,7 @@ const Interaction = ({ config, dom }: { config: PropTypes; dom: Document | Shado
           const input = e.target as HTMLInputElement;
           dispatch<{ input: number }>("SET_INPUT", { input: +input.value });
         }
+      }
       onChange={(e) => {
           const input = e.target as HTMLInputElement;
           dispatch<{ input: number }>("SET_INPUT", { input: +input.value });
