@@ -26,7 +26,8 @@
     "lerna": "lerna",
     "clean": "lerna clean",
     "bootstrap": "lerna bootstrap",
-    "publish": "lerna publish",
+    "publish": "lerna publish --force-publish",
+    "publish-next": "lerna publish --dist-tag next --force-publish --canary preminor",
     "diff": "lerna diff",
     "list": "lerna list",
     "changed": "lerna changed"
