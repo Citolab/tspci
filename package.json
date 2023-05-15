@@ -1,6 +1,6 @@
 {
   "name": "qti-pci-bundler",
-  "version": "2.0.0",
+  "version": "2.0.0-alpha.0",
   "description": "Citolab custom pci builder for IMS pcis and TAO",
   "keywords": [
     "QTI",
@@ -27,7 +27,7 @@
     "clean": "lerna clean",
     "bootstrap": "lerna bootstrap",
     "publish": "lerna publish --force-publish",
-    "publish-next": "lerna publish --dist-tag next --force-publish --canary preminor",
+    "publish-next": "lerna publish --dist-tag next --force-publish",
     "diff": "lerna diff",
     "list": "lerna list",
     "changed": "lerna changed"
