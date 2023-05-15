@@ -18,5 +18,5 @@
     "dev": "tsc --watch",
     "prepublish": "tsc --build"
   },
-  "gitHead": "478292d5b580061e989a3a16a933081d23970962"
+  "gitHead": "b1733e486f1b679d0d805bd987c47e19ad83d121"
 }
