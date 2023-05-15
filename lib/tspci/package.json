@@ -46,5 +46,5 @@
     "help": "tspci --help",
     "init": "tspci init --force --path=../../pcis"
   },
-  "gitHead": "26d14ec486587e5eadaa9ffc2b4869f16e7a83f3"
+  "gitHead": "30554601c3d8204dd6bf0e237d5fd6e4a5401560"
 }
