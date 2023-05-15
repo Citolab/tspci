@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/types.d.ts",
+  "private": true,
   "dependencies": {},
   "devDependencies": {
     "@citolab/tspci": "^2.2.0"
