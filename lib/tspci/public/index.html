@@ -40,12 +40,12 @@
   <body class="bg-light">
     <div class="container">
       <div
-        class="alert alert-danger position-fixed mx-auto bottom-0"
+        class="alert alert-danger position-fixed mx-auto left-2 top-2"
         style="display: none"
         role="alert"
         id="noresponse"
       >
-        user has not yet interacted yet, getResponse should return undefined.
+        user has not yet interacted yet<br />getResponse should return undefined.
       </div>
 
       <div id="pciContainer" class="shadow-sm">
@@ -56,13 +56,40 @@
 
     <script type="module">
       import { h, Component, render } from "https://unpkg.com/preact@latest?module";
-      import { useState, useEffect } from "https://unpkg.com/preact@latest/hooks/dist/hooks.module.js?module";
+      import { useState, useEffect, useRef } from "https://unpkg.com/preact@latest/hooks/dist/hooks.module.js?module";
       import htm from "https://unpkg.com/htm?module";
       // Initialize htm with Preact
       const html = htm.bind(h);
 
+      /**
+       * Minified useInterval hook. A custom hook that calls the given `callback` function at the given `delay` interval.
+       * useInterval(() => {
+       *   console.log('interval')
+       * }, 1000);
+       * The callback is not called immediately on mount but only after the first delay.
+       */
+      function useInterval(c,d){const s=useRef();useEffect(()=>{s.current=c},[c]),useEffect(()=>{if(d!==null){const i=setInterval(()=>{s.current()},d);return()=>clearInterval(i)}},[d])}
+
       function App({ item }) {
         const [show, setShow] = useState(false);
+
+        const [range, setRange] = useState(0);
+        const [maxRange, setMaxRange] = useState(0);
+
+        /* This is a poll mechanism to investigate all the log actions, and adjust the scrubber for max logactions, and also set the range */
+        useInterval(() => {
+          const events = JSON.parse(item.getState()).log
+          if (events.length > maxRange) {
+            setMaxRange(events.length)
+            setRange(events.length)
+          }
+        }, 1000);
+
+        function scrubRange(value) {
+          resetResponse();
+          const state = item.getState();
+          item.store.replay(JSON.parse(state).log.slice(0, value))
+        }
 
         let keyArray = [];
         if (item.config && item.config.properties) {
@@ -126,7 +153,6 @@
 
         function playState() {
           const state = item.getState();
-          debugger;
           item.store.replay(JSON.parse(state).log); // state.log
         }
 
@@ -247,9 +273,9 @@
                 class="form-control-range flex-grow-1"
                 type="range"
                 min="0"
-                max="${JSON.parse(item.getState()).log.length}"
-                value=${0}
-                onChange=${(e) => setRange(e.target.value)}
+                max="${maxRange}"
+                value=${range}
+                onInput=${(e) => scrubRange(e.target.value)}
                 step="1"
               />
             </div>
