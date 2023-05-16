@@ -23,6 +23,42 @@
 
 ## 🔧 Installation & Setup
 
+### Cli
+
+The easiest way to setup a pci develop environment is by using the cli.
+This will ask a few options, and creates a PCI development environment with an example implementation.
+
+<p align="center">
+  <img src="https://github.com/Citolab/tspci/blob/main/lib/tspci/tspci-console.png" alt="Setup using console">
+</p>
+
+Run:  ```npx @citolab/tspci@latest init```
+
+1. It will ask to download the latest version of tspci.
+2. If agreed; tspci will be downloaded and started. 
+3. You should provide a name/identifier for your PCI.
+4. You should provide a description.
+5. Last option is to add options: tailwind and preact (both are selected by default, for more info; keep reading).
+
+#### Tailwind
+Tailwind is a popular css framework and can be used to give a nice look and feel of the PCI. The cli will make sure the css is added; and all build stuff that comes with tailwind is setup.
+
+#### preact
+preact is a small version of react. You can develop your PCI using hooks and the render function as you are familiar with in react. When preact is selected the cli will also add a store to manage state. This can easily be used to store all user actions in the PCI, and even replay them.
+
+### specific implementations like TAO.
+We also support to create a PCI that can be imported in TAO. Therefor you should use @citolab/tspci-tao.
+
+To add tao using the cli you should run the following command inside your PCI folder:
+
+``` sh
+  npm run tspci -- add --target tao
+```
+
+For more info: [@citolab/tspci-tao](https://github.com/Citolab/tspci/tree/main/lib/tspci-tao)
+
+### Manual
+
 1️. **Install** by running: `npm i -D @citolab/tspci`
 
 2️. **Set up** your `package.json`:
@@ -39,6 +75,11 @@
   "devDependencies": {
     "@citolab/tspci": "^1.5.6",
     "@citolab/tspci-tao": "^1.0.0"
+  },
+  "config": {
+    "tspci": {
+      "typeIdentifier": "helloWorld"
+    }
   },
   "scripts": {
     "dev": "tspci --dev",
@@ -129,6 +170,8 @@ Available Commands
   --watch  -w     Only watch changes
   --help   -h     Help about commandos
   --target -t     Build production for platform
+  init            Init PCI development environment.
+  add --target    Add specific implementation to the PCI. 
 
 Examples package.json scripts
 	$ "dev": "tspci --dev",
@@ -321,14 +364,6 @@ Tao adds some lifecycle methods which you can implement and we supply an extende
 More info, see our extension 
 - [github](https://github.com/Citolab/tspci/blob/main/lib/tspci-tao)
 - [@citolab/tspci-tao](https://www.npmjs.com/package/@citolab/tspci-tao)
-
-
-## Roadmap
-
-- Packager for Facet
-- Packager for Trifork
-- Create PCI with Vue
-- Create PCI with Haunted
 
 If you want your platform to be support,  [contact us](mailto://getinspiredbycitolab@gmail.com)
 

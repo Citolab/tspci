@@ -1,4 +1,6 @@
 
+# 2.3.0
+- added a cli to initialize a PCI workspace (```tspci init```)
 # 2.1.3
 - added workaround for bug in new @rollup/plugin-terser
   see https://github.com/rollup/plugins/issues/1366#issuecomment-1345358157

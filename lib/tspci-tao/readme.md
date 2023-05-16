@@ -17,15 +17,49 @@ Configuration of a PCI can be done by the author because this packager reads the
 If scoring can be done with a MATCH_CORRECT (single string comparison) the item author can provide the correct answer in TAO by interaction with the PCI.
 This way one PCI can be re-used in different configurations supporting multiple items.
 
+## Cli
+To add TAO support to an existing tspci PCI you can run:
+
+``` sh
+ tspci add --target tao
+```
+
+This command and all the TAO specific changes that are needed to build importable TAO zip file. This will work for a new project created by ``` tspci init ```. For PCI's that are modified, it will do best effort to fully implement TAO specific changes. Please read the rest of this file in case ``` tspci init ``` fails on your PCI.
+
+<p align="center">
+  <img src="https://github.com/Citolab/tspci/blob/main/lib/tspci-tao/readme-images/tspci-tao-console.png" alt="cli in console">
+</p>
+
+The cli will ask a few things before the script is executed:
+
+- short: name on the interaction icon in TAO.
+- label: label of the interaction
+- scoringMethod: the MATCH CORRECT scoring can be applied on the PCI. The user can interacted with the PCI to provide the correct response. To be able to show the correct response in the author system after the author provided the correct response; the setResponse function of the TAO interface should be implemented. Scoring can (for now) only be done using a string comparison. But sinces the PCI developer implement the getResponse method, as string comparison can be done to compare JSON of formatted numbers.
+
+## Changes
+
 To be able to add an IMS-PCI to the TAO authoring system properties are added to the `package.json`
 and implemented lifecycle events that should be implemented in the PCI.
 
-To create this zip file run:
+
+
+or
+
+``` sh
+ npm run tspci -- add --target tao
+```
+
+To create the zip file that can be added in TAO run:
 
 ``` sh 
  tspci --target tao
 ```
 
+or
+
+``` sh
+ npm run tspci -- --target tao
+```
 ## life cycle methods
 
 To be TAO compliant the TAOpci interface should be implemented:
@@ -68,6 +102,20 @@ class App implements IMSpci<PropTypes>, TAOpci {
 
 
 ### package.json
+
+The version and description fields of the package.json are used while creating the zip file and are mandatory.
+
+Other config properties should be placed under: config -> tspci:
+
+``` json
+ "config": {
+  "tspci": {
+    "typeIdentifier": "myPci",
+    ...
+  }
+ }
+```
+
 - typeIdentifier: a field 'typeIdentifier' should be added. This should match the 'typeIdentifier' value in the PCI entry file (The one that implements IMSPci). Only (alpha)numeric values are allowed. This because a hyphen in the identifier causes an error in TAO. To be sure, only alphanumeric are allowed.
 - label: used as label in TAO
 - short: short name used in TAO to label the PCI where you can drag it in an item.

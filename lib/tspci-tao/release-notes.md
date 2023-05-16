@@ -1,3 +1,6 @@
+# 2.3.0
+- added a script to add TAO support in a PCI that only support the IMS interface.
+
 # 2.0.0
 
 - synchronized versions across tspci libraries
