@@ -7,7 +7,7 @@
   "private": true,
   "dependencies": {},
   "devDependencies": {
-    "@citolab/tspci": "next"
+    "@citolab/tspci": "latest"
   },
   "scripts": {
     "dev": "tspci --dev",
