@@ -126,7 +126,8 @@
 
         function playState() {
           const state = item.getState();
-          item.store.replay(state.log); // state.log
+          debugger;
+          item.store.replay(JSON.parse(state).log); // state.log
         }
 
         function changeConfig(key, value) {
@@ -247,7 +248,7 @@
                 type="range"
                 min="0"
                 max="${JSON.parse(item.getState()).log.length}"
-                value=${range}
+                value=${0}
                 onChange=${(e) => setRange(e.target.value)}
                 step="1"
               />

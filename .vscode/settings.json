@@ -1,5 +1,5 @@
 {
-    "npm.exclude": "**/app/lib/**",
+    "npm.exclude": "**/lib/tspci/preset/**",
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#2da56f",
         "activityBar.activeBorder": "#e1cdf1",

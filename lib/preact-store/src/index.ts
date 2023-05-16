@@ -40,7 +40,7 @@ export function useStore<S, A>(
     const action = typeActions.find((a) => a.type.toString() === actionIdentifier.toString());
     // get date now in ms
     const timestamp = new Date().getTime();
-    payload = { ...payload, timestamp };
+    // payload = { ...payload, timestamp };
     callback && callback(action.type, payload);
     const newState = action.action(globalState as S, payload);
 
@@ -51,6 +51,7 @@ export function useStore<S, A>(
         actionSubscription({
           type: actionIdentifier,
           payload: payload,
+          timestamp
         });
       }
     }
@@ -61,10 +62,11 @@ export function useStore<S, A>(
   }
 
   async function replay(replayActions: { type: string; payload: unknown; timestamp?: number }[], speed?: number) {
+    debugger;
     for (const action of replayActions) {
-      if ((action.payload as any).timestamp) {
+      if (action.timestamp) {
         // get difference the action.timestamp and the previous action.timestamp
-        const delayMs = (action.payload as any).timestamp - (replayActions[replayActions.indexOf(action) - 1]?.timestamp || 0);
+        const delayMs = action.timestamp - (replayActions[replayActions.indexOf(action) - 1]?.timestamp || action.timestamp);
         if (speed) {
           await timeout(delayMs / speed);
         } else {
