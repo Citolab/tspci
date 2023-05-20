@@ -26,7 +26,7 @@
     "lerna": "lerna",
     "link": "lerna link --force-local",
     "clean": "lerna clean",
-    "bootstrap": "lerna bootstrap",
+    "bootstrap": "lerna bootstrap --force-local",
     "publish": "lerna publish --force-publish",
     "publish-next": "lerna publish --dist-tag next --force-publish",
     "diff": "lerna diff",
