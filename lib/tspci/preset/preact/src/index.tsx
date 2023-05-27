@@ -7,7 +7,7 @@ import Interaction from "./interaction";
 import style from "./styles.css";
 import { Configuration, IMSpci, QtiVariableJSON } from "@citolab/tspci";
 import configProps from "./config.json";
-import { actions, StateModel } from "./store";
+import { IStore } from "@citolab/preact-store";
 
 type PropTypes = typeof configProps;
 
@@ -16,7 +16,7 @@ class App implements IMSpci<PropTypes> {
   config: Configuration<PropTypes>; // reference to the interface of the config object which you get when getInstance is called by the player
   state: string; // keep a reference to the state
   shadowdom: ShadowRoot; // Not mandatory, but its wise to create a shadowroot
-  store: Store<StateModel>;
+  store: IStore<StateModel>;
 
   private logActions: { type: string; payload: unknown }[] = []; // optional logActions
 
@@ -30,8 +30,10 @@ class App implements IMSpci<PropTypes> {
 
     const initState: StateModel = stateString ? JSON.parse(stateString).state : { input: 0 };
     this.logActions = stateString ? JSON.parse(stateString).log : [];
-    this.store = initStore<StateModel>(actions as any[], initState, (action) => this.logActions.push(action));
-
+    this.store = initStore(this.initialState );
+    if (restoredState || logActions) {
+      this.store.restoreState(restoredState, logActions);
+    }
     this.shadowdom = dom.attachShadow({ mode: "closed" });
     this.render();
 

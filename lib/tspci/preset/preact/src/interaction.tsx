@@ -1,16 +1,13 @@
-import { useStore } from "@citolab/preact-store";
+import { useStore, IStore, Action } from "@citolab/preact-store";
 import { ActionType, StateModel } from "./store";
 import configProps from "./config.json";
 import procenten from "./assets/procenten.png"; // image types are bundled inside the js
 
 type PropTypes = typeof configProps;
 
-const Interaction = ({ config, dom }: { config: PropTypes; dom: Document | ShadowRoot }) => {
-  const [state, dispatch] = useStore<StateModel, ActionType>(
-    (type, payload) => {
-      console.log(`type: ${type}, payload: ${JSON.stringify(payload)}`);
-    }
-  );
+const Interaction = ({ config, dom }: { config: PropTypes; dom: Document | ShadowRoot, store: IStore<StateModel> }) => {
+  const state = useStore(store);
+
   return <div className="pci-container">
     <h1>{config.title}</h1>
     <div className="body">
@@ -21,12 +18,12 @@ const Interaction = ({ config, dom }: { config: PropTypes; dom: Document | Shado
       <input type="number"
         onKeyUp={(e) => {
           const input = e.target as HTMLInputElement;
-          dispatch<{ input: number }>("SET_INPUT", { input: +input.value });
+          store.dispatch<{ input: number }>({ type: "SET_INPUT", payload: { input: +input.value } });
         }
-      }
-      onChange={(e) => {
+        }
+        onChange={(e) => {
           const input = e.target as HTMLInputElement;
-          dispatch<{ input: number }>("SET_INPUT", { input: +input.value });
+          store.dispatch<{ input: number }>({ type: "SET_INPUT", payload: { input: +input.value } });
         }} min="0" max="100" />%
     </div>
   </div>;
