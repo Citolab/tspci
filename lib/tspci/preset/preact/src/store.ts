@@ -4,7 +4,7 @@ export type ActionType = "SET_INPUT" | "RESTORE_STATE";
 export type StateModel = { input: number };
 
 export const initStore = (initialState: StateModel, restoreData?: {
-  state: StateModel;
+  state?: StateModel;
   actions: { type: string; payload: any; timestamp?: number }[];
 }) => {
   const store = new Store<StateModel>(initialState, restoreData);

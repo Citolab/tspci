@@ -99,8 +99,8 @@
       async function scrubRange(value) {
         if (!isReplaying.current) {
           setCurrentRangeValue(value);
-          resetResponse();
           if (store) {
+            store.reset();
             isReplaying.current = true;
             replayedIndex.current = 0;
             setCurrentRangeValue(value);
@@ -172,7 +172,7 @@
 
       async function playState() {
         if (store && !isReplaying.current) {
-          resetResponse();
+          store.reset();
           isReplaying.current = true;
           replayedIndex.current = 0;
           await store.replay([...actions]);
