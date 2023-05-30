@@ -137,11 +137,16 @@
       function setResponse() {
         const response = localStorage.getItem(item.typeIdentifier + "_response");
         if (response) {
-          item.setResponse({
-            base: {
-              string: response,
-            },
-          });
+          if (item.setResponse) {
+            item.setResponse({
+              base: {
+                string: response,
+              },
+            });
+          }
+          else {
+            alert("load response only when TAO interface is implemented");
+          }
         } else {
           alert("no response stored");
         }
@@ -182,7 +187,7 @@
 
       function changeConfig(key, value) {
         item.config.properties[key] = value;
-        item.trigger(`change${key}`, value);
+        item.trigger && item.trigger(`change${key}`, value);
       }
 
       function reConfig(key, value) {
