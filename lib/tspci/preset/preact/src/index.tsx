@@ -55,7 +55,7 @@ class App implements IMSpci<PropTypes> {
   getState = () =>
     JSON.stringify({
       state: this.store.getState(),
-      log: this.logActions,
+      log: this.store.getActions(),
     });
 
   getResponse = () => {
