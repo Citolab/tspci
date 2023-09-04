@@ -10,7 +10,7 @@ tspci --target qbci
 ## config options
 
 In the package.json of the pci:
-- typeIdentifier (required)
+- config: { tspci: { typeIdentifier: 'yourpciname' }} (required)
 - label (if empty, package name will be used)
-- width
-- height
+- config: { tspci: { width: '500' }} (optional, default: 500)
+- config: { tspci: { height: '500' }} (optional, default: 500)
