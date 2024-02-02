@@ -20,12 +20,12 @@ export interface CES {
   //  */
   // getMedia: () => [];
 
-  // /** 
+  // /**
   //  * @access public
   //  * @deprecated not really deprecated, but bundled ci does not contain media ever again
-  //  * Convenience function to adjust the height of the generated iframe 
+  //  * Convenience function to adjust the height of the generated iframe
   //  * to the current height of the custom interaction’s content height;
-  //  * if that content’s visual size exceeds its layout box (e.g. by using box-shadow), 
+  //  * if that content’s visual size exceeds its layout box (e.g. by using box-shadow),
   //  * an optional vertical margin can be specified.
   //  * @method setStageHeight
   //  * @arg NumberverticalMargin
@@ -46,7 +46,7 @@ export interface CI<ConfigProperties> {
    *  This must have been obtained from a prior call to getState on an
    *  instance of this type (same typeIdentifier)
    */
-   getInstance: (dom: HTMLElement, configuration: Configuration<ConfigProperties>, state: string) => void;
+  getInstance: (dom: HTMLElement, configuration: Configuration<ConfigProperties>, state: string) => void;
 }
 
 export declare type Configuration<T> = {

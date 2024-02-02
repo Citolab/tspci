@@ -18,7 +18,7 @@
         font-size: 100%;
       }
       #pciContainer {
-        display:block;
+        display: block;
         width: 100%;
         /* min-width: 800px; */
         padding: 20px;
@@ -41,19 +41,27 @@
   </head>
   <body class="bg-light">
     <div class="container">
-      <iframe id="pciContainer" class="shadow-sm"> </iframe>
+      <div id="pciContainer" class="shadow-sm"></div>
       <div id="devtools"></div>
     </div>
 
     <script type="module">
       import { h, Component, render } from "https://unpkg.com/preact@latest?module";
-      import { useState, useEffect } from "https://unpkg.com/preact@latest/hooks/dist/hooks.module.js?module";
+      import { useState, useEffect, useRef } from "https://unpkg.com/preact@latest/hooks/dist/hooks.module.js?module";
       import htm from "https://unpkg.com/htm?module";
       // Initialize htm with Preact
       const html = htm.bind(h);
 
-      function App() {
+      function App({ item }) {
         const [show, setShow] = useState(false);
+
+        let keyArray = [];
+        if (item.config && item.config.properties) {
+          keyArray = Object.keys(item.config.properties).map((keyName, keyIndex) => ({
+            key: keyName,
+            value: item.config.properties[keyName],
+          }));
+        }
 
         function resetlocalstorage() {
           localStorage.removeItem(item.typeIdentifier + "_props");
@@ -68,7 +76,7 @@
 
         function changeConfig(key, value) {
           item.config.properties[key] = value;
-          item.trigger(`change${key}`, value);
+          item.trigger && item.trigger(`change${key}`, value);
         }
 
         function reConfig(key, value) {
@@ -78,9 +86,46 @@
 
         return html`
           <div>
+            <div style="width:300px" class="shadow offcanvas offcanvas-end ${show ? "show visible" : ""}">
+              <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="offcanvasExampleLabel">properties</h5>
+                <button
+                  type="button"
+                  onClick="${() => setShow(false)}"
+                  disabled="${!item.config}"
+                  class="btn-close text-reset"
+                ></button>
+              </div>
+              <div class="offcanvas-body">
+                <ul class="card-body">
+                  ${keyArray.map(
+                    ({ key, value }) => html`<div>
+                      <div>${key}</div>
+                      <input
+                        type="text"
+                        class="form-control"
+                        value="${value}"
+                        onkeyup="${(e) => changeConfig(key, e.target.value)}"
+                      />
+                    </div>`
+                  )}
+                </ul>
+                <button class="btn btn-primary" onClick="${() => reConfig()}">save and reload</button>
+              </div>
+            </div>
+
             <div class="d-flex justify-content-start mt-3" role="toolbar" aria-label="Toolbar with button groups">
-              <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
-                <button class="btn btn-outline-secondary" onClick="${() => reload()}">reload</button>
+              <div class="d-flex flex-column">
+                <small class="text-muted">configuration</small>
+                <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
+                  <button class="btn btn-outline-secondary" onClick="${() => setShow(true)}">config</button>
+                </div>
+              </div>
+              <div class="d-flex flex-column">
+                <small class="text-muted">state</small>
+                <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
+                  <button class="btn btn-outline-secondary" onClick="${() => reload()}">reload</button>
+                </div>
               </div>
             </div>
           </div>
@@ -96,25 +141,38 @@
       window["CES"] = {
         response: response,
         setResponse: (data) => {
-          console.log("setting the data", data)
+          console.log("setting the data", data);
           response = data;
         },
-        getResponse: () => {
+        getResponse: (itemInstance = null) => {
           console.log("getting the data");
           return response;
         },
       };
-      var iframe = document.getElementById("pciContainer"),
-        iframeWin = iframe.contentWindow || iframe,
-        iframeDoc = iframe.contentDocument || iframeWin.document;
 
-      iframe.onload = () => {
-        render(html`<${App} />`, document.getElementById("devtools"));
-      };
+      const pciContainer = document.getElementById("pciContainer");
 
-      iframeDoc.open();
-      iframeDoc.write("\<html>\<head>\<script src='index.js'>\<\/script>\<\/head>\<body>\<\/body>\<\/html>");
-      iframeDoc.close();
+      define("qtiCustomInteractionContext", (qtiCustomInteractionContext) => {
+        // return { register: (ctxA) => register(ctxA) };
+      });
+
+      function loadItem() {
+        requirejs(["index.js"], (itemInstance) => {
+          render(html`<${App} item="${new itemInstance.App(pciContainer)}" />`, document.getElementById("devtools"));
+        });
+      }
+
+      window.onload = loadItem;
+
+      // if (itemInstance) render(html`<${App} item="${itemInstance}" />`, document.getElementById("devtools"));
+
+      // const iframe = pciContainer;
+      // const iframeWin = iframe.contentWindow || iframe;
+      // const iframeDoc = iframe.contentDocument || iframeWin.document;
+
+      // iframeDoc.open();
+      // iframeDoc.write("\<html>\<head>\<script src='index.js'>\<\/script>\<\/head>\<body>\<\/body>\<\/html>");
+      // iframeDoc.close();
 
       localStorage.removeItem("ci_response");
     </script>
