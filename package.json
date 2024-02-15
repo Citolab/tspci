@@ -1,6 +1,6 @@
 {
   "name": "qti-pci-bundler",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Citolab custom pci builder for IMS pcis and TAO",
   "keywords": [
     "QTI",
