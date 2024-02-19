@@ -8,3 +8,4 @@ dist
 *.log
 pcis/**/*
 *.DS_Store
+/.idea
