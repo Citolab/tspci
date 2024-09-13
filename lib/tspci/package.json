@@ -44,7 +44,8 @@
   },
   "scripts": {
     "help": "tspci --help",
-    "init": "tspci init --force --path=../../pcis"
+    "init": "tspci init --force --path=../../pcis",
+    "init-debug": "node src/cli.js init --force --path=../../pcis"
   },
   "gitHead": "a3f7e00ec58c881c68b0f4616d5c1e4759e6bf75"
 }

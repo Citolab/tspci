@@ -1,6 +1,8 @@
 import { Configuration, IMSpci, QtiVariableJSON } from "@citolab/tspci";
 import * as ctx from "qtiCustomInteractionContext";
 import configProps from "./config.json";
+import Interaction from "./interaction"; // import and bundle this interaction file
+
 import style from "./styles.css"; // import and bundle this style file ( you can use tailwind and nested css )
 import procenten from "./assets/procenten.png"; // image types are bundled inside the js
 // Configuration
@@ -30,20 +32,11 @@ class Pci implements IMSpci<PropTypes> {
   };
 
   private render = () => {
-    this.shadowdom.addEventListener("change", (e: Event) => {
-      const value = (e.target as HTMLInputElement).value;
-      this.state = value;
+    Interaction({
+      config: this.config,
+      dom: this.shadowdom,
+      store: { setState: (state) => (this.state = state), state: () => this.state },
     });
-    this.shadowdom.innerHTML = `<div class="pci-container">
-      <h1>${this.config.properties.title}</h1>
-      <div class="body">
-        <img width="${+this.config.properties.width}" height="${+this.config.properties.height}" src="${procenten}" />
-      </div>
-      <div class="interaction">
-        <label for="tentacles">${this.config.properties.prompt}</label>
-        <input type="number" value="${this.state}" min="0" max="100">%
-      </div>
-    </div>`;
     const css = document.createElement("style");
     css.innerHTML = style;
     this.shadowdom.appendChild(css);
