@@ -38,7 +38,7 @@ Run:  ```npx @citolab/tspci@latest init```
 2. If agreed; tspci will be downloaded and started. 
 3. You should provide a name/identifier for your PCI.
 4. You should provide a description.
-5. Last option is to add options: tailwind and preact (both are selected by default, for more info; keep reading).
+5. Last option is to choose how you want to build your pci, using tailwind and preact, typescript or javascript
 
 #### Tailwind
 Tailwind is a popular css framework and can be used to give a nice look and feel of the PCI. The cli will make sure the css is added; and all build stuff that comes with tailwind is setup.
