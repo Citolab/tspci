@@ -9,16 +9,6 @@
       "message": "chore(release): publish",
       "registry": "https://registry.npmjs.org/",
       "access": "public"
-    },
-    "bootstrap": {
-      "ignore": "component-*",
-      "npmClientArgs": [
-        "--no-package-lock"
-      ]
     }
-  },
-  "packages": [
-    "pcis/*",
-    "lib/*"
-  ]
+  }
 }

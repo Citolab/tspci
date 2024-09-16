@@ -1,16 +1,8 @@
 {
-  "folders": [
+"folders": [
     {
       "path": "."
     },
-    {
-      "name": "lib",
-      "path": "lib"
-    },
-    {
-      "name": "pcis",
-      "path": "pcis"
-    }
   ],
   "settings": {
     "workbench.colorCustomizations": {

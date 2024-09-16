@@ -32,11 +32,20 @@ class Pci implements IMSpci<PropTypes> {
   };
 
   private render = () => {
-    Interaction({
-      config: this.config,
-      dom: this.shadowdom,
-      store: { setState: (state) => (this.state = state), state: () => this.state },
+    this.shadowdom.addEventListener("change", (e) => {
+      const value = (e.target).value;
+      this.state = value;
     });
+    this.shadowdom.innerHTML = `<div class="pci-container">
+      <h1>${this.config.properties.title}</h1>
+      <div class="body">
+        <img width="${+this.config.properties.width}" height="${+this.config.properties.height}" src="${procenten}" />
+      </div>
+      <div class="interaction">
+        <label for="tentacles">${this.config.properties.prompt}</label>
+        <input type="number" value="${this.state}" min="0" max="100">%
+      </div>
+    </div>`;
     const css = document.createElement("style");
     css.innerHTML = style;
     this.shadowdom.appendChild(css);

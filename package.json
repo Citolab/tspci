@@ -24,15 +24,20 @@
   },
   "scripts": {
     "lerna": "lerna",
-    "link": "lerna link --force-local",
     "clean": "lerna clean",
-    "bootstrap": "lerna bootstrap --force-local",
     "publish": "lerna publish --force-publish",
     "publish-next": "lerna publish --dist-tag next --force-publish",
     "diff": "lerna diff",
     "list": "lerna list",
     "changed": "lerna changed"
   },
+  "workspaces": [
+    "lib/preact-store",
+    "lib/tspci",
+    "lib/tspci-qbci",
+    "lib/tspci-tao",
+    "pcis/**/*"
+  ],
   "contributors": [
     {
       "name": "Patrick de Klein",
