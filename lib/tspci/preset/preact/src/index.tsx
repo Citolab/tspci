@@ -67,6 +67,7 @@ class App implements IMSpci<PropTypes> {
       },
     } as QtiVariableJSON;
   }
+  oncompleted = () => { };
 }
 
 export default new App();

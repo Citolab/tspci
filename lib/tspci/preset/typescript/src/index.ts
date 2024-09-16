@@ -32,8 +32,8 @@ class Pci implements IMSpci<PropTypes> {
   };
 
   private render = () => {
-    this.shadowdom.addEventListener("change", (e) => {
-      const value = (e.target).value;
+    this.shadowdom.addEventListener("change", (e: Event) => {
+      const value = (e.target as HTMLInputElement)?.value || "";
       this.state = value;
     });
     this.shadowdom.innerHTML = `<div class="pci-container">
@@ -52,11 +52,16 @@ class Pci implements IMSpci<PropTypes> {
   };
 
   getResponse = () => {
-    const response = (this.state === null || this.state === undefined) ? undefined : { base: { integer: this.state }} as QtiVariableJSON;
+    const response =
+      this.state === null || this.state === undefined
+        ? undefined
+        : ({ base: { integer: this.state } } as QtiVariableJSON);
     return response;
   };
 
   getState = () => this.state.toString();
+
+  oncompleted = () => {};
 }
 
 export default new Pci();
