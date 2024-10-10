@@ -1,5 +1,5 @@
 {
-  "version": "2.5.4",
+  "version": "2.5.5",
   "npmClient": "npm",
   "command": {
     "publish": {
@@ -8,7 +8,11 @@
       ],
       "message": "chore(release): publish",
       "registry": "https://registry.npmjs.org/",
-      "access": "public"
+      "access": "public",
+      "yes": true,
+      "conventionalCommits": true,
+      "distTag": "latest",
+      "version": "patch"
     }
   }
 }
