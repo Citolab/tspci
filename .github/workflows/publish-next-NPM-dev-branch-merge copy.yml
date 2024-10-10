@@ -28,7 +28,7 @@ jobs:
   
       - name: Publish
         run: | 
-          lerna publish --yes --dist-tag latest --no-verify-access --message 'chore: release new versions'
+          lerna publish --yes --dist-tag latest --conventional-commits --yes --no-verify-access --message 'chore: release new versions'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
