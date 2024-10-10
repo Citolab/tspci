@@ -10,6 +10,7 @@
       "registry": "https://registry.npmjs.org/",
       "access": "public",
       "yes": true,
+      "distTag": "latest",
       "version": "patch"
     }
   }
