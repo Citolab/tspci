@@ -27,7 +27,8 @@ jobs:
         run: npm ci
   
       - name: Publish
-        run: lerna publish --yes --message 'chore: release new versions'
+        run: | 
+          lerna publish --yes --message 'chore: release new versions'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
