@@ -1,5 +1,5 @@
 {
-  "version": "2.5.6",
+  "version": "2.5.5",
   "npmClient": "npm",
   "command": {
     "publish": {
@@ -10,7 +10,6 @@
       "registry": "https://registry.npmjs.org/",
       "access": "public",
       "yes": true,
-      "distTag": "latest",
       "version": "patch"
     }
   }
