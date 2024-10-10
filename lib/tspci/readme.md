@@ -32,26 +32,29 @@ This will ask a few options, and creates a PCI development environment with an e
   <img src="https://github.com/Citolab/tspci/blob/main/lib/tspci/tspci-console.png" alt="Setup using console">
 </p>
 
-Run:  ```npx @citolab/tspci@latest init```
+Run: `npx @citolab/tspci@latest init`
 
 1. It will ask to download the latest version of tspci.
-2. If agreed; tspci will be downloaded and started. 
+2. If agreed; tspci will be downloaded and started.
 3. You should provide a name/identifier for your PCI.
 4. You should provide a description.
 5. Last option is to choose how you want to build your pci, using tailwind and preact, typescript or javascript
 
 #### Tailwind
+
 Tailwind is a popular css framework and can be used to give a nice look and feel of the PCI. The cli will make sure the css is added; and all build stuff that comes with tailwind is setup.
 
 #### preact
+
 preact is a small version of react. You can develop your PCI using hooks and the render function as you are familiar with in react. When preact is selected the cli will also add a store to manage state. This can easily be used to store all user actions in the PCI, and even replay them.
 
 ### specific implementations like TAO.
+
 We also support to create a PCI that can be imported in TAO. Therefor you should use @citolab/tspci-tao.
 
 To add tao using the cli you should run the following command inside your PCI folder:
 
-``` sh
+```sh
   npm run tspci -- add --target tao
 ```
 
@@ -64,6 +67,7 @@ For more info: [@citolab/tspci-tao](https://github.com/Citolab/tspci/tree/main/l
 2️. **Set up** your `package.json`:
 
 `// package.json`
+
 ```json
 {
   "name": "@citolab/hello-world",
@@ -151,9 +155,9 @@ Add a `tsconfig.json` to your project for type checking
     "jsxImportSource": "preact",
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "esModuleInterop": true,
+    "esModuleInterop": true
   },
-  "include": ["**/*"],
+  "include": ["**/*"]
 }
 ```
 
@@ -169,9 +173,9 @@ Available Commands
   --dev    -d     Start development server
   --watch  -w     Only watch changes
   --help   -h     Help about commandos
-  --target -t     Build production for platform
+  --target -t     Build production for platform, could be @citolab/tscpi-${target} or a fully qualified specified npm package name.
   init            Init PCI development environment.
-  add --target    Add specific implementation to the PCI. 
+  add --target    Add specific implementation to the PCI.
 
 Examples package.json scripts
 	$ "dev": "tspci --dev",
@@ -182,11 +186,12 @@ Examples package.json scripts
 
 ## 🛣 What's next
 
-Use one of the [examples](https://github.com/Citolab/tspci-examples) to get a headstart 
+Use one of the [examples](https://github.com/Citolab/tspci-examples) to get a headstart
 
-Or read further how we build our PCIs 
+Or read further how we build our PCIs
 
 Our prefered layout of our PCIs
+
 ```
 your-pci-project
 │   package.json       // Definition of your PCI in a standard package.json, TAO adds some props
@@ -195,7 +200,7 @@ your-pci-project
 │
 └───src
 │   │   config.json    // Used to configure PCI, and in TAO for authors
-│   │   index.ts       // The api for the player and bootstraps your interaction 
+│   │   index.ts       // The api for the player and bootstraps your interaction
 │   │   interaction.ts // the actual interaction, preferably a main preact component
 │   │   store.ts       // definition of the state and all possible state mutations of your pci
 │   └───style.css      // css styles, imported by your pci and possible to use tailwind classes
@@ -204,8 +209,8 @@ your-pci-project
 │   tailwind.config.js // include tailwind classes
 ```
 
-
 ### Use JSX
+
 Use (p)react in your PCI's to create interactions and bind your data to HTML
 
 ```ts
@@ -220,6 +225,7 @@ Use (p)react in your PCI's to create interactions and bind your data to HTML
 ```
 
 ### Bundle your css
+
 Import and bundle css
 Appending css to shadowdom will prevent styles leaking into your player
 
@@ -239,20 +245,18 @@ Appending css to shadowdom will prevent styles leaking into your player
 
 install autoprefixer
 
-``` sh 
+```sh
 npm i -D autoprefixer
 ```
 
 add `postcss.config.js` with autoprefixer
 
 // postcss.config.js
+
 ```js
 module.exports = {
-  plugins: [
-    require('postcss-import'),
-    require('autoprefixer'),
-  ]
-}
+  plugins: [require("postcss-import"), require("autoprefixer")],
+};
 ```
 
 ### Modern UI with existing classes
@@ -262,10 +266,7 @@ and add a `tailwind.config.js`
 
 ```js
 // postcss.config.js
-  plugins: [
-    + require('tailwindcss/nesting'),
-    + require('tailwindcss'),
-  ];
+plugins: [+require("tailwindcss/nesting"), +require("tailwindcss")];
 ```
 
 ```js
@@ -280,7 +281,8 @@ module.exports = {
 ```
 
 ### Bundle all your images
-Images are bundled in the js by importing them in code: 
+
+Images are bundled in the js by importing them in code:
 imports JPG, PNG, GIF, SVG, and WebP files
 
 ```ts
@@ -289,6 +291,7 @@ import procenten from "./assets/procenten.png";
 ```
 
 ### Create advanced PCIs with 3D libraries
+
 For example, import threejs to create 3D pci's
 
 ```ts
@@ -300,6 +303,7 @@ class VoxelPainterClass {
 ```
 
 ### Record user interaction
+
 A store will centralize your PCI state but also all mutations.
 This means, this way you could replay everything a user did
 And you can use Redux devtools to debug
@@ -312,17 +316,20 @@ dispatch<{ x: number }>("ADD_ACTION", { x: +inputValue });
 ```
 
 ### Let authors configure your PCI in QTI
+
 Use properties in config.json to let authors configure your PCI
 Also used in the TAO export for configuring PCIs in TAO
 `// src/config.json`
+
 ```json
 {
   "buttonText": "Calculate",
-  "sum1" : "$1 * 14 + 1",
-  "sum2" : "$1 * 2 + 21",
-  "tableSize" : "4"
+  "sum1": "$1 * 14 + 1",
+  "sum2": "$1 * 2 + 21",
+  "tableSize": "4"
 }
 ```
+
 ```ts
 // src/index.ts
   + import configProps from "./config.json";
@@ -341,6 +348,7 @@ Also used in the TAO export for configuring PCIs in TAO
 ```
 
 ### Make use of existing react hooks
+
 ```ts
 // src/useMousePosition
 import { useEffect, useState } from "react";
@@ -354,20 +362,21 @@ export const useMousePosition = () => {
     return () => window.removeEventListener("mousemove", setPosFromEvent);
   }, []);
 
-  return { clientX: position.x, clientY: position.y }
+  return { clientX: position.x, clientY: position.y };
 };
 ```
 
 ### Use in TAO
-Tao adds some lifecycle methods which you can implement and we supply an extended interfaee on top of the IMS one. 
 
-More info, see our extension 
+Tao adds some lifecycle methods which you can implement and we supply an extended interfaee on top of the IMS one.
+
+More info, see our extension
+
 - [github](https://github.com/Citolab/tspci/blob/main/lib/tspci-tao)
 - [@citolab/tspci-tao](https://www.npmjs.com/package/@citolab/tspci-tao)
 
-If you want your platform to be support,  [contact us](mailto://getinspiredbycitolab@gmail.com)
-
+If you want your platform to be support, [contact us](mailto://getinspiredbycitolab@gmail.com)
 
 ## License
 
- [GPLv3](https://github.com/Citolab/tspci/blob/main/LICENSE)
+[GPLv3](https://github.com/Citolab/tspci/blob/main/LICENSE)
