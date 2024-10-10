@@ -27,10 +27,9 @@ jobs:
         run: npm ci
   
       - name: Publish
-        run: | 
-          lerna publish --yes --dist-tag latest --conventional-commits --yes --no-verify-access --message 'chore: release new versions'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm run publish
 
       # Push repository changes
       - name: Push changes to repository
