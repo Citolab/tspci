@@ -173,7 +173,8 @@ Available Commands
   --dev    -d     Start development server
   --watch  -w     Only watch changes
   --help   -h     Help about commandos
-  --target -t     Build production for platform, could be @citolab/tscpi-${target} or a fully qualified specified npm package name.
+  --target -t     Build production for platform, could be @citolab/tscpi-${target}
+  --targetExt -tx Same as -target but reffering to a fully qualified package (not in @citolab)
   init            Init PCI development environment.
   add --target    Add specific implementation to the PCI.
 
