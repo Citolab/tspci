@@ -15,10 +15,10 @@ jobs:
           git config --global user.name "patrickdeklein"
 
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "20" # Specify the Node.js version
           registry-url: "https://registry.npmjs.org/"
