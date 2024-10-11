@@ -1,6 +1,6 @@
 {
   "name": "@citolab/preact-store",
-  "version": "2.5.10",
+  "version": "2.5.11",
   "description": "simple preact store",
   "author": "patrick <patrick.deklein@cito.nl>, marcel  <marcel.hoekstra@cito.nl>",
   "homepage": "",
