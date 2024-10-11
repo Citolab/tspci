@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2.5.10 (2024-10-11)
+
+**Note:** Version bump only for package qti-pci-bundler
+
+
+
+
+
 ## 2.5.9 (2024-10-11)
 
 **Note:** Version bump only for package qti-pci-bundler
