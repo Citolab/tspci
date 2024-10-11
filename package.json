@@ -22,6 +22,9 @@
     "type": "git",
     "url": "https://github.com/Citolab/qti-pci-bundler"
   },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "publish": "lerna publish --force-publish",
     "publish-next": "lerna publish --dist-tag next --force-publish",
