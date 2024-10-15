@@ -43,7 +43,6 @@
     "rollup-plugin-node-globals": "^1.4.0",
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-string": "^3.0.0",
-    "rollup-plugin-watch-assets": "^1.0.1",
     "tailwindcss": "^3.4.11"
   },
   "gitHead": "a3f7e00ec58c881c68b0f4616d5c1e4759e6bf75"
