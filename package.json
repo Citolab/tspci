@@ -59,8 +59,5 @@
   ],
   "devDependencies": {
     "lerna": "^8.1.8"
-  },
-  "dependencies": {
-    "rollup-plugin-livereload": "^2.0.5"
   }
 }
