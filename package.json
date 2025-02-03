@@ -26,8 +26,8 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "publish": "lerna publish --force-publish",
-    "publish-next": "lerna publish --dist-tag next --force-publish --preid beta",
+    "publish-packages": "lerna publish --force-publish",
+    "publish-packages-next": "lerna publish prerelease --dist-tag next --force-publish --preid beta",
     "diff": "lerna diff",
     "list": "lerna list",
     "changed": "lerna changed"
