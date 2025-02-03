@@ -1,5 +1,5 @@
 {
-  "version": "2.5.30-beta.1",
+  "version": "2.5.30-beta.2",
   "npmClient": "npm",
   "command": {
     "publish": {
