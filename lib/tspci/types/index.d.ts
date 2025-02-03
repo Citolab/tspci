@@ -1,6 +1,6 @@
 // Define the payload structure for the custom event
 export interface QtiInteractionChangedDetail {
-  interaction: IMSpci<ConfigProperties<unknown>>; // The PCI instance itself
+  interaction: IMSpci<unknown>; // The PCI instance itself
   responseIdentifier: string; // The response identifier provided in the getInstance call
   valid?: boolean; // Optional boolean indicating if checkValidity() returns true
   value?: QtiVariableJSON; // Optional value returned by getResponse()
@@ -14,9 +14,9 @@ export interface ConfigProperties<T> {
   boundTo: Record<string, QtiVariableJSON>; // Follows structure in Appendix C
   responseIdentifier: string; // Unique within interaction scope
 
-  onready: (interaction: IMSpci<ConfigProperties<unknown>>, state?: string) => void; // Callback when PCI is fully constructed and ready
+  onready: (interaction: IMSpci<T>, state?: string) => void; // Callback when PCI is fully constructed and ready
   ondone?: (
-    interaction: IMSpci<ConfigProperties<unknown>>,
+    interaction: IMSpci<T>,
     response: Record<string, QtiVariableJSON>,
     state: string,
     status?: "interacting" | "closed" | "solution" | "review"

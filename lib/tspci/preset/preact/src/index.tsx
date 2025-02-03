@@ -20,7 +20,9 @@ class App implements IMSpci<PropTypes> {
   private logActions: { type: string; payload: unknown }[] = []; // optional logActions
   private initialState: StateModel = { input: undefined }; // optional initial state
   constructor() {
-    ctx && ctx.register(this);
+    if (ctx) {
+      ctx.register(this);
+    }
   }
 
   getInstance = (dom: HTMLElement, config: Configuration<PropTypes>, stateString: string) => {
@@ -41,7 +43,9 @@ class App implements IMSpci<PropTypes> {
     this.shadowdom = dom.attachShadow({ mode: "closed" });
     this.render();
 
-    this.config.onready && this.config.onready(this);
+    if (this.config.onready) {
+      this.config.onready(this);
+    }
   };
 
   render = () => {

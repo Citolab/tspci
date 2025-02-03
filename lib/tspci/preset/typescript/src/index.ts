@@ -15,7 +15,9 @@ class Pci implements IMSpci<PropTypes> {
   shadowdom: ShadowRoot | Element; // Not mandatory, but its wise to create a shadowroot
 
   constructor() {
-    ctx && ctx.register(this); // we assume the qtiCustomInteractionContext is avaible due to the import above
+    if (ctx) {
+      ctx.register(this); // we assume the qtiCustomInteractionContext is avaible due to the import above
+    }
   }
 
   // First in the lifecycle of a PCI, this method is called with the domElement ( usually qti-interaction-markup ) where we can add our dom tree.
