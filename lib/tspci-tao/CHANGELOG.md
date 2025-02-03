@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.5.25](https://github.com/Citolab/tspci/compare/v2.5.24...v2.5.25) (2025-02-03)
+
+**Note:** Version bump only for package @citolab/tspci-tao
+
+
+
+
+
 ## [2.5.24](https://github.com/Citolab/tspci/compare/v2.5.23...v2.5.24) (2025-02-03)
 
 **Note:** Version bump only for package @citolab/tspci-tao
