@@ -1,6 +1,6 @@
 {
   "name": "@citolab/tspci",
-  "version": "2.5.30-beta.5",
+  "version": "2.5.30-beta.6",
   "description": "an opiniated typescript ims-pci builder with tao integration",
   "author": "patrick <patrick.deklein@cito.nl>",
   "repository": "@citolab/tspci",
@@ -24,6 +24,7 @@
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.1.0",
     "@tailwindcss/nesting": "0.0.0-insiders.565cd3e",
+    "@tailwindcss/postcss": "^4.0.3",
     "@testing-library/dom": "^10.4.0",
     "@types/node": "^22.5.5",
     "@typescript-eslint/eslint-plugin": "^8.9.0",
