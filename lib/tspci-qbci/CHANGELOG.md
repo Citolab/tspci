@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.5.30-beta.4](https://github.com/Citolab/tspci/compare/v2.5.30-beta.3...v2.5.30-beta.4) (2025-02-03)
+
+**Note:** Version bump only for package @citolab/tspci-qbci
+
+
+
+
+
 ## [2.5.30-beta.3](https://github.com/Citolab/tspci/compare/v2.5.30-beta.2...v2.5.30-beta.3) (2025-02-03)
 
 **Note:** Version bump only for package @citolab/tspci-qbci
