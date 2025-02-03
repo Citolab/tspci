@@ -27,7 +27,7 @@
   },
   "scripts": {
     "publish": "lerna publish --force-publish",
-    "publish-next": "lerna publish --dist-tag next --force-publish",
+    "publish-next": "lerna publish --dist-tag next --force-publish --preid beta",
     "diff": "lerna diff",
     "list": "lerna list",
     "changed": "lerna changed"

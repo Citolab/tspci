@@ -1,4 +1,31 @@
-export interface IMSpci<ConfigProperties> {
+// Define the payload structure for the custom event
+export interface QtiInteractionChangedDetail {
+  interaction: IMSpci<ConfigProperties>; // The PCI instance itself
+  responseIdentifier: string; // The response identifier provided in the getInstance call
+  valid?: boolean; // Optional boolean indicating if checkValidity() returns true
+  value?: QtiVariableJSON; // Optional value returned by getResponse()
+}
+
+// Define the ConfigProperties interface
+export interface ConfigProperties {
+  properties: Record<string, string>; // Follows dataset conversion rules (camelCased keys)
+  templateVariables: Record<string, QtiVariableJSON>; // Follows structure in Appendix C
+  contextVariables: Record<string, QtiVariableJSON>; // Follows structure in Appendix C
+  boundTo: Record<string, QtiVariableJSON>; // Follows structure in Appendix C
+  responseIdentifier: string; // Unique within interaction scope
+
+  onready: (interaction: IMSpci<ConfigProperties>, state?: string) => void; // Callback when PCI is fully constructed and ready
+  ondone?: (
+    interaction: IMSpci<ConfigProperties>,
+    response: Record<string, QtiVariableJSON>,
+    state: string,
+    status?: "interacting" | "closed" | "solution" | "review"
+  ) => void; // Optional callback when candidate finishes interaction
+
+  status?: "interacting" | "suspended" | "closed" | "solution" | "review"; // Optional, defaults to "interacting"
+}
+
+export interface IMSpci<CustomConfigProperties extends ConfigProperties> {
   typeIdentifier: string;
 
   /** @access public
@@ -10,13 +37,13 @@ export interface IMSpci<ConfigProperties> {
    *  This must have been obtained from a prior call to getState on an
    *  instance of this type (same typeIdentifier)
    */
-  getInstance: (dom: HTMLElement, configuration: Configuration<ConfigProperties>, state: string) => void;
+  getInstance: (dom: HTMLElement, configuration: Configuration<CustomConfigProperties>, state: string) => void;
 
   /** @access public
    * @method getResponse
    * @return {Object} - the value to assign to the bound QTI response variable
    */
-  getResponse: () => QtiVariableJSON;
+  getResponse: () => QtiVariableJSON | undefined;
 
   /** @access public
    * @method getState
@@ -28,21 +55,9 @@ export interface IMSpci<ConfigProperties> {
   destroy?: () => void; // Not used in IMS and not in TAO implementation, so not used here (optional)
 }
 
-
-
-export declare type Configuration<T> = {
-  onready: (pci: IMSpci<T>, state?: string) => void;
+export declare type Configuration<T extends ConfigProperties> = {
+  onready: () => void;
   properties: T;
-  // PK: following this: https://www.imsglobal.org/spec/qti/v3p0/impl#h.1mc9puik2ft6
-  // All below are not used in the IMS Reference implementation, keeping for ref
-  /*    
-  ondone: (pci: IMSPci<T>,response:any,state:string, status?: "interacting" | "closed" | "solution" | "review" ) => void;
-  status: string;
-  templateVariables: any;  
-  boundTo: any;
-  contextVariables
-  responseIdentifier
-  */
 };
 
 export interface directedPair {
