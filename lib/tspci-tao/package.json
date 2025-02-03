@@ -1,6 +1,6 @@
 {
   "name": "@citolab/tspci-tao",
-  "version": "2.5.24",
+  "version": "2.5.25",
   "description": "create a zip file that can be imported into TAO",
   "author": "patrick <patrick.deklein@cito.nl>, Marcel Hoekstra <marcel.hoekstra@cito.nl>",
   "repository": "",
@@ -12,5 +12,5 @@
     "inquirer": "11.0.1"
   },
   "scripts": {},
-  "gitHead": "a3f7e00ec58c881c68b0f4616d5c1e4759e6bf75"
+  "gitHead": "1e88ee1d5bfab210cbab4653449639d30c32ea1b"
 }
