@@ -4,7 +4,7 @@ import { IStore } from "@citolab/preact-store";
 import * as ctx from "qtiCustomInteractionContext";
 import Interaction from "./interaction";
 import style from "./styles.css";
-import { Configuration, IMSpci, QtiInteractionChangedDetail, QtiVariableJSON } from "@citolab/tspci";
+import { ConfigProperties, IMSpci, QtiInteractionChangedDetail, QtiVariableJSON } from "@citolab/tspci";
 import configProps from "./config.json";
 import { StateModel, initStore } from "./store";
 
@@ -12,7 +12,7 @@ type PropTypes = typeof configProps;
 
 class App implements IMSpci<PropTypes> {
   typeIdentifier = "###___PCI_NAME___###"; // typeIdentifier is mandatory for all PCI's
-  config: Configuration<PropTypes>; // reference to the interface of the config object which you get when getInstance is called by the player
+  config: ConfigProperties<PropTypes>; // reference to the interface of the config object which you get when getInstance is called by the player
   state: string; // keep a reference to the state
   shadowdom: ShadowRoot; // Not mandatory, but its wise to create a shadowroot
   store: IStore<StateModel>;
@@ -25,7 +25,7 @@ class App implements IMSpci<PropTypes> {
     }
   }
 
-  getInstance = (dom: HTMLElement, config: Configuration<PropTypes>, stateString: string) => {
+  getInstance = (dom: HTMLElement, config: ConfigProperties<PropTypes>, stateString: string) => {
     config.properties = { ...configProps, ...config.properties }; // merge current props with incoming
     this.config = config;
     if (!dom) {
