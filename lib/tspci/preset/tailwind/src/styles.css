@@ -1,7 +1,10 @@
-@tailwind components;
-@tailwind utilities;
-@tailwind base;
-
-.pci-container  { @apply container flex flex-col justify-center items-center;  }
-h1 { @apply text-2xl text-red-500 m-4; }
-input { @apply border border-gray-400 rounded p-2 m-1;  }
+@import "tailwindcss";
+.pci-container {
+  @apply container flex flex-col justify-center items-center;
+}
+h1 {
+  @apply text-2xl text-red-500 m-4;
+}
+input {
+  @apply border border-gray-400 rounded p-2 m-1;
+}

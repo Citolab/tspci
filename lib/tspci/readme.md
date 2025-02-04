@@ -97,7 +97,7 @@ Add the following PCI in the src folder `index.ts`
 
 ```ts
 // src/index.ts
-import { Configuration, IMSpci } from "@citolab/tspci";
+import { ConfigProperties, IMSpci } from "@citolab/tspci";
 import * as ctx from "qtiCustomInteractionContext";
 
 class Pci implements IMSpci<{}> {
@@ -108,7 +108,7 @@ class Pci implements IMSpci<{}> {
     ctx && ctx.register(this);
   }
 
-  getInstance = (dom: HTMLElement, config: Configuration<any>, state: string) => {
+  getInstance = (dom: HTMLElement, config: ConfigProperties<any>, state: string) => {
     this.shadowdom = dom.attachShadow({ mode: "closed" });
     this.render();
     config.onready(this);
@@ -337,9 +337,9 @@ Also used in the TAO export for configuring PCIs in TAO
   + type PropTypes = typeof configProps;
 
   // add to types
-  + private config: Configuration<PropTypes>;
+  + private config: ConfigProperties<PropTypes>;
 
-  getInstance = (dom: HTMLElement, config: Configuration<PropTypes>, stateString: string) => {
+  getInstance = (dom: HTMLElement, config: ConfigProperties<PropTypes>, stateString: string) => {
   + config.properties = { ...configProps, ...config.properties }; // merge our props with players
   + this.config = config;
 
