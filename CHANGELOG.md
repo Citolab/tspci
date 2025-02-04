@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.5.30-beta.9](https://github.com/Citolab/qti-pci-bundler/compare/v2.5.30-beta.8...v2.5.30-beta.9) (2025-02-04)
+
+**Note:** Version bump only for package qti-pci-bundler
+
+
+
+
+
 ## [2.5.30-beta.8](https://github.com/Citolab/qti-pci-bundler/compare/v2.5.30-beta.7...v2.5.30-beta.8) (2025-02-04)
 
 **Note:** Version bump only for package qti-pci-bundler
