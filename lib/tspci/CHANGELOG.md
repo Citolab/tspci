@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.5.30-beta.7](/compare/v2.5.30-beta.6...v2.5.30-beta.7) (2025-02-04)
+
+
+### Features
+
+* dispatch qti-interaction-changed event 5c81bab
+
+
+
+
+
 ## [2.5.30-beta.6](/compare/v2.5.30-beta.5...v2.5.30-beta.6) (2025-02-03)
 
 **Note:** Version bump only for package @citolab/tspci
