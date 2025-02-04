@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.5.30-beta.11](https://github.com/Citolab/qti-pci-bundler/compare/v2.5.30-beta.10...v2.5.30-beta.11) (2025-02-04)
+
+
+### Features
+
+* add tailwindcss to devDependencies and set version based on @tailwindcss/postcss ([907b541](https://github.com/Citolab/qti-pci-bundler/commit/907b541e8fa52a8e0751de6318e39bbcda6cee5e))
+
+
+
+
+
 ## [2.5.30-beta.10](https://github.com/Citolab/qti-pci-bundler/compare/v2.5.30-beta.9...v2.5.30-beta.10) (2025-02-04)
 
 **Note:** Version bump only for package qti-pci-bundler
