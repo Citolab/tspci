@@ -1,4 +1,4 @@
-import { Configuration, IMSpci, QtiVariableJSON } from "@citolab/tspci";
+import { Configuration, IMSpci, QtiInteractionChangedDetail, QtiVariableJSON } from "@citolab/tspci";
 import * as ctx from "qtiCustomInteractionContext";
 import configProps from "./config.json";
 import Interaction from "./interaction"; // import and bundle this interaction file
@@ -13,6 +13,7 @@ class Pci implements IMSpci<PropTypes> {
   config: Configuration<PropTypes>; // reference to the interface of the config object which you get when getInstance is called by the player
   state: string; // keep a reference to the state
   shadowdom: ShadowRoot | Element; // Not mandatory, but its wise to create a shadowroot
+  dom: HTMLElement;
 
   constructor() {
     if (ctx) {
@@ -22,21 +23,40 @@ class Pci implements IMSpci<PropTypes> {
 
   // First in the lifecycle of a PCI, this method is called with the domElement ( usually qti-interaction-markup ) where we can add our dom tree.
   // config is the configuration object which has an onready
-  getInstance = (dom: HTMLElement, config: Configuration<any>, state: string) => {
+  getInstance = (dom: HTMLElement, config: Configuration<PropTypes>, state: string) => {
     config.properties = { ...configProps, ...config.properties }; // merge current props with incoming
     this.config = config;
     this.state = state ? state : "";
-
+    if (!dom) {
+      throw new Error("No DOM Element provided");
+    }
     this.shadowdom = dom.attachShadow({ mode: "closed" });
+    this.dom = dom;
+
     this.render();
 
     config.onready(this);
+  };
+
+  private interactionChanged = () => {
+    const event: QtiInteractionChangedDetail = {
+      interaction: this,
+      responseIdentifier: this.config.responseIdentifier,
+      valid: true,
+      value: this.getResponse(),
+    };
+    // dispatch a custom event to notify the Delivery System that the interaction has changed
+    const interactionChangedEvent = new CustomEvent("qti-interaction-changed", {
+      detail: event,
+    });
+    this.dom.dispatchEvent(interactionChangedEvent);
   };
 
   private render = () => {
     this.shadowdom.addEventListener("change", (e: Event) => {
       const value = (e.target as HTMLInputElement)?.value || "";
       this.state = value;
+      this.interactionChanged();
     });
     this.shadowdom.innerHTML = `<div class="pci-container">
       <h1>${this.config.properties.title}</h1>

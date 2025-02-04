@@ -4,7 +4,7 @@ import { IStore } from "@citolab/preact-store";
 import * as ctx from "qtiCustomInteractionContext";
 import Interaction from "./interaction";
 import style from "./styles.css";
-import { Configuration, IMSpci, QtiVariableJSON } from "@citolab/tspci";
+import { Configuration, IMSpci, QtiInteractionChangedDetail, QtiVariableJSON } from "@citolab/tspci";
 import configProps from "./config.json";
 import { StateModel, initStore } from "./store";
 
@@ -28,7 +28,9 @@ class App implements IMSpci<PropTypes> {
   getInstance = (dom: HTMLElement, config: Configuration<PropTypes>, stateString: string) => {
     config.properties = { ...configProps, ...config.properties }; // merge current props with incoming
     this.config = config;
-
+    if (!dom) {
+      throw new Error("No DOM Element provided");
+    }
     this.logActions = stateString ? JSON.parse(stateString).log : [];
     this.store = initStore(this.initialState);
     try {
@@ -41,6 +43,21 @@ class App implements IMSpci<PropTypes> {
     }
 
     this.shadowdom = dom.attachShadow({ mode: "closed" });
+
+    this.store.subscribe(() => {
+      const event: QtiInteractionChangedDetail = {
+        interaction: this,
+        responseIdentifier: this.config.responseIdentifier,
+        valid: true,
+        value: this.getResponse(),
+      };
+      // dispatch a custom event to notify the Delivery System that the interaction has changed
+      const interactionChangedEvent = new CustomEvent("qti-interaction-changed", {
+        detail: event,
+      });
+      dom.dispatchEvent(interactionChangedEvent);
+    });
+
     this.render();
 
     if (this.config.onready) {
