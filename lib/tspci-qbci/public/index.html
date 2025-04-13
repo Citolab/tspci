@@ -44,13 +44,21 @@
       <div id="pciContainer" class="shadow-sm"></div>
       <div id="devtools"></div>
     </div>
-
+    <script type="importmap">
+      {
+        "imports": {
+          "preact": "https://unpkg.com/preact@10.25.4/dist/preact.module.js",
+          "preact/hooks": "https://unpkg.com/preact@10.25.4/hooks/dist/hooks.module.js",
+          "htm": "https://unpkg.com/htm@3.1.1/dist/htm.module.js"
+        }
+      }
+    </script>
     <script type="module">
-      import { h, Component, render } from "https://unpkg.com/preact@latest?module";
-      import { useState, useEffect, useRef } from "https://unpkg.com/preact@latest/hooks/dist/hooks.module.js?module";
-      import htm from "https://unpkg.com/htm?module";
-      // Initialize htm with Preact
-      const html = htm.bind(h);
+      import { render } from "preact";
+      import { useState } from "preact/hooks";
+      import htm from "htm";
+
+      const html = htm
 
       function App({ item }) {
         const [show, setShow] = useState(false);
