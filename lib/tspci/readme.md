@@ -123,6 +123,10 @@ class Pci implements IMSpci<{}> {
   };
 
   getState = () => null;
+
+  setResponse = () => {
+    
+  }
 }
 export default new Pci();
 ```

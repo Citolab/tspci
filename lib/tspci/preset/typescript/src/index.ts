@@ -25,7 +25,7 @@ class Pci implements IMSpci<PropTypes> {
   // config is the configuration object which has an onready
   getInstance = (dom: HTMLElement, config: ConfigProperties<PropTypes>, state: string) => {
     config.properties = { ...configProps, ...config.properties }; // merge current props with incoming
-    this.config = config;
+    this.config = config;   
     this.state = state ? state : "";
     if (!dom) {
       throw new Error("No DOM Element provided");
@@ -35,8 +35,20 @@ class Pci implements IMSpci<PropTypes> {
 
     this.render();
 
+    if (this.config.boundTo && Object.keys(this.config.boundTo).length > 0) {
+      const responseIdentifier = Object.keys(this.config.boundTo)[0];
+      const response = this.config.boundTo[responseIdentifier];
+      this.setResponse(response);
+    }
+
     config.onready(this);
   };
+
+  setResponse = (response: QtiVariableJSON) => {
+    // TODO restore the response
+    // Get the actual value by the variable type like:
+    // - response?.base?.string or response?.base?.integer
+  }
 
   private interactionChanged = () => {
     const event: QtiInteractionChangedDetail = {

@@ -52,6 +52,7 @@ export interface IMSpci<T> {
    */
   getState: () => string;
   oncompleted?: () => void;
+  setResponse?: (response: QtiVariableJSON) => void; // No IMS specification for this, but best option to set the response when bound to a QTI variable
   destroy?: () => void; // Not used in IMS and not in TAO implementation, so not used here (optional)
 }
 

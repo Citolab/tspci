@@ -60,6 +60,12 @@ class App implements IMSpci<PropTypes> {
 
     this.render();
 
+    if (this.config.boundTo && Object.keys(this.config.boundTo).length > 0) {
+      const responseIdentifier = Object.keys(this.config.boundTo)[0];
+      const response = this.config.boundTo[responseIdentifier];
+      this.setResponse(response);
+    }
+
     if (this.config.onready) {
       this.config.onready(this);
     }
@@ -72,6 +78,13 @@ class App implements IMSpci<PropTypes> {
     this.shadowdom.appendChild(css);
     render(<Interaction config={this.config.properties} dom={this.shadowdom} store={this.store} />, this.shadowdom);
   };
+
+  setResponse = (response: QtiVariableJSON) => {
+    // TODO restore the response
+    // Get the actual value by the variable type like:
+    // - response?.base?.string or response?.base?.integer
+  }
+
 
   getState = () =>
     JSON.stringify({
