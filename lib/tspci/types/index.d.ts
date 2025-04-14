@@ -75,14 +75,8 @@ export interface InputResponseFormat<T> {
 export interface Calculate {
   calculate: () => ResponseType;
 }
-export declare type QtiVariableJSON = {
-  [K in "list" | "base"]?: {
-    [Ka in "boolean" | "integer" | "float" | "string" | "pair" | "directedPair" | "identifier"]?: ResponseType;
-  };
-};
 export declare type float = number;
 export declare type integer = number;
-export declare type ResponseType = boolean | directedPair | float | integer | string | ResponseType[];
 export declare enum BaseType {
   boolean = "boolean",
   directedPair = "directedPair",
@@ -97,3 +91,82 @@ export declare enum Cardinality {
   ordered = "ordered",
   single = "single",
 }
+
+// Individual type definitions for different QTI data types
+
+// File type representation
+export type QtiFileData = {
+  data: string;
+  mime: string;
+  name?: string;
+};
+
+// Possible base types
+export type QtiBaseBoolean = boolean;
+export type QtiBaseInteger = number;
+export type QtiBaseFloat = number;
+export type QtiBaseString = string;
+export type QtiBasePoint = [number, number];
+export type QtiBasePair = [string, string];
+export type QtiBaseDirectedPair = [string, string];
+export type QtiBaseDuration = string; // ISO 8601 duration format
+export type QtiBaseFile = QtiFileData;
+export type QtiBaseUri = string;
+export type QtiBaseIntOrIdentifier = number | string;
+export type QtiBaseIdentifier = string;
+
+// Union of all possible response types for base and list
+export type ResponseType = 
+  boolean | 
+  number | 
+  string | 
+  QtiBasePair | 
+  QtiBasePoint | 
+  QtiFileData | 
+  Array<boolean | number | string | QtiBasePair | QtiBasePoint | QtiFileData>;
+
+// Record item type
+export type QtiRecordItem = {
+  name: string;
+  base?: QtiBaseTypeJSON | null;
+  list?: QtiListTypeJSON | null;
+};
+
+// Base type JSON representation
+export type QtiBaseTypeJSON = {
+  boolean?: QtiBaseBoolean;
+  integer?: QtiBaseInteger;
+  float?: QtiBaseFloat;
+  string?: QtiBaseString;
+  point?: QtiBasePoint;
+  pair?: QtiBasePair;
+  directedPair?: QtiBaseDirectedPair;
+  duration?: QtiBaseDuration;
+  file?: QtiBaseFile;
+  uri?: QtiBaseUri;
+  intOrIdentifier?: QtiBaseIntOrIdentifier;
+  identifier?: QtiBaseIdentifier;
+} | null;
+
+// List type JSON representation
+export type QtiListTypeJSON = {
+  boolean?: QtiBaseBoolean[];
+  integer?: QtiBaseInteger[];
+  float?: QtiBaseFloat[];
+  string?: QtiBaseString[];
+  point?: QtiBasePoint[];
+  pair?: QtiBasePair[];
+  directedPair?: QtiBaseDirectedPair[];
+  duration?: QtiBaseDuration[];
+  file?: QtiBaseFile[];
+  uri?: QtiBaseUri[];
+  intOrIdentifier?: QtiBaseIntOrIdentifier[];
+  identifier?: QtiBaseIdentifier[];
+} | null;
+
+// Complete QTI Variable JSON type
+export declare type QtiVariableJSON = {
+  base?: QtiBaseTypeJSON;
+  list?: QtiListTypeJSON;
+  record?: QtiRecordItem[] | null;
+};
