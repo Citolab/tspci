@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.6.3-beta.0](https://github.com/Citolab/qti-pci-bundler/compare/v2.6.2...v2.6.3-beta.0) (2025-04-14)
+
+
+### Bug Fixes
+
+* update tailwindcss version to 4.1.3 in package.json and package-lock.json ([55c8ccb](https://github.com/Citolab/qti-pci-bundler/commit/55c8ccb6493ee85edd100d43fb910a11af33a8af))
+
+
+### Features
+
+* implement setResponse method in PCI ([1e4dffa](https://github.com/Citolab/qti-pci-bundler/commit/1e4dffac9a182096f750c7c57a7b6096270608a7))
+
+
+
+
+
 ## [2.6.2](https://github.com/Citolab/qti-pci-bundler/compare/v2.6.1...v2.6.2) (2025-02-04)
 
 **Note:** Version bump only for package qti-pci-bundler

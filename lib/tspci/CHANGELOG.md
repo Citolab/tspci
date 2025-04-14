@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.6.3-beta.0](/compare/v2.6.2...v2.6.3-beta.0) (2025-04-14)
+
+
+### Bug Fixes
+
+* update tailwindcss version to 4.1.3 in package.json and package-lock.json 55c8ccb
+
+
+### Features
+
+* implement setResponse method in PCI 1e4dffa
+
+
+
+
+
 ## [2.6.2](/compare/v2.6.1...v2.6.2) (2025-02-04)
 
 **Note:** Version bump only for package @citolab/tspci
