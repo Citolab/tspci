@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.6.3-beta.0](https://github.com/Citolab/tspci/compare/v2.6.2...v2.6.3-beta.0) (2025-04-14)
+
+
+### Features
+
+* implement setResponse method in PCI ([1e4dffa](https://github.com/Citolab/tspci/commit/1e4dffac9a182096f750c7c57a7b6096270608a7))
+
+
+
+
+
 ## [2.6.2](https://github.com/Citolab/tspci/compare/v2.6.1...v2.6.2) (2025-02-04)
 
 **Note:** Version bump only for package @citolab/tspci-tao
