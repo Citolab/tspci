@@ -1,6 +1,6 @@
 {
   "name": "@citolab/preact-store",
-  "version": "2.6.3-beta.2",
+  "version": "2.6.3-beta.3",
   "description": "simple preact store",
   "author": "patrick <patrick.deklein@cito.nl>, marcel  <marcel.hoekstra@cito.nl>",
   "homepage": "",
@@ -18,5 +18,5 @@
     "dev": "tsc --watch",
     "prepublish": "tsc --build"
   },
-  "gitHead": "604b6123a4e495717e4fdde55d1ad1c52cb81724"
+  "gitHead": "d2254763e62f23bb6341df86a8a0099ba0496fb5"
 }
