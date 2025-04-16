@@ -1,6 +1,6 @@
 {
   "name": "@citolab/tspci",
-  "version": "2.6.3-beta.1",
+  "version": "2.6.3-beta.2",
   "description": "an opiniated typescript ims-pci builder with tao integration",
   "author": "patrick <patrick.deklein@cito.nl>",
   "repository": "@citolab/tspci",
