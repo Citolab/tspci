@@ -41,9 +41,25 @@ class App implements IMSpci<PropTypes> {
     } catch (error) {
       console.log(error);
     }
-
     this.shadowdom = dom.attachShadow({ mode: "closed" });
+    this.render();
 
+    // Handle boundTo value if it exists
+    if (this.config.boundTo && Object.keys(this.config.boundTo).length > 0) {
+      const responseIdentifier = Object.keys(this.config.boundTo)[0];
+      const response = this.config.boundTo[responseIdentifier];
+      // Only call setResponse if response has valid data
+      if (response && response.base !== null) {
+        this.setResponse(response);
+      }
+    }
+
+    // Call onready callback to signal the component is ready
+    if (this.config.onready) {
+      this.config.onready(this);
+    }
+
+    // MOVED: Only subscribe to store changes AFTER everything else is done
     this.store.subscribe(() => {
       const event: QtiInteractionChangedDetail = {
         interaction: this,
@@ -57,20 +73,7 @@ class App implements IMSpci<PropTypes> {
       });
       dom.dispatchEvent(interactionChangedEvent);
     });
-
-    this.render();
-
-    if (this.config.boundTo && Object.keys(this.config.boundTo).length > 0) {
-      const responseIdentifier = Object.keys(this.config.boundTo)[0];
-      const response = this.config.boundTo[responseIdentifier];
-      this.setResponse(response);
-    }
-
-    if (this.config.onready) {
-      this.config.onready(this);
-    }
   };
-
   render = () => {
     render(null, this.shadowdom);
     const css = document.createElement("style");

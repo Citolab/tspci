@@ -1,4 +1,9 @@
-import { ConfigProperties, IMSpci, QtiInteractionChangedDetail, QtiVariableJSON } from "@citolab/tspci";
+import {
+  ConfigProperties,
+  IMSpci,
+  QtiInteractionChangedDetail,
+  QtiVariableJSON,
+} from "@citolab/tspci";
 import * as ctx from "qtiCustomInteractionContext";
 import configProps from "./config.json";
 import Interaction from "./interaction"; // import and bundle this interaction file
@@ -23,9 +28,13 @@ class Pci implements IMSpci<PropTypes> {
 
   // First in the lifecycle of a PCI, this method is called with the domElement ( usually qti-interaction-markup ) where we can add our dom tree.
   // config is the configuration object which has an onready
-  getInstance = (dom: HTMLElement, config: ConfigProperties<PropTypes>, state: string) => {
+  getInstance = (
+    dom: HTMLElement,
+    config: ConfigProperties<PropTypes>,
+    state: string
+  ) => {
     config.properties = { ...configProps, ...config.properties }; // merge current props with incoming
-    this.config = config;   
+    this.config = config;
     this.state = state ? state : "";
     if (!dom) {
       throw new Error("No DOM Element provided");
@@ -38,17 +47,21 @@ class Pci implements IMSpci<PropTypes> {
     if (this.config.boundTo && Object.keys(this.config.boundTo).length > 0) {
       const responseIdentifier = Object.keys(this.config.boundTo)[0];
       const response = this.config.boundTo[responseIdentifier];
-      this.setResponse(response);
+      if (response && response.base !== null) {
+        this.setResponse(response);
+      }
     }
 
-    config.onready(this);
+    if (config.onready) {
+      config.onready(this);
+    }
   };
 
   setResponse = (response: QtiVariableJSON) => {
     // TODO restore the response
     // Get the actual value by the variable type like:
     // - response?.base?.string or response?.base?.integer
-  }
+  };
 
   private interactionChanged = () => {
     const event: QtiInteractionChangedDetail = {
@@ -73,7 +86,8 @@ class Pci implements IMSpci<PropTypes> {
     this.shadowdom.innerHTML = `<div class="pci-container">
       <h1>${this.config.properties.title}</h1>
       <div class="body">
-        <img width="${+this.config.properties.width}" height="${+this.config.properties.height}" src="${procenten}" />
+        <img width="${+this.config.properties.width}" height="${+this.config
+      .properties.height}" src="${procenten}" />
       </div>
       <div class="interaction">
         <label for="tentacles">${this.config.properties.prompt}</label>
