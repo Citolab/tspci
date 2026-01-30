@@ -8,8 +8,8 @@
   "types": "types/index.d.ts",
   "devDependencies": {
     "archiver": "^7.0.1",
-    "chalk": "5.3.0",
-    "inquirer": "11.0.1"
+    "chalk": "5.6.2",
+    "inquirer": "13.2.2"
   },
   "scripts": {},
   "gitHead": "d2254763e62f23bb6341df86a8a0099ba0496fb5"

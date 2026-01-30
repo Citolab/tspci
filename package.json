@@ -58,6 +58,9 @@
     }
   ],
   "devDependencies": {
-    "lerna": "^8.1.8"
+    "lerna": "^9.0.3"
+  },
+  "overrides": {
+    "tar": "^7.5.7"
   }
 }
