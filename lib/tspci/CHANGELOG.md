@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.6.6](/compare/v2.6.5...v2.6.6) (2026-02-02)
+
+**Note:** Version bump only for package @citolab/tspci
+
+
+
+
+
 ## [2.6.5](/compare/v2.6.3-beta.3...v2.6.5) (2025-04-16)
 
 **Note:** Version bump only for package @citolab/tspci
