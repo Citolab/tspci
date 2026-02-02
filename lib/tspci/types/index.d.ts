@@ -29,17 +29,6 @@ export interface IMSpci<T> {
   typeIdentifier: string;
 
   /** @access public
-   *  @method getInstance Create a new instance of this portable custom interaction
-   *  Will be called by the qtiCustomInteractionContext
-   *  @param {DOM Element} dom - the DOM Element this PCI is being added to
-   *  @param {Object} configuration - the configuration to apply to this PCI
-   *  @param {String} state - a previous saved state to apply to this instance.
-   *  This must have been obtained from a prior call to getState on an
-   *  instance of this type (same typeIdentifier)
-   */
-  getInstance: (dom: HTMLElement, configuration: ConfigProperties<T>, state: string) => void;
-
-  /** @access public
    * @method getResponse
    * @return {Object} - the value to assign to the bound QTI response variable
    */
@@ -52,8 +41,17 @@ export interface IMSpci<T> {
    */
   getState: () => string;
   oncompleted?: () => void;
-  setResponse?: (response: QtiVariableJSON) => void; // No IMS specification for this, but best option to set the response when bound to a QTI variable
-  destroy?: () => void; // Not used in IMS and not in TAO implementation, so not used here (optional)
+  checkValidity?: () => boolean | undefined;
+  reportValidity?: () => boolean | undefined;
+  setCustomValidity?: (message: string) => void;
+  getCustomValidity?: () => string;
+  setResponse?: (response: QtiVariableJSON) => void; // Not in the QTI 3.0 PCI instance interface, but used by some delivery engines/tools
+  destroy?: () => void; // Not used in QTI 3.0, but kept for compatibility
+}
+
+export interface IMSpciFactory<T> {
+  typeIdentifier: string;
+  getInstance: (dom: HTMLElement, configuration: ConfigProperties<T>, state?: string) => IMSpci<T>;
 }
 
 export interface directedPair {

@@ -1,6 +1,7 @@
 import {
   ConfigProperties,
   IMSpci,
+  IMSpciFactory,
   QtiInteractionChangedDetail,
   QtiVariableJSON,
 } from "@citolab/tspci";
@@ -13,76 +14,86 @@ import procenten from "./assets/procenten.png"; // image types are bundled insid
 // Configuration
 type PropTypes = typeof configProps;
 
-class Pci implements IMSpci<PropTypes> {
-  typeIdentifier = "###___PCI_NAME___###"; // typeIdentifier is mandatory for all PCI's
-  config: ConfigProperties<PropTypes>; // reference to the interface of the config object which you get when getInstance is called by the player
-  state: string; // keep a reference to the state
-  shadowdom: ShadowRoot | Element; // Not mandatory, but its wise to create a shadowroot
-  dom: HTMLElement;
+type PciState = {
+  value: string;
+  touched: boolean;
+  customValidity?: string;
+};
 
-  constructor() {
-    if (ctx) {
-      ctx.register(this); // we assume the qtiCustomInteractionContext is avaible due to the import above
-    }
-  }
+class PciInstance implements IMSpci<PropTypes> {
+  typeIdentifier = "###___PCI_NAME___###";
+  private config: ConfigProperties<PropTypes>;
+  private dom: HTMLElement;
+  private shadowdom: ShadowRoot;
+  private state: PciState;
+  private onChange: (e: Event) => void;
 
-  // First in the lifecycle of a PCI, this method is called with the domElement ( usually qti-interaction-markup ) where we can add our dom tree.
-  // config is the configuration object which has an onready
-  getInstance = (
-    dom: HTMLElement,
-    config: ConfigProperties<PropTypes>,
-    state: string
-  ) => {
-    config.properties = { ...configProps, ...config.properties }; // merge current props with incoming
-    this.config = config;
-    this.state = state ? state : "";
-    if (!dom) {
-      throw new Error("No DOM Element provided");
-    }
-    this.shadowdom = dom.attachShadow({ mode: "closed" });
+  constructor(dom: HTMLElement, config: ConfigProperties<PropTypes>, stateString?: string) {
+    if (!dom) throw new Error("No DOM Element provided");
+    config.properties = { ...configProps, ...config.properties };
     this.dom = dom;
+    this.config = config;
+    this.shadowdom = dom.attachShadow({ mode: "closed" });
 
-    this.render();
-
-    if (this.config.boundTo && Object.keys(this.config.boundTo).length > 0) {
-      const responseIdentifier = Object.keys(this.config.boundTo)[0];
-      const response = this.config.boundTo[responseIdentifier];
-      if (response && response.base !== null) {
-        this.setResponse(response);
+    this.state = { value: "", touched: false };
+    if (stateString) {
+      try {
+        const parsed = JSON.parse(stateString) as Partial<PciState>;
+        this.state = {
+          value: typeof parsed.value === "string" ? parsed.value : "",
+          touched: parsed.touched === true,
+          customValidity: typeof parsed.customValidity === "string" ? parsed.customValidity : undefined,
+        };
+      } catch {
+        this.state = { value: typeof stateString === "string" ? stateString : "", touched: false };
       }
     }
 
-    if (config.onready) {
-      config.onready(this);
+    const boundResponse =
+      this.config.boundTo?.[this.config.responseIdentifier] ??
+      (this.config.boundTo && Object.keys(this.config.boundTo).length === 1
+        ? this.config.boundTo[Object.keys(this.config.boundTo)[0]]
+        : undefined);
+    if (boundResponse && (boundResponse.base || boundResponse.list || boundResponse.record)) {
+      this.setResponse?.(boundResponse);
     }
-  };
 
-  setResponse = (response: QtiVariableJSON) => {
-    // TODO restore the response
-    // Get the actual value by the variable type like:
-    // - response?.base?.string or response?.base?.integer
-  };
+    this.onChange = (e: Event) => {
+      const target = e.target as HTMLInputElement | null;
+      if (!target) return;
+      const nextValue = target.value ?? "";
+      if (nextValue === this.state.value && this.state.touched) return;
+      this.state = { ...this.state, value: nextValue, touched: true };
+      this.dispatchInteractionChanged();
+    };
 
-  private interactionChanged = () => {
-    const event: QtiInteractionChangedDetail = {
+    this.render();
+
+    if (this.config.onready) {
+      this.config.onready(this, this.getState());
+    }
+  }
+
+  private getInputEl(): HTMLInputElement | null {
+    return this.shadowdom.querySelector("input[type='number']");
+  }
+
+  private dispatchInteractionChanged() {
+    const detail: QtiInteractionChangedDetail = {
       interaction: this,
       responseIdentifier: this.config.responseIdentifier,
-      valid: true,
+      valid: this.checkValidity?.() ?? true,
       value: this.getResponse(),
     };
-    // dispatch a custom event to notify the Delivery System that the interaction has changed
-    const interactionChangedEvent = new CustomEvent("qti-interaction-changed", {
-      detail: event,
+    const event = new CustomEvent("qti-interaction-changed", {
+      bubbles: true,
+      cancelable: true,
+      detail,
     });
-    this.dom.dispatchEvent(interactionChangedEvent);
-  };
+    this.dom.dispatchEvent(event);
+  }
 
-  private render = () => {
-    this.shadowdom.addEventListener("change", (e: Event) => {
-      const value = (e.target as HTMLInputElement)?.value || "";
-      this.state = value;
-      this.interactionChanged();
-    });
+  private render() {
     this.shadowdom.innerHTML = `<div class="pci-container">
       <h1>${this.config.properties.title}</h1>
       <div class="body">
@@ -90,26 +101,90 @@ class Pci implements IMSpci<PropTypes> {
       .properties.height}" src="${procenten}" />
       </div>
       <div class="interaction">
-        <label for="tentacles">${this.config.properties.prompt}</label>
-        <input type="number" value="${this.state}" min="0" max="100">%
+        <label>${this.config.properties.prompt}</label>
+        <input type="number" value="${this.state.value}" min="0" max="100">%
       </div>
     </div>`;
+
     const css = document.createElement("style");
     css.innerHTML = style;
     this.shadowdom.appendChild(css);
+
+    const input = this.getInputEl();
+    if (input) {
+      if (this.state.customValidity) input.setCustomValidity(this.state.customValidity);
+      input.addEventListener("input", this.onChange);
+      input.addEventListener("change", this.onChange);
+    }
+  }
+
+  setResponse = (response: QtiVariableJSON) => {
+    const next =
+      typeof response?.base?.integer === "number"
+        ? String(response.base.integer)
+        : typeof response?.base?.string === "string"
+          ? response.base.string
+          : "";
+    this.state = { ...this.state, value: next, touched: true };
+    const input = this.getInputEl();
+    if (input) input.value = next;
   };
 
   getResponse = () => {
-    const response =
-      this.state === null || this.state === undefined
-        ? undefined
-        : ({ base: { integer: this.state } } as QtiVariableJSON);
-    return response;
+    if (!this.state.touched) return undefined;
+    const trimmed = (this.state.value ?? "").toString().trim();
+    if (!trimmed) return undefined;
+    const asNumber = Number(trimmed);
+    if (!Number.isFinite(asNumber)) return undefined;
+    return { base: { integer: Math.trunc(asNumber) } } as QtiVariableJSON;
   };
 
-  getState = () => this.state.toString();
+  getState = () => JSON.stringify(this.state);
 
-  oncompleted = () => {};
+  checkValidity = () => {
+    const input = this.getInputEl();
+    if (!input) return undefined;
+    return input.checkValidity();
+  };
+
+  reportValidity = () => {
+    const input = this.getInputEl();
+    if (!input) return undefined;
+    return input.reportValidity();
+  };
+
+  setCustomValidity = (message: string) => {
+    this.state = { ...this.state, customValidity: message };
+    const input = this.getInputEl();
+    if (input) input.setCustomValidity(message);
+  };
+
+  getCustomValidity = () => this.state.customValidity ?? "";
+
+  oncompleted = () => {
+    const input = this.getInputEl();
+    if (input) {
+      input.removeEventListener("input", this.onChange);
+      input.removeEventListener("change", this.onChange);
+    }
+  };
 }
 
-export default new Pci();
+const factory: IMSpciFactory<PropTypes> = {
+  typeIdentifier: "###___PCI_NAME___###",
+  getInstance: (dom, config, state) => new PciInstance(dom, config, state),
+};
+
+const engineContext =
+  ctx && typeof (ctx as unknown as { register?: unknown }).register === "function"
+    ? (ctx as unknown as { register: (f: IMSpciFactory<PropTypes>) => void })
+    : typeof window !== "undefined" && (window as unknown as { qtiCustomInteractionContext?: unknown }).qtiCustomInteractionContext
+      ? ((window as unknown as { qtiCustomInteractionContext: { register: (f: IMSpciFactory<PropTypes>) => void } })
+          .qtiCustomInteractionContext as { register: (f: IMSpciFactory<PropTypes>) => void })
+      : undefined;
+
+if (engineContext) {
+  engineContext.register(factory);
+}
+
+export default factory;

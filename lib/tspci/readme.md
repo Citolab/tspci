@@ -97,38 +97,34 @@ Add the following PCI in the src folder `index.ts`
 
 ```ts
 // src/index.ts
-import { ConfigProperties, IMSpci } from "@citolab/tspci";
-import * as ctx from "qtiCustomInteractionContext";
+	import { ConfigProperties, IMSpci, IMSpciFactory } from "@citolab/tspci";
+	import * as ctx from "qtiCustomInteractionContext";
 
-class Pci implements IMSpci<{}> {
-  typeIdentifier = "HelloWorld"; // same as in package.json
-  shadowdom: ShadowRoot;
+	class PciInstance implements IMSpci<{}> {
+	  typeIdentifier = "HelloWorld"; // same as in package.json
+	  private shadowdom: ShadowRoot;
 
-  constructor() {
-    ctx && ctx.register(this);
-  }
+	  constructor(dom: HTMLElement, config: ConfigProperties<{}>, state?: string) {
+	    this.shadowdom = dom.attachShadow({ mode: "closed" });
+	    this.render();
+	    config.onready(this, this.getState());
+	  }
 
-  getInstance = (dom: HTMLElement, config: ConfigProperties<any>, state: string) => {
-    this.shadowdom = dom.attachShadow({ mode: "closed" });
-    this.render();
-    config.onready(this);
-  };
+	  private render = () => {
+	    this.shadowdom.innerHTML = `<div>Hello-World</div>`;
+	  };
 
-  private render = () => {
-    this.shadowdom.innerHTML = `<div>Hello-World</div>`;
-  };
+	  getResponse = () => undefined;
+	  getState = () => JSON.stringify({ v: 1 });
+	}
 
-  getResponse = () => {
-    return null;
-  };
+	const factory: IMSpciFactory<{}> = {
+	  typeIdentifier: "HelloWorld",
+	  getInstance: (dom, config, state) => new PciInstance(dom, config, state),
+	};
 
-  getState = () => null;
-
-  setResponse = () => {
-    
-  }
-}
-export default new Pci();
+	ctx && ctx.register(factory);
+	export default factory;
 ```
 
 Add this in your root project: `global.d.ts` file
@@ -136,7 +132,7 @@ Add this in your root project: `global.d.ts` file
 ```ts
 // global.d.ts
 declare module "qtiCustomInteractionContext" {
-  const register: { register: (PortableInteraction) => void };
+  const register: { register: (factory: { typeIdentifier: string; getInstance: Function }) => void };
   export = register;
 }
 ```
@@ -343,8 +339,9 @@ Also used in the TAO export for configuring PCIs in TAO
   // add to types
   + private config: ConfigProperties<PropTypes>;
 
+  // in your factory.getInstance(...) (or instance constructor):
   getInstance = (dom: HTMLElement, config: ConfigProperties<PropTypes>, stateString: string) => {
-  + config.properties = { ...configProps, ...config.properties }; // merge our props with players
+  + config.properties = { ...configProps, ...config.properties }; // merge our props with the player's
   + this.config = config;
 
   // destructure props for use in PCI
