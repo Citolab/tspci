@@ -60,6 +60,27 @@ To add tao using the cli you should run the following command inside your PCI fo
 
 For more info: [@citolab/tspci-tao](https://github.com/Citolab/tspci/tree/main/lib/tspci-tao)
 
+### QTI 3 package export
+
+You can also export a QTI 3 package zip containing:
+- one assessment item with identifier `ITM-PCI`
+- one assessment test with a single testPart, section, and that item
+- a QTI 3 manifest
+
+To add QTI 3 support using the cli run:
+
+```sh
+  npm run tspci -- add --target qti3
+```
+
+Then build the package:
+
+```sh
+  tspci --target qti3
+```
+
+For more info: [@citolab/tspci-qti3](https://github.com/Citolab/tspci/tree/main/lib/tspci-qti3)
+
 ### Manual
 
 1️. **Install** by running: `npm i -D @citolab/tspci`
@@ -78,7 +99,8 @@ For more info: [@citolab/tspci-tao](https://github.com/Citolab/tspci/tree/main/l
   "dependencies": {},
   "devDependencies": {
     "@citolab/tspci": "^1.5.6",
-    "@citolab/tspci-tao": "^1.0.0"
+    "@citolab/tspci-tao": "^1.0.0",
+    "@citolab/tspci-qti3": "^1.0.0"
   },
   "config": {
     "tspci": {

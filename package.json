@@ -36,6 +36,7 @@
     "lib/preact-store",
     "lib/tspci",
     "lib/tspci-qbci",
+    "lib/tspci-qti3",
     "lib/tspci-tao",
     "pcis/**/*"
   ],
