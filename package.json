@@ -30,7 +30,9 @@
     "publish-packages-next": "lerna publish prerelease --dist-tag next --force-publish --preid beta",
     "diff": "lerna diff",
     "list": "lerna list",
-    "changed": "lerna changed"
+    "changed": "lerna changed",
+    "test:init:local": "npm --prefix lib/tspci run test:init:local",
+    "test:init:smoke": "npm --prefix lib/tspci run test:init:smoke"
   },
   "workspaces": [
     "lib/preact-store",
