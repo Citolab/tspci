@@ -1,6 +1,6 @@
 {
   "name": "@citolab/tspci-qbci",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "description": "create a .ci file that can be imported into Questify",
   "author": "patrick <patrick.deklein@cito.nl>, Marcel Hoekstra <marcel.hoekstra@cito.nl>",
   "repository": "",
@@ -11,8 +11,9 @@
     "yazl": "^3.3.1"
   },
   "scripts": {},
-  "gitHead": "0a226ed0fe2a3ee4a09523b39f4fdd879d469d5e",
+  "gitHead": "fe332c73951e5d608e2d3841e2aba8ad61fb3cb0",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }
