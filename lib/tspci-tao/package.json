@@ -6,10 +6,10 @@
   "repository": "",
   "type": "module",
   "types": "types/index.d.ts",
-  "devDependencies": {
-    "archiver": "^7.0.1",
+  "dependencies": {
     "chalk": "5.6.2",
-    "inquirer": "13.2.2"
+    "inquirer": "13.2.2",
+    "yazl": "^3.3.1"
   },
   "scripts": {},
   "gitHead": "0a226ed0fe2a3ee4a09523b39f4fdd879d469d5e"
