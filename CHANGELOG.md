@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.8.0](https://github.com/Citolab/qti-pci-bundler/compare/v2.7.1...v2.8.0) (2026-02-24)
+
+
+### Features
+
+* add local test initialization scripts and rollup plugins ([582f4d8](https://github.com/Citolab/qti-pci-bundler/commit/582f4d8f4705714be979b7cd59f71184a3ad2a5e))
+* enhance CLI options handling and project path resolution ([f9b51c6](https://github.com/Citolab/qti-pci-bundler/commit/f9b51c6a60999d4fc33ebaa2fbd8e19b35b05606))
+
+
+
+
+
 ## [2.7.1](https://github.com/Citolab/qti-pci-bundler/compare/v2.7.0...v2.7.1) (2026-02-09)
 
 **Note:** Version bump only for package qti-pci-bundler
