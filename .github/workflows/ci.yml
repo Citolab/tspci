@@ -9,8 +9,11 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - name: Checkout
@@ -27,3 +30,4 @@ jobs:
 
       - name: Run init matrix test
         run: npm run test:init:matrix
+        shell: bash
