@@ -16,6 +16,16 @@ clean_dir_contents() {
 mkdir -p "${NPM_CACHE_DIR}"
 clean_dir_contents "${TEST_ROOT}"
 
+# On Windows (Git Bash), convert Unix-style paths to native Windows paths so
+# npm can resolve file: references correctly. No-op on Linux/macOS.
+npm_path() {
+  if command -v cygpath &>/dev/null; then
+    cygpath -m "$1"
+  else
+    echo "$1"
+  fi
+}
+
 TARBALLS=()
 cleanup() {
   for file in "${TARBALLS[@]:-}"; do
@@ -37,7 +47,7 @@ pack_local_pkg() {
   local tgz
   prepare_pkg_for_pack "${pkg_dir}"
   echo "  - packing ${pkg_name}" >&2
-  tgz="$(cd "${pkg_dir}" && npm pack --silent --ignore-scripts --cache "${NPM_CACHE_DIR}" | tail -n 1)"
+  tgz="$(cd "${pkg_dir}" && npm pack --silent --ignore-scripts --cache "${NPM_CACHE_DIR}" | tail -n 1 | tr -d '\r')"
   local full_path="${pkg_dir}/${tgz}"
   TARBALLS+=("${full_path}")
   echo "${full_path}"
@@ -76,7 +86,7 @@ create_project() {
       pkg.dependencies["@citolab/preact-store"] = `file:${preactStoreTar}`;
     }
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
-  ' "${project_dir}/package.json" "${TSPCI_TGZ}" "${PREACT_STORE_TGZ}"
+  ' "${project_dir}/package.json" "$(npm_path "${TSPCI_TGZ}")" "$(npm_path "${PREACT_STORE_TGZ}")"
 
   (cd "${project_dir}" && npm install --cache "${NPM_CACHE_DIR}" --workspaces=false)
 }
@@ -112,21 +122,21 @@ run_base_build "${TEST_ROOT}/TypeScriptTailwindPci"
 
 echo "Scenario 4: add tspci-qbci and export .ci package"
 create_project "QbciPci" "typescript" "QBCI export matrix test"
-(cd "${TEST_ROOT}/QbciPci" && npm install --save-dev "file:${QBCI_TGZ}" --cache "${NPM_CACHE_DIR}" --workspaces=false)
+(cd "${TEST_ROOT}/QbciPci" && npm install --save-dev "file:$(npm_path "${QBCI_TGZ}")" --cache "${NPM_CACHE_DIR}" --workspaces=false)
 (cd "${TEST_ROOT}/QbciPci" && npm run tspci -- add --target qbci)
 (cd "${TEST_ROOT}/QbciPci" && npm run prod -- --target qbci)
 ls "${TEST_ROOT}/QbciPci/ci-dist/"*.ci >/dev/null
 
 echo "Scenario 5: add tspci-qti3 and export qti3 zip"
 create_project "Qti3Pci" "typescript" "QTI3 export matrix test"
-(cd "${TEST_ROOT}/Qti3Pci" && npm install --save-dev "file:${QTI3_TGZ}" --cache "${NPM_CACHE_DIR}" --workspaces=false)
+(cd "${TEST_ROOT}/Qti3Pci" && npm install --save-dev "file:$(npm_path "${QTI3_TGZ}")" --cache "${NPM_CACHE_DIR}" --workspaces=false)
 (cd "${TEST_ROOT}/Qti3Pci" && npm run tspci -- add --target qti3)
 (cd "${TEST_ROOT}/Qti3Pci" && npm run prod -- --target qti3)
 ls "${TEST_ROOT}/Qti3Pci/qti3-dist/"*.zip >/dev/null
 
 echo "Scenario 6: add tspci-tao and export tao zip"
 create_project "TaoPci" "typescript" "TAO export matrix test"
-(cd "${TEST_ROOT}/TaoPci" && npm install --save-dev "file:${TAO_TGZ}" --cache "${NPM_CACHE_DIR}" --workspaces=false)
+(cd "${TEST_ROOT}/TaoPci" && npm install --save-dev "file:$(npm_path "${TAO_TGZ}")" --cache "${NPM_CACHE_DIR}" --workspaces=false)
 (cd "${TEST_ROOT}/TaoPci" && npm run tspci -- add --target tao --ci)
 node -e '
   const fs = require("fs");
@@ -146,7 +156,7 @@ ls "${TEST_ROOT}/TaoPci/dist/tao-pci-"*.zip >/dev/null
 
 echo "Scenario 7: preact-store with TypeScript + tailwind builds"
 create_project "TailwindPreactStorePci" "preact+tailwind" "Tailwind + preact-store matrix test"
-(cd "${TEST_ROOT}/TailwindPreactStorePci" && npm install --save "file:${PREACT_STORE_TGZ}" --cache "${NPM_CACHE_DIR}" --workspaces=false)
+(cd "${TEST_ROOT}/TailwindPreactStorePci" && npm install --save "file:$(npm_path "${PREACT_STORE_TGZ}")" --cache "${NPM_CACHE_DIR}" --workspaces=false)
 run_base_build "${TEST_ROOT}/TailwindPreactStorePci"
 
 echo ""
