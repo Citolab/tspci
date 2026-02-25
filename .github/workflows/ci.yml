@@ -30,4 +30,3 @@ jobs:
 
       - name: Run init matrix test
         run: npm run test:init:matrix
-        shell: bash

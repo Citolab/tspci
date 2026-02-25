@@ -10,9 +10,9 @@
   "scripts": {
     "help": "tspci --help",
     "init": "tspci init --force --path=../../pcis",
-    "test:init:local": "./scripts/test-init-local.sh",
-    "test:init:smoke": "./scripts/test-init-local.sh",
-    "test:init:matrix": "./scripts/test-init-matrix.sh"
+    "test:init:local": "bash ./scripts/test-init-local.sh",
+    "test:init:smoke": "bash ./scripts/test-init-local.sh",
+    "test:init:matrix": "bash ./scripts/test-init-matrix.sh"
   },
   "type": "module",
   "types": "types/index.d.ts",
