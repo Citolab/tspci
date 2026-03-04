@@ -1,0 +1,23 @@
+{
+  "name": "@citolab/tspci-dev-app",
+  "description": "Local workspace dev app for testing @citolab/tspci changes",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/types.d.ts",
+  "private": true,
+  "dependencies": {},
+  "devDependencies": {
+    "@citolab/tspci": "*"
+  },
+  "scripts": {
+    "dev": "tspci --dev",
+    "prod": "tspci",
+    "tspci": "tspci"
+  },
+  "config": {
+    "tspci": {
+      "typeIdentifier": "TspciDevApp"
+    }
+  },
+  "source": "src/index.ts"
+}

@@ -31,6 +31,8 @@
     "diff": "lerna diff",
     "list": "lerna list",
     "changed": "lerna changed",
+    "dev:tspci": "npm --prefix pcis/tspci-dev-app run dev",
+    "build:tspci": "npm --prefix pcis/tspci-dev-app run prod",
     "test:init:local": "npm --prefix lib/tspci run test:init:local",
     "test:init:smoke": "npm --prefix lib/tspci run test:init:smoke",
     "test:init:matrix": "npm --prefix lib/tspci run test:init:matrix"

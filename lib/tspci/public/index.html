@@ -1,378 +1,853 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <title>Hello RequireJS</title>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"
+      integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <!-- <link rel="stylesheet" class="bootswatcher" href="//bootswatch.com/5/lumen/bootstrap.min.css" /> -->
 
-<head>
-  <title>Hello RequireJS</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"
-    integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <!-- <link rel="stylesheet" class="bootswatcher" href="//bootswatch.com/5/lumen/bootstrap.min.css" /> -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+    />
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" />
+    <style>
+      html {
+        font-size: 100%;
+      }
 
-  <style>
-    html {
-      font-size: 100%;
-    }
+      #pciContainer {
+        width: 100%;
+        /* min-width: 800px; */
 
-    #pciContainer {
-      width: 100%;
-      /* min-width: 800px; */
+        max-width: 1024px;
+        height: 600px;
+        min-height: 600px;
+        /* max-height: 600px; */
+        border: 1px solid #dbe3ec;
+        overflow: hidden;
+        margin: 1.25rem auto 0;
+        background-color: #ffffff;
+        border-radius: 16px;
+        padding: 1rem;
+        box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+      }
 
-      max-width: 1024px;
-      height: 600px;
-      min-height: 600px;
-      /* max-height: 600px; */
-      border: 1px solid #eeeeee;
-      overflow: hidden;
-      margin: 0 auto;
-      background-color: white;
-      border-radius: 10px;
-      margin-top: 1rem;
-    }
+      qti-portable-custom-interaction {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
 
-    #devtools {
-      max-width: 1024px;
-      margin: 0 auto;
-    }
-  </style>
-</head>
+      #devtools {
+        max-width: 1024px;
+        margin: 0 auto;
+      }
 
-<body class="bg-light">
-  <div class="container">
-    <div class="alert alert-danger position-fixed mx-auto left-2 top-2" style="display: none" role="alert"
-      id="noresponse">
-      user has not yet interacted yet<br />getResponse should return undefined.
+      .container {
+        max-width: 1360px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .app-shell {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      #main {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      #right-pane {
+        flex: 0 0 320px;
+        width: 320px;
+        padding-top: 1.25rem;
+      }
+
+      .dev-layout {
+        margin-top: 1rem;
+      }
+
+      .dev-main {
+        min-width: 0;
+      }
+
+      .dev-sidepane {
+        position: sticky;
+        top: 1rem;
+        width: 100%;
+        max-height: calc(100vh - 2rem);
+        overflow: auto;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        padding: 1rem;
+        border-radius: 0.5rem;
+      }
+
+      @media (max-width: 1100px) {
+        .app-shell {
+          display: block;
+        }
+
+        #right-pane {
+          width: 100%;
+          max-width: 100%;
+          padding-top: 0;
+        }
+
+        .dev-sidepane {
+          position: static;
+          max-height: none;
+        }
+      }
+
+      .json-block {
+        min-height: 180px;
+        max-height: 280px;
+        overflow: auto;
+        background: #111827;
+        color: #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        font-size: 12px;
+        line-height: 1.4;
+        margin: 0;
+        border: 1px solid #374151;
+      }
+
+      .json-key {
+        color: #93c5fd;
+      }
+
+      .json-string {
+        color: #86efac;
+      }
+
+      .json-number {
+        color: #fca5a5;
+      }
+
+      .json-boolean {
+        color: #fcd34d;
+      }
+
+      .json-null {
+        color: #c4b5fd;
+      }
+
+      .icon-btn {
+        border: 1px solid #ced4da;
+        background: #fff;
+        border-radius: 999px;
+        width: 26px;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .spin {
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .tiny-note {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 0.35rem;
+      }
+    </style>
+  </head>
+
+  <body class="bg-light">
+    <div class="container app-shell">
+      <div id="main">
+        <div
+          class="alert alert-danger position-fixed mx-auto left-2 top-2"
+          style="display: none"
+          role="alert"
+          id="noresponse"
+        >
+          user has not yet interacted yet<br />getResponse should return
+          undefined.
+        </div>
+
+        <div id="pciContainer" class="shadow-sm">
+          <div id="loading" class="text-muted mx-auto p-4">Loading...</div>
+        </div>
+        <div id="devtools"></div>
+      </div>
+      <div id="right-pane"></div>
     </div>
 
-    <div id="pciContainer" class="shadow-sm">
-      <div id="loading" class="text-muted mx-auto p-4">Loading...</div>
-    </div>
-    <div id="devtools"></div>
-  </div>
+    <script type="module">
+      import {
+        h,
+        render,
+      } from "https://unpkg.com/preact@latest?module";
+      import {
+        useState,
+        useEffect,
+        useRef,
+      } from "https://unpkg.com/preact@latest/hooks/dist/hooks.module.js?module";
+      import htm from "https://unpkg.com/htm?module";
+      // Initialize htm with Preact
+      const html = htm.bind(h);
 
-  <script type="module">
-    import { h, Component, render } from "https://unpkg.com/preact@latest?module";
-    import { useState, useEffect, useRef } from "https://unpkg.com/preact@latest/hooks/dist/hooks.module.js?module";
-    import htm from "https://unpkg.com/htm?module";
-    // Initialize htm with Preact
-    const html = htm.bind(h);
+      const CONFIG_TO_DATA_PROPERTY_KEYS = [
+        "title",
+        "prompt",
+        "width",
+        "height",
+      ];
+      const CONFIG_CHANGE_DEBOUNCE_MS = 1000;
+      const INTERACTION_REFRESH_DELAY_MS = 120;
 
-    /**
-     * Minified useInterval hook. A custom hook that calls the given `callback` function at the given `delay` interval.
-     * useInterval(() => {
-     *   console.log('interval')
-     * }, 1000);
-     * The callback is not called immediately on mount but only after the first delay.
-     */
-    function useInterval(c, d) { const s = useRef(); useEffect(() => { s.current = c }, [c]), useEffect(() => { if (d !== null) { const i = setInterval(() => { s.current() }, d); return () => clearInterval(i) } }, [d]) }
-
-    function App({ item }) {
-      const [show, setShow] = useState(false);
-
-      const [range, setRange] = useState(0);
-      const [currentRangeValue, setCurrentRangeValue] = useState(0);
-      const [maxRange, setMaxRange] = useState(0);
-      const [actions, setActions] = useState([]);
-
-      const isReplaying = useRef(false);
-      const replayedIndex = useRef(0);
-      const store = item.store;
-
-      useEffect(() => {
-        if (store) {
-          store.subscribeActions(action => {
-            if (!isReplaying.current) {
-              const allActions = store.actions;
-              setRange(allActions.length);
-              setMaxRange(allActions.length);
-              setActions(allActions);
-              setCurrentRangeValue(allActions.findIndex(a => a === action) + 1);
-            } else {
-              replayedIndex.current++;
-              setCurrentRangeValue(replayedIndex.current);
-            }
-          });
+      function mergeConfigPropertiesIntoDataProperties(
+        properties,
+        dataProperties = {},
+      ) {
+        const merged = { ...(dataProperties || {}) };
+        if (!properties) {
+          return merged;
         }
-      }, [store]);
-
-      async function scrubRange(value) {
-        if (!isReplaying.current) {
-          setCurrentRangeValue(value);
-          if (store) {
-            store.reset();
-            isReplaying.current = true;
-            replayedIndex.current = 0;
-            setCurrentRangeValue(value);
-            await store.replay([...actions], { until: value, animate: false });
-            isReplaying.current = false;
+        CONFIG_TO_DATA_PROPERTY_KEYS.forEach((key) => {
+          const value = properties[key];
+          if (value !== null && typeof value !== "undefined") {
+            merged[key] = String(value);
           }
-        }
+        });
+        return merged;
       }
 
-      let keyArray = [];
-      if (item.config && item.config.properties) {
-        keyArray = Object.keys(item.config.properties).map((keyName, keyIndex) => ({
-          key: keyName,
-          value: item.config.properties[keyName],
-        }));
+      function getQtiPortableCustomInteractionElement() {
+        return document.querySelector(
+          "#pciContainer qti-portable-custom-interaction",
+        );
       }
 
-      function resetlocalstorage() {
-        localStorage.removeItem(item.typeIdentifier + "_state");
-        localStorage.removeItem(item.typeIdentifier + "_props");
-        localStorage.removeItem(item.typeIdentifier + "_response");
+      function getQtiAssessmentItemElement() {
+        return document.querySelector("#pciContainer qti-assessment-item");
       }
 
-      function reset() {
-        resetlocalstorage();
-        location.reload();
-      }
-
-      function resetResponse() {
-        localStorage.removeItem(item.typeIdentifier + "_response");
-        item.resetResponse();
-      }
-
-      function setResponse() {
-        const response = localStorage.getItem(item.typeIdentifier + "_response");
-        if (response) {
-          if (item.setResponse) {
-            item.setResponse({
-              base: {
-                string: response,
-              },
-            });
-          }
-          else {
-            alert("load response only when TAO interface is implemented");
-          }
-        } else {
-          alert("no response stored");
-        }
-      }
-
-      function saveResponse() {
-        const saveResponse = item.getResponse().base.string;
-        localStorage.setItem(item.typeIdentifier + "_response", saveResponse);
-      }
-
-      function compareResponse() {
-        const response = localStorage.getItem(item.typeIdentifier + "_response");
-        if (!response) {
-          alert("no response stored");
+      function applyDataPropertiesToQtiHost(dataProperties = {}) {
+        const host = getQtiPortableCustomInteractionElement();
+        if (!host) {
           return;
         }
-        if (response === item.getResponse().base.string) {
-          alert("same");
-        } else {
-          alert("different");
+        Object.keys(dataProperties || {}).forEach((key) => {
+          const normalizedKey = String(key || "")
+            .trim()
+            .replace(/^data-/, "");
+          if (!normalizedKey) {
+            return;
+          }
+          const value = dataProperties[key];
+          if (value === null || typeof value === "undefined") {
+            return;
+          }
+          host.setAttribute(`data-${normalizedKey}`, String(value));
+        });
+      }
+
+      function syncConfigPropertiesToHostDataProperties(
+        config,
+        dataProperties,
+      ) {
+        if (!config || !config.properties) {
+          return;
+        }
+        currentPciHostDataProperties = mergeConfigPropertiesIntoDataProperties(
+          config.properties,
+          dataProperties,
+        );
+        applyDataPropertiesToQtiHost(currentPciHostDataProperties);
+      }
+
+      let currentPciFactory = null;
+      let currentPciConfig = null;
+      let currentPciHostDataProperties = {};
+      let currentPciInteraction = null;
+      let currentAssessmentItem = null;
+      let configUpdateTimer = null;
+
+      function ensureOptionalTaoMethods(target) {
+        if (!target || typeof target !== "object") {
+          return;
+        }
+        if (typeof target.off !== "function") {
+          target.off = () => {};
+        }
+        if (typeof target.on !== "function") {
+          target.on = () => {};
+        }
+        if (typeof target.trigger !== "function") {
+          target.trigger = () => {};
+        }
+        if (typeof target.resetResponse !== "function") {
+          target.resetResponse = () => {};
         }
       }
 
-      function reload() {
-        const state = item.getState();
-        localStorage.setItem(item.typeIdentifier + "_state", JSON.stringify(state));
-        location.reload();
+      function setCurrentRuntime(factory, interaction, config, dataProperties) {
+        const runtimeItem =
+          interaction && typeof interaction === "object"
+            ? interaction
+            : factory;
+        ensureOptionalTaoMethods(runtimeItem);
+        currentPciFactory = factory;
+        currentPciInteraction =
+          interaction && typeof interaction === "object" ? interaction : null;
+        currentPciConfig = config;
+        currentPciHostDataProperties = dataProperties || {};
+        renderDevtools();
+        renderConfigPanel();
       }
 
-      async function playState() {
-        if (store && !isReplaying.current) {
-          store.reset();
-          isReplaying.current = true;
-          replayedIndex.current = 0;
-          await store.replay([...actions]);
-          isReplaying.current = false;
+      function refreshCurrentPci(options = {}) {
+        if (
+          !currentPciFactory ||
+          typeof currentPciFactory.getInstance !== "function"
+        ) {
+          return;
+        }
+        const config = currentPciConfig || { properties: {} };
+        const state = Object.prototype.hasOwnProperty.call(
+          options,
+          "stateOverride",
+        )
+          ? options.stateOverride
+          : currentAssessmentItem?.state;
+        if (typeof currentPciInteraction?.oncompleted === "function") {
+          currentPciInteraction.oncompleted();
+        }
+        if (typeof currentPciInteraction?.destroy === "function") {
+          currentPciInteraction.destroy();
+        }
+        const dataProperties = mergeConfigPropertiesIntoDataProperties(
+          config.properties,
+          currentPciHostDataProperties || {},
+        );
+        const dom = createQtiPciHost(currentPciFactory, dataProperties);
+        const originalOnReady = config.onready;
+        const configWithOnReady = {
+          ...config,
+          onready: (...args) => {
+            if (typeof originalOnReady === "function") {
+              originalOnReady(...args);
+            }
+            if (typeof options.onready === "function") {
+              options.onready(...args);
+            }
+          },
+        };
+        const interaction = currentPciFactory.getInstance(
+          dom,
+          configWithOnReady,
+          state,
+        );
+        setCurrentRuntime(
+          currentPciFactory,
+          interaction,
+          config,
+          dataProperties,
+        );
+      }
+
+      function renderDevtools() {
+        const devtools = document.getElementById("devtools");
+        if (!devtools) {
+          return;
+        }
+        render(html`<${App} />`, devtools);
+      }
+
+      function applyConfigChangesDebounced() {
+        if (configUpdateTimer) {
+          clearTimeout(configUpdateTimer);
+        }
+        configUpdateTimer = setTimeout(() => {
+          const current = currentPciConfig;
+          if (!currentPciFactory || !current || !current.properties) {
+            return;
+          }
+          syncConfigPropertiesToHostDataProperties(
+            current,
+            currentPciHostDataProperties,
+          );
+          localStorage.setItem(
+            currentPciFactory.typeIdentifier + "_props",
+            JSON.stringify(current.properties || {}),
+          );
+          refreshCurrentPci();
+          renderConfigPanel();
+        }, CONFIG_CHANGE_DEBOUNCE_MS);
+      }
+
+      function changeConfigProperty(key, value) {
+        const current = currentPciConfig;
+        if (!current || !current.properties) {
+          return;
+        }
+        current.properties[key] = value;
+        renderConfigPanel();
+        applyConfigChangesDebounced();
+      }
+
+      function ConfigPanel() {
+        const configSource = currentPciConfig;
+        const keyArray = configSource?.properties
+          ? Object.keys(configSource.properties).map((keyName) => ({
+              key: keyName,
+              value: configSource.properties[keyName],
+            }))
+          : [];
+
+        return html`
+          <aside class="dev-sidepane">
+            <h6 class="mb-3">Config</h6>
+            <form onSubmit="${(e) => e.preventDefault()}">
+              ${keyArray.map(
+                ({ key, value }) =>
+                  html`<div class="mb-2">
+                    <label class="form-label text-muted mb-1">${key}</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      value="${value}"
+                      onInput="${(e) =>
+                        changeConfigProperty(key, e.target.value)}"
+                    />
+                  </div>`,
+              )}
+            </form>
+          </aside>
+        `;
+      }
+
+      function renderConfigPanel() {
+        const pane = document.getElementById("right-pane");
+        if (!pane) {
+          return;
+        }
+        render(html`<${ConfigPanel} />`, pane);
+      }
+
+      function toPrettyJson(value) {
+        if (typeof value === "undefined") {
+          return "undefined";
+        }
+        try {
+          return JSON.stringify(value, null, 2);
+        } catch (error) {
+          return `[unserializable] ${String(error?.message || error)}`;
         }
       }
 
-      function changeConfig(key, value) {
-        item.config.properties[key] = value;
-        item.trigger && item.trigger(`change${key}`, value);
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
       }
 
-      function reConfig(key, value) {
-        localStorage.setItem(item.typeIdentifier + "_props", JSON.stringify(item.config.properties));
-        location.reload();
+      function escapeHtmlAttribute(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/"/g, "&quot;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
       }
 
-      function unload() {
-        item.destroy && item.destroy();
-        item.oncompleted && item.oncompleted();
-        var name = require.undef("index.js");
-        loadItem();
+      function highlightJson(jsonText) {
+        const escaped = escapeHtml(jsonText);
+        return escaped.replace(
+          /("(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\btrue\b|\bfalse\b|\bnull\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+          (match) => {
+            if (match.startsWith('"') && match.endsWith(":")) {
+              return `<span class="json-key">${match}</span>`;
+            }
+            if (match.startsWith('"')) {
+              return `<span class="json-string">${match}</span>`;
+            }
+            if (match === "true" || match === "false") {
+              return `<span class="json-boolean">${match}</span>`;
+            }
+            if (match === "null") {
+              return `<span class="json-null">${match}</span>`;
+            }
+            return `<span class="json-number">${match}</span>`;
+          },
+        );
       }
 
-      return html`
-          <div>
-            <div style="width:300px" class="shadow offcanvas offcanvas-end ${show ? "show visible" : ""}">
-              <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="offcanvasExampleLabel">properties</h5>
-                <button
-                  type="button"
-                  onClick="${() => setShow(false)}"
-                  disabled="${!item.config}"
-                  class="btn-close text-reset"
-                ></button>
-              </div>
-              <div class="offcanvas-body">
-                <ul class="card-body">
-                  ${keyArray.map(
-        ({ key, value }) => html`<div>
-                      <div>${key}</div>
-                      <input
-                        type="text"
-                        class="form-control"
-                        value="${value}"
-                        onkeyup="${(e) => changeConfig(key, e.target.value)}"
-                      />
-                    </div>`
-      )}
-                </ul>
-                <button class="btn btn-primary" onClick="${() => reConfig()}">save and reload</button>
+      function App() {
+        const [responseSnapshot, setResponseSnapshot] = useState("undefined");
+        const [stateSnapshot, setStateSnapshot] = useState("undefined");
+        const [isRestoringState, setIsRestoringState] = useState(false);
+        const interactionRefreshTimer = useRef(null);
+        const getCurrentAssessmentItem = () =>
+          currentAssessmentItem || getQtiAssessmentItemElement();
+
+        function refreshLiveData() {
+          const assessmentItem = getCurrentAssessmentItem();
+          let responseValue = undefined;
+          let stateValue = undefined;
+
+          if (assessmentItem) {
+            try {
+              stateValue = assessmentItem.state;
+            } catch (error) {
+              stateValue = `[assessment state threw] ${String(error?.message || error)}`;
+            }
+            try {
+              const variables = assessmentItem.variables;
+              const responseVariable = Array.isArray(variables)
+                ? variables.find((v) => v?.identifier === "RESPONSE")
+                : undefined;
+              responseValue = responseVariable?.value;
+            } catch (error) {
+              responseValue = `[assessment variables threw] ${String(error?.message || error)}`;
+            }
+          }
+
+          setResponseSnapshot(toPrettyJson(responseValue));
+          setStateSnapshot(toPrettyJson(stateValue));
+        }
+
+        useEffect(() => {
+          refreshLiveData();
+        }, []);
+
+        useEffect(() => {
+          const container = document.getElementById("pciContainer");
+          if (!container) return;
+          const onAssessmentItemConnected = (event) => {
+            const detail = event?.detail;
+            const candidate =
+              detail?.assessmentItem ||
+              detail?.["qti-assessment-item"] ||
+              (detail?.tagName === "QTI-ASSESSMENT-ITEM" ? detail : null);
+            if (candidate && candidate.tagName === "QTI-ASSESSMENT-ITEM") {
+              currentAssessmentItem = candidate;
+              refreshLiveData();
+            }
+          };
+          const onInteractionChanged = (event) => {
+            if (interactionRefreshTimer.current) {
+              clearTimeout(interactionRefreshTimer.current);
+            }
+            interactionRefreshTimer.current = setTimeout(() => {
+              refreshLiveData();
+              interactionRefreshTimer.current = null;
+            }, INTERACTION_REFRESH_DELAY_MS);
+          };
+          container.addEventListener(
+            "qti-assessment-item-connected",
+            onAssessmentItemConnected,
+          );
+          container.addEventListener(
+            "qti-interaction-changed",
+            onInteractionChanged,
+          );
+          return () => {
+            if (interactionRefreshTimer.current) {
+              clearTimeout(interactionRefreshTimer.current);
+              interactionRefreshTimer.current = null;
+            }
+            container.removeEventListener(
+              "qti-assessment-item-connected",
+              onAssessmentItemConnected,
+            );
+            container.removeEventListener(
+              "qti-interaction-changed",
+              onInteractionChanged,
+            );
+          };
+        }, []);
+
+        useEffect(() => {
+          const onGlobalInteractionChanged = (event) => {
+            if (interactionRefreshTimer.current) {
+              clearTimeout(interactionRefreshTimer.current);
+            }
+            interactionRefreshTimer.current = setTimeout(() => {
+              refreshLiveData();
+              interactionRefreshTimer.current = null;
+            }, INTERACTION_REFRESH_DELAY_MS);
+          };
+          document.addEventListener(
+            "qti-interaction-changed",
+            onGlobalInteractionChanged,
+            true,
+          );
+          return () => {
+            document.removeEventListener(
+              "qti-interaction-changed",
+              onGlobalInteractionChanged,
+              true,
+            );
+          };
+        }, []);
+
+        useEffect(() => {
+          return () => {
+            if (configUpdateTimer) {
+              clearTimeout(configUpdateTimer);
+              configUpdateTimer = null;
+            }
+            if (interactionRefreshTimer.current) {
+              clearTimeout(interactionRefreshTimer.current);
+              interactionRefreshTimer.current = null;
+            }
+          };
+        }, []);
+
+        function emptyAndRestoreState() {
+          if (isRestoringState) return;
+          const storedState = currentAssessmentItem?.state;
+          const storageKey = currentPciFactory
+            ? `${currentPciFactory.typeIdentifier}_state_restore`
+            : "pci_state_restore";
+          try {
+            sessionStorage.setItem(storageKey, JSON.stringify(storedState));
+          } catch (error) {
+            // Ignore storage failures; fallback to in-memory state.
+          }
+
+          let reinitState = storedState;
+          try {
+            const fromStorage = sessionStorage.getItem(storageKey);
+            if (fromStorage !== null) {
+              reinitState = JSON.parse(fromStorage);
+            }
+          } catch (error) {
+            reinitState = storedState;
+          }
+
+          setIsRestoringState(true);
+          refreshCurrentPci({
+            stateOverride: reinitState,
+            onready: () => {
+              setIsRestoringState(false);
+              refreshLiveData();
+            },
+          });
+        }
+
+        return html`
+          <div class="dev-layout">
+            <div class="dev-main">
+              <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                  <h6 class="mb-1">Response</h6>
+                  <pre class="json-block"><code dangerouslySetInnerHTML=${{
+                    __html: highlightJson(responseSnapshot),
+                  }}></code></pre>
+                </div>
+                <div class="col-md-6">
+                  <div
+                    class="d-flex justify-content-between align-items-center"
+                  >
+                    <h6 class="mb-1">State</h6>
+                    <button
+                      class="icon-btn ${isRestoringState ? "spin" : ""}"
+                      title="empty the state and restore"
+                      onClick="${() => emptyAndRestoreState()}"
+                    >
+                      ↻
+                    </button>
+                  </div>
+                  <pre class="json-block"><code dangerouslySetInnerHTML=${{
+                    __html: highlightJson(stateSnapshot),
+                  }}></code></pre>
+                </div>
               </div>
             </div>
-
-            <div class="d-flex justify-content-between mt-3" role="toolbar" aria-label="Toolbar with button groups">
-              <div class="d-flex flex-column">
-                <small class="text-muted">configuration</small>
-                <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
-                  <button class="btn btn-outline-secondary" onClick="${() => setShow(true)}">config</button>
-                </div>
-              </div>
-
-              <div class="d-flex flex-column">
-                <small class="text-muted">data</small>
-                <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
-                  <button
-                    class="btn btn-outline-secondary"
-                    onClick="${() => alert(JSON.stringify(item.getResponse(), null, 4))}"
-                  >
-                    getResponse
-                  </button>
-                  <button class="btn btn-outline-secondary" onClick="${() => alert(item.getState())}">getStates</button>
-                </div>
-              </div>
-
-              <div class="d-flex flex-column">
-                <small class="text-muted">state</small>
-                <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
-                  <button class="btn btn-outline-secondary" onClick="${() => reload()}">reload</button>
-                </div>
-              </div>
-
-              <div class="d-flex flex-column">
-                <small class="text-muted">scoring TAO (match correct string)</small>
-                <div class="btn-group me-2 shadow-sm" role="group" aria-label="Basic checkbox toggle button group">
-                  <button class="btn btn-outline-secondary position-relative" onClick="${() => saveResponse()}">
-                    save
-                  </button>
-                  <button class="btn btn-outline-secondary" onClick="${() => compareResponse()}">compare</button>
-                  <button class="btn btn-outline-secondary" onClick="${() => setResponse()}">load</button>
-                  <button
-                    class="btn btn-outline-secondary"
-                    disabled="${!item.resetResponse}"
-                    onClick="${() => resetResponse()}"
-                  >
-                    clear
-                  </button>
-                </div>
-              </div>
-
-              <div class="d-flex flex-column">
-                <small class="text-muted">ㅤ</small>
-                <div class="d-flex">
-                  <button
-                    class="btn bg-light shadow-sm btn-outline-danger me-2"
-                    disabled="${!(item.destroy || item.oncompleted)}"
-                    onClick="${() => unload()}"
-                  >
-                    unload
-                  </button>
-                  <button class="btn bg-light shadow-sm btn-outline-danger" onClick="${() => reset()}">reset</button>
-                </div>
-              </div>
-            </div>
-            ${store && html`<div class="mt-3 d-flex flex-column gap-2">
-              <div class="d-flex gap-2 align-items-center">
-                <button class="btn btn-outline-secondary" onClick="${() => playState()}">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play" viewBox="0 0 16 16">
-                    <path d="M3.905 14.21a1 1 0 0 1-1.555-.832V2.622a1 1 0 0 1 1.555-.832l9.066 5.293a1 1 0 0 1 0 1.664l-9.066 5.293zm-.57-1.664L11.4 8 3.335 2.454v10.092z"/>
-                  </svg>
-                </button>
-                <div class="w-100 d-flex"><input
-                  class="form-control-range w-100"
-                  type="range"
-                  min="0"
-                  max="${maxRange}"
-                  value=${currentRangeValue}
-                  onInput=${(e) => scrubRange(e.target.value)}
-                  step="1"
-                /><div>${maxRange}</div></div>
-              </div>
-            </div>` }
-            
           </div>
         `;
-    }
-
-    function register(item) {
-      let state = undefined;
-      const localStorageState = localStorage.getItem(item.typeIdentifier + "_state");
-      if (localStorageState) {
-        state = JSON.parse(localStorageState);
       }
-      let props = {};
-      const localStorageProps = localStorage.getItem(item.typeIdentifier + "_props");
-      if (localStorageProps) {
-        props = JSON.parse(localStorageProps);
+      function register(item) {
+        let state = undefined;
+        const localStorageState = localStorage.getItem(
+          item.typeIdentifier + "_state",
+        );
+        if (localStorageState) {
+          state = JSON.parse(localStorageState);
+        }
+        let props = {};
+        const localStorageProps = localStorage.getItem(
+          item.typeIdentifier + "_props",
+        );
+        if (localStorageProps) {
+          props = JSON.parse(localStorageProps);
+        }
+        const dataProperties = mergeConfigPropertiesIntoDataProperties(props);
+        item.qtiHostDataProperties = dataProperties;
+        const dom = createQtiPciHost(item, dataProperties);
+        const config = {
+          onready: () => {
+            const loading = document.getElementById("loading");
+            if (loading) {
+              loading.innerHTML = "";
+            }
+          },
+          properties: props,
+        };
+
+        const interaction = item.getInstance(dom, config, state);
+        setCurrentRuntime(item, interaction, config, dataProperties);
+        syncConfigPropertiesToHostDataProperties(config, dataProperties);
+        localStorage.removeItem(item.typeIdentifier + "_state");
       }
-      const dom = document.getElementById("pciContainer");
-      const config = {
-        onready: () => {
-          document.getElementById("loading").innerHTML = "";
-        },
-        properties: props,
-      };
 
-      item.getInstance(dom, config, state);
+      async function loadQtiComponents() {
+        if (customElements.get("qti-portable-custom-interaction")) {
+          return true;
+        }
+        const moduleCandidates = [
+          "https://cdn.jsdelivr.net/npm/@citolab/qti-components/+esm",
+          "https://cdn.jsdelivr.net/npm/@citolab/qti-components/dist/index.js",
+          "https://unpkg.com/@citolab/qti-components/dist/index.js?module",
+        ];
 
-      if (item.getResponse() !== undefined) {
-        // document.getElementById("noresponse").style.display = "block";
+        for (const modulePath of moduleCandidates) {
+          try {
+            await import(modulePath);
+            if (customElements.get("qti-portable-custom-interaction")) {
+              return true;
+            }
+          } catch (error) {
+            // Try the next candidate.
+          }
+        }
+
+        console.warn(
+          "Could not load qti-components; using default PCI container rendering.",
+        );
+        return false;
       }
-      localStorage.removeItem(item.typeIdentifier + "_state");
-    }
 
-    define("qtiCustomInteractionContext", (qtiCustomInteractionContext) => {
-      return { register: (ctxA) => register(ctxA) };
-    });
+      function createQtiPciHost(item, dataProperties = {}) {
+        const container = document.getElementById("pciContainer");
+        container.innerHTML = "";
+        currentAssessmentItem = null;
 
-    function loadItem() {
-      requirejs(["index.js"], (itemInstance) => {
-        render(html`<${App} item="${itemInstance}" />`, document.getElementById("devtools"));
+        if (!customElements.get("qti-portable-custom-interaction")) {
+          return container;
+        }
+
+        const typeIdentifier = item.typeIdentifier || "pci";
+        const escapedTypeIdentifier = escapeHtmlAttribute(typeIdentifier);
+        const dataAttributes = Object.keys(dataProperties || {})
+          .map((key) => {
+            const normalizedKey = String(key || "")
+              .trim()
+              .replace(/^data-/, "");
+            if (!normalizedKey) {
+              return "";
+            }
+            const value = dataProperties[key];
+            if (value === null || typeof value === "undefined") {
+              return "";
+            }
+            return ` data-${normalizedKey}="${escapeHtmlAttribute(value)}"`;
+          })
+          .join("");
+
+        const qtiItem = document.createElement("qti-item");
+        qtiItem.innerHTML = `
+          <qti-assessment-item identifier="PREVIEW-ITEM" title="${escapedTypeIdentifier}" adaptive="false" time-dependent="false">
+            <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"></qti-response-declaration>
+            <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"></qti-outcome-declaration>
+            <qti-item-body>
+              <qti-portable-custom-interaction response-identifier="RESPONSE" module="pci" custom-interaction-type-identifier="${escapedTypeIdentifier}"${dataAttributes}>
+                <qti-interaction-modules>
+                  <qti-interaction-module id="pci" primary-path="./index"></qti-interaction-module>
+                </qti-interaction-modules>
+                <qti-interaction-markup>
+                  <div data-qti-pci-runtime-host style="height:100%"></div>
+                </qti-interaction-markup>
+              </qti-portable-custom-interaction>
+            </qti-item-body>
+          </qti-assessment-item>
+        `;
+        container.appendChild(qtiItem);
+
+        return (
+          qtiItem.querySelector(
+            "[data-qti-pci-runtime-host]",
+          ) || qtiItem.querySelector("qti-portable-custom-interaction")
+        );
+      }
+
+      define("qtiCustomInteractionContext", (qtiCustomInteractionContext) => {
+        return { register: (ctxA) => register(ctxA) };
       });
-    }
-    window.onload = () => loadItem();
-  </script>
 
-  <h3 style="margin-top: 12rem">checklist</h3>
-  <ul style="margin-bottom: 10rem">
-    <li>Is the css scoped to the item?</li>
-    <li>Is the css/item somewhat responsive on smaller screens</li>
-    <li>Can you reset the item to its initial state</li>
-    <li>Can it restore its state ( reload )</li>
-    <li>Can you change the config</li>
-    <li>Colorblind</li>
-    <li>Touch/Mouse friendly</li>
-    <li>Works in older browser like IE11</li>
-    <li>Destroys itself correctly, removing event listeners</li>
-    <li>No objects or variables on global scope</li>
-    <li>Triggers correctly on changed config properties</li>
-    <li>Implements on off() methods of tao?</li>
-    <li>Response type and response correct</li>
-    <li>getResponse() should give undefined when user has not done anything</li>
-    <li>For TAO to enter response is the entered comparable by the response given</li>
-  </ul>
-</body>
+      function loadItem() {
+        requirejs(["index.js"], (itemInstance) => {
+          currentAssessmentItem = null;
+          if (!currentPciFactory) {
+            currentPciFactory = itemInstance;
+          }
+          renderDevtools();
+        });
+      }
+      window.onload = async () => {
+        // Some runtimes assume a global `off()` exists (TAO compatibility).
+        // In the live IMS preview this should be optional, so provide a safe fallback.
+        if (typeof globalThis.off !== "function") {
+          globalThis.off = () => {};
+        }
+        await loadQtiComponents();
+        loadItem();
+      };
+    </script>
 
+    <!--
+    <h3 style="margin-top: 12rem">checklist</h3>
+    <ul style="margin-bottom: 10rem">
+      <li>Is the css scoped to the item?</li>
+      <li>Is the css/item somewhat responsive on smaller screens</li>
+      <li>Can you reset the item to its initial state</li>
+      <li>Can it restore its state ( reload )</li>
+      <li>Can you change the config</li>
+      <li>Colorblind</li>
+      <li>Touch/Mouse friendly</li>
+      <li>Works in older browser like IE11</li>
+      <li>Destroys itself correctly, removing event listeners</li>
+      <li>No objects or variables on global scope</li>
+      <li>Triggers correctly on changed config properties</li>
+      <li>Implements on off() methods of tao?</li>
+      <li>Response type and response correct</li>
+      <li>
+        getResponse() should give undefined when user has not done anything
+      </li>
+      <li>
+        For TAO to enter response is the entered comparable by the response
+        given
+      </li>
+    </ul>
+    -->
+  </body>
 </html>

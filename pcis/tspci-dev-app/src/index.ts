@@ -7,11 +7,9 @@ import {
 } from "@citolab/tspci";
 import * as ctx from "qtiCustomInteractionContext";
 import configProps from "./config.json";
-import Interaction from "./interaction"; // import and bundle this interaction file
+import style from "./styles.css";
+import procenten from "./assets/procenten.png";
 
-import style from "./styles.css"; // import and bundle this style file ( you can use tailwind and nested css )
-import procenten from "./assets/procenten.png"; // image types are bundled inside the js
-// Configuration
 type PropTypes = typeof configProps;
 
 type PciState = {
@@ -21,7 +19,7 @@ type PciState = {
 };
 
 class PciInstance implements IMSpci<PropTypes> {
-  typeIdentifier = "###___PCI_NAME___###";
+  typeIdentifier = "TspciDevApp";
   private config: ConfigProperties<PropTypes>;
   private dom: HTMLElement;
   private shadowdom: ShadowRoot;
@@ -47,15 +45,6 @@ class PciInstance implements IMSpci<PropTypes> {
       } catch {
         this.state = { value: typeof stateString === "string" ? stateString : "", touched: false };
       }
-    }
-
-    const boundResponse =
-      this.config.boundTo?.[this.config.responseIdentifier] ??
-      (this.config.boundTo && Object.keys(this.config.boundTo).length === 1
-        ? this.config.boundTo[Object.keys(this.config.boundTo)[0]]
-        : undefined);
-    if (boundResponse && (boundResponse.base || boundResponse.list || boundResponse.record)) {
-      this.setResponse?.(boundResponse);
     }
 
     this.onChange = (e: Event) => {
@@ -98,8 +87,7 @@ class PciInstance implements IMSpci<PropTypes> {
     this.shadowdom.innerHTML = `<div class="pci-container">
       <h1>${this.config.properties.title}</h1>
       <div class="body">
-        <img width="${+this.config.properties.width}" height="${+this.config
-      .properties.height}" src="${procenten}" />
+        <img width="${+this.config.properties.width}" height="${+this.config.properties.height}" src="${procenten}" />
       </div>
       <div class="interaction">
         <label>${this.config.properties.prompt}</label>
@@ -132,6 +120,13 @@ class PciInstance implements IMSpci<PropTypes> {
   };
 
   getResponse = () => {
+    // Fallback: if an input event was missed, read the current DOM value directly.
+    const input = this.getInputEl();
+    const liveValue = input?.value ?? "";
+    if ((!this.state.touched || !String(this.state.value ?? "").trim()) && liveValue.trim()) {
+      this.state = { ...this.state, value: liveValue, touched: true };
+    }
+
     if (!this.state.touched) return undefined;
     const trimmed = (this.state.value ?? "").toString().trim();
     if (!trimmed) return undefined;
@@ -172,7 +167,7 @@ class PciInstance implements IMSpci<PropTypes> {
 }
 
 const factory: IMSpciFactory<PropTypes> = {
-  typeIdentifier: "###___PCI_NAME___###",
+  typeIdentifier: "TspciDevApp",
   getInstance: (dom, config, state) => new PciInstance(dom, config, state),
 };
 

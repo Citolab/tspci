@@ -24,6 +24,7 @@ class PciInstance implements IMSpci<PropTypes> {
   private storeListener: Listener<StateModel>;
   private previousResponseJson: string = "";
   private initialState: StateModel = { input: undefined };
+  private customValidity: string = "";
 
   constructor(dom: HTMLElement, config: ConfigProperties<PropTypes>, stateString?: string) {
     if (!dom) throw new Error("No DOM Element provided");
@@ -83,6 +84,7 @@ class PciInstance implements IMSpci<PropTypes> {
       };
       const evt = new CustomEvent("qti-interaction-changed", {
         bubbles: true,
+        composed: true,
         cancelable: true,
         detail,
       });
@@ -121,6 +123,20 @@ class PciInstance implements IMSpci<PropTypes> {
     if (value === undefined) return undefined;
     return { base: { integer: value } } as QtiVariableJSON;
   };
+
+  checkValidity = () => {
+    const input = this.shadowdom.querySelector("input");
+    if (!input) return undefined;
+    return input.checkValidity();
+  };
+
+  setCustomValidity = (message: string) => {
+    this.customValidity = message;
+    const input = this.shadowdom.querySelector("input");
+    if (input) input.setCustomValidity(message);
+  };
+
+  getCustomValidity = () => this.customValidity;
 
   oncompleted = () => {
     if (this.storeListener) {

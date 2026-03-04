@@ -7,6 +7,9 @@ tao_pci/tmp
 dist
 *.log
 pcis/**/*
+!pcis/tspci-dev-app/
+!pcis/tspci-dev-app/**
+pcis/tspci-dev-app/dist/
 *.DS_Store
 /.idea
 *.tgz
