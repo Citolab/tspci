@@ -1,3 +1,18 @@
-h1 {
-    color: red;
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+.pci-selected-image {
+  outline: 4px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 10px;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+img[data-editable="image"] {
+  cursor: pointer;
+  transition: box-shadow 120ms ease, outline-color 120ms ease;
+}
+
+img[data-editable="image"]:hover {
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.2);
 }

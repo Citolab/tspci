@@ -68,5 +68,8 @@
   },
   "overrides": {
     "tar": "^6.2.0"
+  },
+  "dependencies": {
+    "playwright": "^1.52.0"
   }
 }

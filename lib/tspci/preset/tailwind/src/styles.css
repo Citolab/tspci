@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@config "../tailwind.config.js";
+
 .pci-container {
   @apply container flex flex-col justify-center items-center;
 }

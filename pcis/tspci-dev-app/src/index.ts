@@ -8,12 +8,11 @@ import {
 import * as ctx from "qtiCustomInteractionContext";
 import configProps from "./config.json";
 import style from "./styles.css";
-import procenten from "./assets/procenten.png";
 
 type PropTypes = typeof configProps;
 
 type PciState = {
-  value: string;
+  selectedIndex: number;
   touched: boolean;
   customValidity?: string;
 };
@@ -22,49 +21,97 @@ class PciInstance implements IMSpci<PropTypes> {
   typeIdentifier = "TspciDevApp";
   private config: ConfigProperties<PropTypes>;
   private dom: HTMLElement;
-  private shadowdom: ShadowRoot;
   private state: PciState;
-  private onChange: (e: Event) => void;
+  private clickableImages: HTMLImageElement[] = [];
+  private imageClickHandlers: Array<(e: MouseEvent) => void> = [];
 
-  constructor(dom: HTMLElement, config: ConfigProperties<PropTypes>, stateString?: string) {
+  constructor(
+    dom: HTMLElement,
+    config: ConfigProperties<PropTypes>,
+    stateString?: string,
+  ) {
     if (!dom) throw new Error("No DOM Element provided");
     config.properties = { ...configProps, ...config.properties };
     this.dom = dom;
     this.config = config;
-    this.shadowdom = dom.attachShadow({ mode: "closed" });
 
-    this.state = { value: "", touched: false };
+    const doc = dom.ownerDocument || document;
+    const styleEl = doc.createElement("style");
+    styleEl.textContent = style;
+    doc.head.appendChild(styleEl);
+
+    this.state = { selectedIndex: -1, touched: false };
     if (stateString) {
       try {
         const parsed = JSON.parse(stateString) as Partial<PciState>;
         this.state = {
-          value: typeof parsed.value === "string" ? parsed.value : "",
+          selectedIndex:
+            typeof parsed.selectedIndex === "number"
+              ? parsed.selectedIndex
+              : -1,
           touched: parsed.touched === true,
-          customValidity: typeof parsed.customValidity === "string" ? parsed.customValidity : undefined,
+          customValidity:
+            typeof parsed.customValidity === "string"
+              ? parsed.customValidity
+              : undefined,
         };
       } catch {
-        this.state = { value: typeof stateString === "string" ? stateString : "", touched: false };
+        this.state = { selectedIndex: -1, touched: false };
       }
     }
 
-    this.onChange = (e: Event) => {
-      const target = e.target as HTMLInputElement | null;
-      if (!target) return;
-      const nextValue = target.value ?? "";
-      if (nextValue === this.state.value && this.state.touched) return;
-      this.state = { ...this.state, value: nextValue, touched: true };
-      this.dispatchInteractionChanged();
-    };
-
-    this.render();
+    this.initializeFromMarkup();
 
     if (this.config.onready) {
       this.config.onready(this, this.getState());
     }
+
+    if (this.state.touched && this.state.selectedIndex >= 0) {
+      this.dispatchInteractionChanged();
+    }
   }
 
-  private getInputEl(): HTMLInputElement | null {
-    return this.shadowdom.querySelector("input[type='number']");
+  private initializeFromMarkup() {
+    this.bindSelectableImages();
+    this.applySelectionUi();
+  }
+
+  private bindSelectableImages() {
+    this.clearImageListeners();
+    this.clickableImages = Array.from(
+      this.dom.querySelectorAll("img[data-editable='image']"),
+    ) as HTMLImageElement[];
+    this.imageClickHandlers = this.clickableImages.map((img, index) => {
+      const handler = (event: MouseEvent) => {
+        event.preventDefault();
+        this.state = { ...this.state, selectedIndex: index, touched: true };
+        this.applySelectionUi();
+        this.dispatchInteractionChanged();
+      };
+      img.addEventListener("click", handler);
+      return handler;
+    });
+  }
+
+  private clearImageListeners() {
+    this.clickableImages.forEach((img, index) => {
+      const handler = this.imageClickHandlers[index];
+      if (handler) {
+        img.removeEventListener("click", handler);
+      }
+    });
+    this.clickableImages = [];
+    this.imageClickHandlers = [];
+  }
+
+  private applySelectionUi() {
+    this.clickableImages.forEach((img, index) => {
+      if (index === this.state.selectedIndex) {
+        img.classList.add("pci-selected-image");
+      } else {
+        img.classList.remove("pci-selected-image");
+      }
+    });
   }
 
   private dispatchInteractionChanged() {
@@ -83,86 +130,59 @@ class PciInstance implements IMSpci<PropTypes> {
     this.dom.dispatchEvent(event);
   }
 
-  private render() {
-    this.shadowdom.innerHTML = `<div class="pci-container">
-      <h1>${this.config.properties.title}</h1>
-      <div class="body">
-        <img width="${+this.config.properties.width}" height="${+this.config.properties.height}" src="${procenten}" />
-      </div>
-      <div class="interaction">
-        <label>${this.config.properties.prompt}</label>
-        <input type="number" value="${this.state.value}" min="0" max="100">%
-      </div>
-    </div>`;
+  private indexToIdentifier(index: number): string {
+    return String.fromCharCode(65 + index);
+  }
 
-    const css = document.createElement("style");
-    css.innerHTML = style;
-    this.shadowdom.appendChild(css);
-
-    const input = this.getInputEl();
-    if (input) {
-      if (this.state.customValidity) input.setCustomValidity(this.state.customValidity);
-      input.addEventListener("input", this.onChange);
-      input.addEventListener("change", this.onChange);
-    }
+  private identifierToIndex(identifier: string): number {
+    const normalized = String(identifier || "")
+      .trim()
+      .toUpperCase();
+    if (!/^[A-Z]$/.test(normalized)) return -1;
+    return normalized.charCodeAt(0) - 65;
   }
 
   setResponse = (response: QtiVariableJSON) => {
-    const next =
-      typeof response?.base?.integer === "number"
-        ? String(response.base.integer)
-        : typeof response?.base?.string === "string"
-          ? response.base.string
+    const nextIdentifier =
+      typeof response?.base?.string === "string"
+        ? response.base.string
+        : typeof response?.base?.identifier === "string"
+          ? response.base.identifier
           : "";
-    this.state = { ...this.state, value: next, touched: true };
-    const input = this.getInputEl();
-    if (input) input.value = next;
+    const nextIndex = this.identifierToIndex(nextIdentifier);
+    this.state = {
+      ...this.state,
+      selectedIndex: nextIndex >= 0 ? nextIndex : -1,
+      touched: nextIndex >= 0,
+    };
+    this.applySelectionUi();
+    this.dispatchInteractionChanged();
   };
 
   getResponse = () => {
-    // Fallback: if an input event was missed, read the current DOM value directly.
-    const input = this.getInputEl();
-    const liveValue = input?.value ?? "";
-    if ((!this.state.touched || !String(this.state.value ?? "").trim()) && liveValue.trim()) {
-      this.state = { ...this.state, value: liveValue, touched: true };
-    }
-
-    if (!this.state.touched) return undefined;
-    const trimmed = (this.state.value ?? "").toString().trim();
-    if (!trimmed) return undefined;
-    const asNumber = Number(trimmed);
-    if (!Number.isFinite(asNumber)) return undefined;
-    return { base: { integer: Math.trunc(asNumber) } } as QtiVariableJSON;
+    if (!this.state.touched || this.state.selectedIndex < 0) return undefined;
+    return {
+      base: { string: this.indexToIdentifier(this.state.selectedIndex) },
+    } as QtiVariableJSON;
   };
 
   getState = () => JSON.stringify(this.state);
 
   checkValidity = () => {
-    const input = this.getInputEl();
-    if (!input) return undefined;
-    return input.checkValidity();
+    const isValid = this.state.selectedIndex >= 0;
+    return this.state.customValidity ? false : isValid;
   };
 
-  reportValidity = () => {
-    const input = this.getInputEl();
-    if (!input) return undefined;
-    return input.reportValidity();
-  };
+  reportValidity = () => this.checkValidity();
 
   setCustomValidity = (message: string) => {
     this.state = { ...this.state, customValidity: message };
-    const input = this.getInputEl();
-    if (input) input.setCustomValidity(message);
   };
 
   getCustomValidity = () => this.state.customValidity ?? "";
 
   oncompleted = () => {
-    const input = this.getInputEl();
-    if (input) {
-      input.removeEventListener("input", this.onChange);
-      input.removeEventListener("change", this.onChange);
-    }
+    this.clearImageListeners();
   };
 }
 
@@ -172,11 +192,21 @@ const factory: IMSpciFactory<PropTypes> = {
 };
 
 const engineContext =
-  ctx && typeof (ctx as unknown as { register?: unknown }).register === "function"
+  ctx &&
+  typeof (ctx as unknown as { register?: unknown }).register === "function"
     ? (ctx as unknown as { register: (f: IMSpciFactory<PropTypes>) => void })
-    : typeof window !== "undefined" && (window as unknown as { qtiCustomInteractionContext?: unknown }).qtiCustomInteractionContext
-      ? ((window as unknown as { qtiCustomInteractionContext: { register: (f: IMSpciFactory<PropTypes>) => void } })
-          .qtiCustomInteractionContext as { register: (f: IMSpciFactory<PropTypes>) => void })
+    : typeof window !== "undefined" &&
+        (window as unknown as { qtiCustomInteractionContext?: unknown })
+          .qtiCustomInteractionContext
+      ? ((
+          window as unknown as {
+            qtiCustomInteractionContext: {
+              register: (f: IMSpciFactory<PropTypes>) => void;
+            };
+          }
+        ).qtiCustomInteractionContext as {
+          register: (f: IMSpciFactory<PropTypes>) => void;
+        })
       : undefined;
 
 if (engineContext) {

@@ -43,6 +43,18 @@
         height: 100%;
       }
 
+      qti-item,
+      qti-assessment-item,
+      qti-item-body {
+        display: block;
+        width: 100%;
+      }
+
+      qti-assessment-item,
+      qti-item-body {
+        height: 100%;
+      }
+
       #devtools {
         max-width: 1024px;
         margin: 0 auto;
@@ -90,6 +102,10 @@
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
         padding: 1rem;
         border-radius: 0.5rem;
+      }
+
+      .dev-sidepane .form-control {
+        text-align: left;
       }
 
       @media (max-width: 1100px) {
@@ -175,6 +191,48 @@
         color: #6c757d;
         margin-top: 0.35rem;
       }
+
+      .prose-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .prose-btn {
+        border: 1px solid #ced4da;
+        background: #fff;
+        border-radius: 0.375rem;
+        font-size: 12px;
+        line-height: 1.2;
+        padding: 0.3rem 0.45rem;
+        cursor: pointer;
+      }
+
+      .prose-editor {
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        background: #fff;
+        padding: 0.5rem;
+        min-height: 220px;
+      }
+
+      .prose-editor .ProseMirror {
+        min-height: 200px;
+        outline: none;
+      }
+
+      .prose-editor .ProseMirror table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      .prose-editor .ProseMirror th,
+      .prose-editor .ProseMirror td {
+        border: 1px solid #dee2e6;
+        padding: 0.35rem;
+        vertical-align: top;
+      }
     </style>
   </head>
 
@@ -210,17 +268,16 @@
         useRef,
       } from "https://unpkg.com/preact@latest/hooks/dist/hooks.module.js?module";
       import htm from "https://unpkg.com/htm?module";
+      import { Editor } from "https://esm.sh/@tiptap/core@2.10.4";
+      import StarterKit from "https://esm.sh/@tiptap/starter-kit@2.10.4";
+      import Underline from "https://esm.sh/@tiptap/extension-underline@2.10.4";
       // Initialize htm with Preact
       const html = htm.bind(h);
 
-      const CONFIG_TO_DATA_PROPERTY_KEYS = [
-        "title",
-        "prompt",
-        "width",
-        "height",
-      ];
       const CONFIG_CHANGE_DEBOUNCE_MS = 1000;
       const INTERACTION_REFRESH_DELAY_MS = 120;
+      const QTI_ASSESSMENT_ITEM_FILE_NAME = "qti-assessment-item.xml";
+      const MARKUP_SAVE_DEBOUNCE_MS = 800;
 
       function mergeConfigPropertiesIntoDataProperties(
         properties,
@@ -230,7 +287,7 @@
         if (!properties) {
           return merged;
         }
-        CONFIG_TO_DATA_PROPERTY_KEYS.forEach((key) => {
+        Object.keys(properties).forEach((key) => {
           const value = properties[key];
           if (value !== null && typeof value !== "undefined") {
             merged[key] = String(value);
@@ -289,6 +346,224 @@
       let currentPciInteraction = null;
       let currentAssessmentItem = null;
       let configUpdateTimer = null;
+      let currentQtiMarkup = "";
+      let currentAssessmentItemTemplateXml = "";
+      let markupSaveTimer = null;
+      let markupPersistSequence = 0;
+      let currentConfigSchemaKeys = null;
+
+      function sanitizeConfigProperties(properties) {
+        const source = properties && typeof properties === "object" ? properties : {};
+        if (Array.isArray(currentConfigSchemaKeys)) {
+          const allowed = new Set(currentConfigSchemaKeys);
+          return Object.fromEntries(
+            Object.entries(source).filter(([key]) => allowed.has(String(key))),
+          );
+        }
+        return source;
+      }
+
+      async function loadConfigSchemaKeys() {
+        try {
+          const response = await fetch(`./config.json?t=${Date.now()}`, {
+            cache: "no-store",
+          });
+          if (!response.ok) {
+            currentConfigSchemaKeys = [];
+            return;
+          }
+          const configJson = await response.json();
+          if (configJson && typeof configJson === "object") {
+            currentConfigSchemaKeys = Object.keys(configJson);
+            return;
+          }
+          currentConfigSchemaKeys = [];
+        } catch {
+          currentConfigSchemaKeys = [];
+        }
+      }
+
+      function hasMarkupContent(value) {
+        return String(value || "").trim().length > 0;
+      }
+
+      function getPortableCustomInteractionElementFromXml(xmlText) {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(String(xmlText || ""), "application/xml");
+        return (
+          xmlDoc.querySelector("qti-portable-custom-interaction") ||
+          xmlDoc.getElementsByTagName("qti-portable-custom-interaction")[0] ||
+          null
+        );
+      }
+
+      function parseAssessmentItemXml(xmlText) {
+        const pciElement = getPortableCustomInteractionElementFromXml(xmlText);
+        if (!pciElement) {
+          return { interactionMarkupHtml: "" };
+        }
+        const interactionMarkupElement =
+          pciElement.querySelector("qti-interaction-markup") ||
+          pciElement.getElementsByTagName("qti-interaction-markup")[0] ||
+          null;
+        return {
+          interactionMarkupHtml: interactionMarkupElement?.innerHTML || "",
+        };
+      }
+
+      async function loadAssessmentItemXmlFromFile() {
+        const fileUrl = `./${QTI_ASSESSMENT_ITEM_FILE_NAME}?t=${Date.now()}`;
+        try {
+          const response = await fetch(fileUrl, { cache: "no-store" });
+          if (!response.ok) {
+            return { xmlText: "", interactionMarkupHtml: "" };
+          }
+          const xmlText = await response.text();
+          const parsed = parseAssessmentItemXml(xmlText);
+          return { xmlText, ...parsed };
+        } catch (error) {
+          return { xmlText: "", interactionMarkupHtml: "" };
+        }
+      }
+
+      function updateAssessmentItemMarkupXml(sourceXml, interactionMarkupHtml) {
+        const parser = new DOMParser();
+        const source =
+          String(sourceXml || "").trim() ||
+          `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item identifier="PREVIEW-ITEM" title="PCI Item" adaptive="false" time-dependent="false">
+  <qti-item-body>
+    <qti-portable-custom-interaction response-identifier="RESPONSE" module="pci" custom-interaction-type-identifier="pci"></qti-portable-custom-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+        const xmlDoc = parser.parseFromString(source, "application/xml");
+        const parseError = xmlDoc.querySelector("parsererror");
+        if (parseError) {
+          return source;
+        }
+        let pciElement =
+          xmlDoc.querySelector("qti-portable-custom-interaction") ||
+          xmlDoc.getElementsByTagName("qti-portable-custom-interaction")[0] ||
+          null;
+        if (!pciElement) {
+          return source;
+        }
+
+        const existingInteractionMarkup =
+          pciElement.querySelector("qti-interaction-markup") ||
+          pciElement.getElementsByTagName("qti-interaction-markup")[0] ||
+          null;
+        const interactionMarkupElement =
+          existingInteractionMarkup || xmlDoc.createElement("qti-interaction-markup");
+        while (interactionMarkupElement.firstChild) {
+          interactionMarkupElement.removeChild(interactionMarkupElement.firstChild);
+        }
+        const markupNodes = htmlFragmentToXmlNodes(
+          xmlDoc,
+          String(interactionMarkupHtml || ""),
+        );
+        markupNodes.forEach((node) => {
+          interactionMarkupElement.appendChild(node);
+        });
+        if (!existingInteractionMarkup) {
+          pciElement.appendChild(interactionMarkupElement);
+        }
+
+        return new XMLSerializer().serializeToString(xmlDoc);
+      }
+
+      function htmlFragmentToXmlNodes(xmlDoc, htmlFragment) {
+        const htmlDoc = document.implementation.createHTMLDocument("");
+        htmlDoc.body.innerHTML = String(htmlFragment || "");
+        const body = htmlDoc.body;
+        if (!body) {
+          return [];
+        }
+
+        function cloneHtmlNodeAsXmlNode(node) {
+          if (node.nodeType === Node.TEXT_NODE) {
+            return xmlDoc.createTextNode(node.nodeValue || "");
+          }
+          if (node.nodeType === Node.COMMENT_NODE) {
+            return xmlDoc.createComment(node.nodeValue || "");
+          }
+          if (node.nodeType !== Node.ELEMENT_NODE) {
+            return null;
+          }
+
+          const sourceElement = node;
+          const xmlElement = xmlDoc.createElement(
+            sourceElement.tagName.toLowerCase(),
+          );
+          Array.from(sourceElement.attributes || []).forEach((attr) => {
+            const attributeName = String(attr.name || "").toLowerCase();
+            if (attributeName === "xmlns" || attributeName.startsWith("xmlns:")) {
+              return;
+            }
+            xmlElement.setAttribute(attr.name, attr.value);
+          });
+          Array.from(sourceElement.childNodes || []).forEach((childNode) => {
+            const clonedChild = cloneHtmlNodeAsXmlNode(childNode);
+            if (clonedChild) {
+              xmlElement.appendChild(clonedChild);
+            }
+          });
+          return xmlElement;
+        }
+
+        return Array.from(body.childNodes)
+          .map((node) => cloneHtmlNodeAsXmlNode(node))
+          .filter(Boolean);
+      }
+
+      async function saveAssessmentItemXmlToFile({ interactionMarkupHtml }) {
+        const xmlBody = updateAssessmentItemMarkupXml(
+          currentAssessmentItemTemplateXml,
+          interactionMarkupHtml,
+        );
+        currentAssessmentItemTemplateXml = xmlBody;
+        await fetch("/__tspci/save-qti-assessment-item", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/xml; charset=utf-8",
+          },
+          body: xmlBody,
+        });
+      }
+
+      async function persistMarkupAndReloadFromFile(sequence) {
+        await saveAssessmentItemXmlToFile({
+          interactionMarkupHtml: currentQtiMarkup,
+        });
+        if (sequence !== markupPersistSequence) {
+          return;
+        }
+        const loadedAssessmentItem = await loadAssessmentItemXmlFromFile();
+        if (sequence !== markupPersistSequence) {
+          return;
+        }
+        if (loadedAssessmentItem.xmlText) {
+          currentAssessmentItemTemplateXml = loadedAssessmentItem.xmlText;
+        }
+        currentQtiMarkup = loadedAssessmentItem.interactionMarkupHtml || "";
+        if (currentPciFactory) {
+          refreshCurrentPci();
+        }
+        renderConfigPanel();
+      }
+
+      function saveAssessmentItemXmlToFileDebounced() {
+        markupPersistSequence += 1;
+        const sequence = markupPersistSequence;
+        if (markupSaveTimer) {
+          clearTimeout(markupSaveTimer);
+        }
+        markupSaveTimer = setTimeout(() => {
+          persistMarkupAndReloadFromFile(sequence).catch((error) => {
+            console.error("Failed to save qti-assessment-item.xml", error);
+          });
+        }, MARKUP_SAVE_DEBOUNCE_MS);
+      }
 
       function ensureOptionalTaoMethods(target) {
         if (!target || typeof target !== "object") {
@@ -317,6 +592,9 @@
         currentPciFactory = factory;
         currentPciInteraction =
           interaction && typeof interaction === "object" ? interaction : null;
+        if (config && typeof config === "object") {
+          config.properties = sanitizeConfigProperties(config.properties);
+        }
         currentPciConfig = config;
         currentPciHostDataProperties = dataProperties || {};
         renderDevtools();
@@ -390,6 +668,7 @@
           if (!currentPciFactory || !current || !current.properties) {
             return;
           }
+          current.properties = sanitizeConfigProperties(current.properties);
           syncConfigPropertiesToHostDataProperties(
             current,
             currentPciHostDataProperties,
@@ -413,12 +692,301 @@
         applyConfigChangesDebounced();
       }
 
+      function changeQtiMarkup(value) {
+        currentQtiMarkup = String(value || "");
+        currentAssessmentItemTemplateXml = updateAssessmentItemMarkupXml(
+          currentAssessmentItemTemplateXml,
+          currentQtiMarkup,
+        );
+        saveAssessmentItemXmlToFileDebounced();
+      }
+
+      function createMarkupRoot(markup) {
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = String(markup || "");
+        return wrapper;
+      }
+
+      function getRepeatElements(wrapper) {
+        return Array.from(wrapper.querySelectorAll("[data-repeat]"));
+      }
+
+      function getRepeatItemElements(repeatElement) {
+        return Array.from(repeatElement.children).filter(
+          (node) => node.nodeType === Node.ELEMENT_NODE,
+        );
+      }
+
+      function getEditableElementsOutsideRepeats(wrapper) {
+        return Array.from(wrapper.querySelectorAll("[data-editable][data-name]")).filter(
+          (element) => !element.closest("[data-repeat]"),
+        );
+      }
+
+      function readEditableValue(element) {
+        const editableType = String(
+          element?.getAttribute?.("data-editable") || "",
+        ).toLowerCase();
+        if (editableType === "image") {
+          return element.getAttribute("src") || "";
+        }
+        if (editableType === "text") {
+          return element.textContent || "";
+        }
+        return element.innerHTML || "";
+      }
+
+      function writeEditableValue(element, value) {
+        const editableType = String(
+          element?.getAttribute?.("data-editable") || "",
+        ).toLowerCase();
+        if (editableType === "image") {
+          element.setAttribute("src", String(value || ""));
+          return;
+        }
+        if (editableType === "text") {
+          element.textContent = String(value || "");
+          return;
+        }
+        element.innerHTML = String(value || "");
+      }
+
+      function applyRepeatItemDefaults(itemElement, itemIndex) {
+        const labelElements = Array.from(
+          itemElement.querySelectorAll('[data-editable="text"][data-name="label"]'),
+        );
+        labelElements.forEach((labelElement) => {
+          labelElement.textContent = `Image ${String.fromCharCode(65 + itemIndex)}`;
+        });
+      }
+
+      function parseAllowedMarks(element) {
+        const allowedRaw = String(element?.getAttribute?.("data-allowed") || "")
+          .trim()
+          .toLowerCase();
+        if (!allowedRaw) {
+          return ["bold", "italic", "underline"];
+        }
+        return allowedRaw.split(/\s+/).filter(Boolean);
+      }
+
+      function parseLinesLimit(element) {
+        const raw = String(element?.getAttribute?.("data-lines") || "").trim();
+        const parsed = Number.parseInt(raw, 10);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+      }
+
+      function toBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = String(reader.result || "");
+            const commaIndex = result.indexOf(",");
+            resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : result);
+          };
+          reader.onerror = () =>
+            reject(reader.error || new Error("Could not read file"));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function uploadAssetFile(file) {
+        const contentBase64 = await toBase64(file);
+        const response = await fetch("/__tspci/upload-asset", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+          },
+          body: JSON.stringify({
+            fileName: file.name,
+            contentBase64,
+          }),
+        });
+        if (!response.ok) {
+          throw new Error(`Upload failed (${response.status})`);
+        }
+        const payload = await response.json();
+        return String(payload?.href || "");
+      }
+
+      function ProseRichTextEditor({ value, onChange, allowedMarks, linesLimit }) {
+        const editorElementRef = useRef(null);
+        const editorRef = useRef(null);
+        const onChangeRef = useRef(onChange);
+        const allowedMarksKey = Array.isArray(allowedMarks)
+          ? allowedMarks.join("|")
+          : "";
+        const parsedAllowedMarks = allowedMarksKey
+          .split("|")
+          .map((value) => value.trim())
+          .filter(Boolean);
+
+        useEffect(() => {
+          onChangeRef.current = onChange;
+        }, [onChange]);
+
+        useEffect(() => {
+          if (!editorElementRef.current) {
+            return;
+          }
+          const allowed = parsedAllowedMarks;
+          const editor = new Editor({
+            element: editorElementRef.current,
+            extensions: [
+              StarterKit.configure({
+                bulletList: false,
+                orderedList: false,
+              }),
+              Underline,
+            ],
+            content: String(value || ""),
+            onUpdate: ({ editor: tiptapEditor }) => {
+              if (typeof onChangeRef.current === "function") {
+                onChangeRef.current(tiptapEditor.getHTML());
+              }
+            },
+            editorProps: {
+              handleKeyDown: (view, event) => {
+                if (linesLimit === 1 && event.key === "Enter") {
+                  event.preventDefault();
+                  return true;
+                }
+                return false;
+              },
+            },
+          });
+          editorRef.current = editor;
+          if (!allowed.includes("bold")) {
+            editor.commands.unsetBold();
+          }
+          if (!allowed.includes("italic")) {
+            editor.commands.unsetItalic();
+          }
+          if (!allowed.includes("underline")) {
+            editor.commands.unsetUnderline();
+          }
+          return () => {
+            editor.destroy();
+            editorRef.current = null;
+          };
+        }, [allowedMarksKey, linesLimit]);
+
+        useEffect(() => {
+          const editor = editorRef.current;
+          if (!editor) {
+            return;
+          }
+          if (editor.isFocused) {
+            return;
+          }
+          const nextValue = String(value || "");
+          if (editor.getHTML() !== nextValue) {
+            editor.commands.setContent(nextValue, false);
+          }
+        }, [value]);
+
+        function runEditorCommand(command) {
+          const editor = editorRef.current;
+          if (!editor) {
+            return;
+          }
+          command(editor);
+          editor.commands.focus();
+        }
+
+        return html`
+          <div class="prose-toolbar">
+            ${parsedAllowedMarks.includes("bold")
+              ? html`<button
+                  type="button"
+                  class="prose-btn"
+                  onClick="${() =>
+                    runEditorCommand((editor) =>
+                      editor.chain().focus().toggleBold().run(),
+                    )}"
+                >
+                  Bold
+                </button>`
+              : null}
+            ${parsedAllowedMarks.includes("italic")
+              ? html`<button
+                  type="button"
+                  class="prose-btn"
+                  onClick="${() =>
+                    runEditorCommand((editor) =>
+                      editor.chain().focus().toggleItalic().run(),
+                    )}"
+                >
+                  Italic
+                </button>`
+              : null}
+            ${parsedAllowedMarks.includes("underline")
+              ? html`<button
+                  type="button"
+                  class="prose-btn"
+                  onClick="${() =>
+                    runEditorCommand((editor) =>
+                      editor.chain().focus().toggleUnderline().run(),
+                    )}"
+                >
+                  Underline
+                </button>`
+              : null}
+          </div>
+          <div class="prose-editor">
+            <div ref="${editorElementRef}"></div>
+          </div>
+        `;
+      }
+
       function ConfigPanel() {
+        const [showMarkupEditor, setShowMarkupEditorState] = useState(
+          hasMarkupContent(currentQtiMarkup),
+        );
+        const [markupContent, setMarkupContent] = useState(currentQtiMarkup);
+        const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+        useEffect(() => {
+          if (hasMarkupContent(currentQtiMarkup)) {
+            setShowMarkupEditorState(true);
+          }
+          setMarkupContent(currentQtiMarkup);
+        }, [currentQtiMarkup]);
+
+        const markupRoot = createMarkupRoot(markupContent);
+        const standaloneEditableElements =
+          getEditableElementsOutsideRepeats(markupRoot);
+        const repeatElements = getRepeatElements(markupRoot);
+
+        function updateMarkup(mutator) {
+          const root = createMarkupRoot(markupContent);
+          mutator(root);
+          const nextMarkup = root.innerHTML;
+          setMarkupContent(nextMarkup);
+          changeQtiMarkup(nextMarkup);
+        }
+
+        async function handleImageFileSelected(applyMutation, file) {
+          if (!file) {
+            return;
+          }
+          setIsUploadingImage(true);
+          try {
+            const uploadedHref = await uploadAssetFile(file);
+            applyMutation(uploadedHref);
+          } catch (error) {
+            console.error("Image upload failed", error);
+          } finally {
+            setIsUploadingImage(false);
+          }
+        }
+
         const configSource = currentPciConfig;
-        const keyArray = configSource?.properties
-          ? Object.keys(configSource.properties).map((keyName) => ({
+        const safeProperties = sanitizeConfigProperties(configSource?.properties);
+        const keyArray = safeProperties
+          ? Object.keys(safeProperties).map((keyName) => ({
               key: keyName,
-              value: configSource.properties[keyName],
+              value: safeProperties[keyName],
             }))
           : [];
 
@@ -428,7 +996,7 @@
             <form onSubmit="${(e) => e.preventDefault()}">
               ${keyArray.map(
                 ({ key, value }) =>
-                  html`<div class="mb-2">
+                  html`<div class="mb-2" key="${`config-${key}`}">
                     <label class="form-label text-muted mb-1">${key}</label>
                     <input
                       type="text"
@@ -440,6 +1008,309 @@
                   </div>`,
               )}
             </form>
+            <hr />
+            ${showMarkupEditor
+              ? null
+              : html`<button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm mb-2"
+                  onClick="${() => setShowMarkupEditorState(true)}"
+                >
+                  Add markup
+                </button>`}
+            ${showMarkupEditor
+              ? html`
+                  <div class="mb-2">
+                    <label class="form-label text-muted mb-2">
+                      QTI Interaction Markup Fields
+                    </label>
+
+                    ${standaloneEditableElements.map((element, fieldIndex) => {
+                      const editableType = String(
+                        element.getAttribute("data-editable") || "",
+                      ).toLowerCase();
+                      const fieldName =
+                        element.getAttribute("data-name") || `field-${fieldIndex + 1}`;
+                      const fieldValue = readEditableValue(element);
+                      const allowedMarks = parseAllowedMarks(element);
+                      const linesLimit = parseLinesLimit(element);
+                      const elementKey = `standalone-${fieldName}-${fieldIndex}`;
+                      if (editableType === "image") {
+                        return html`<div class="mb-3" key="${elementKey}">
+                          <label class="form-label text-muted mb-1">${fieldName}</label>
+                          <input
+                            type="text"
+                            class="form-control mb-2"
+                            value="${fieldValue}"
+                            onInput="${(e) =>
+                              updateMarkup((root) => {
+                                const candidates =
+                                  getEditableElementsOutsideRepeats(root);
+                                writeEditableValue(
+                                  candidates[fieldIndex],
+                                  e.target.value,
+                                );
+                              })}"
+                          />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            class="form-control"
+                            onChange="${(e) =>
+                              handleImageFileSelected(
+                                (uploadedHref) =>
+                                  updateMarkup((root) => {
+                                    const candidates =
+                                      getEditableElementsOutsideRepeats(root);
+                                    writeEditableValue(
+                                      candidates[fieldIndex],
+                                      uploadedHref,
+                                    );
+                                  }),
+                                e.target.files?.[0],
+                              )}"
+                          />
+                        </div>`;
+                      }
+                      if (editableType === "text") {
+                        return html`<div class="mb-3" key="${elementKey}">
+                          <label class="form-label text-muted mb-1">${fieldName}</label>
+                          <input
+                            type="text"
+                            class="form-control"
+                            value="${fieldValue}"
+                            onInput="${(e) =>
+                              updateMarkup((root) => {
+                                const candidates =
+                                  getEditableElementsOutsideRepeats(root);
+                                writeEditableValue(candidates[fieldIndex], e.target.value);
+                              })}"
+                          />
+                        </div>`;
+                      }
+                      return html`<div class="mb-3" key="${elementKey}">
+                        <label class="form-label text-muted mb-1">${fieldName}</label>
+                        <${ProseRichTextEditor}
+                          value="${fieldValue}"
+                          allowedMarks="${allowedMarks}"
+                          linesLimit="${linesLimit}"
+                          onChange="${(nextValue) =>
+                            updateMarkup((root) => {
+                              const candidates =
+                                getEditableElementsOutsideRepeats(root);
+                              writeEditableValue(candidates[fieldIndex], nextValue);
+                            })}"
+                        />
+                      </div>`;
+                    })}
+
+                    ${repeatElements.map((repeatElement, repeatIndex) => {
+                      const repeatName =
+                        repeatElement.getAttribute("data-repeat") ||
+                        `repeat-${repeatIndex + 1}`;
+                      const min = Number.parseInt(
+                        repeatElement.getAttribute("data-min") || "0",
+                        10,
+                      );
+                      const max = Number.parseInt(
+                        repeatElement.getAttribute("data-max") || "100",
+                        10,
+                      );
+                      const repeatItems = getRepeatItemElements(repeatElement);
+                      const currentCount = repeatItems.length;
+                      return html`<div class="mb-4 border rounded p-2" key="${`repeat-${repeatName}-${repeatIndex}`}">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <strong>${repeatName}</strong>
+                          <div class="d-flex align-items-center gap-2">
+                            <button
+                              type="button"
+                              class="btn btn-outline-secondary btn-sm"
+                              disabled="${currentCount <= min}"
+                              onClick="${() =>
+                                updateMarkup((root) => {
+                                  const repeats = getRepeatElements(root);
+                                  const targetRepeat = repeats[repeatIndex];
+                                  if (!targetRepeat) return;
+                                  const items = getRepeatItemElements(targetRepeat);
+                                  if (items.length > min) {
+                                    items[items.length - 1].remove();
+                                  }
+                                })}"
+                            >
+                              -
+                            </button>
+                            <span class="tiny-note m-0">
+                              ${currentCount} (min ${min}, max ${max})
+                            </span>
+                            <button
+                              type="button"
+                              class="btn btn-outline-secondary btn-sm"
+                              disabled="${currentCount >= max}"
+                              onClick="${() =>
+                                updateMarkup((root) => {
+                                  const repeats = getRepeatElements(root);
+                                  const targetRepeat = repeats[repeatIndex];
+                                  if (!targetRepeat) return;
+                                  const items = getRepeatItemElements(targetRepeat);
+                                  if (items.length >= max) return;
+                                  const template = items[0];
+                                  if (!template) return;
+                                  const clone = template.cloneNode(true);
+                                  applyRepeatItemDefaults(clone, items.length);
+                                  targetRepeat.appendChild(clone);
+                                })}"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+
+                        ${repeatItems.map((itemElement, itemIndex) => {
+                          const itemFields = Array.from(
+                            itemElement.querySelectorAll(
+                              "[data-editable][data-name]",
+                            ),
+                          );
+                          return html`<div class="mb-3 p-2 border rounded" key="${`repeat-item-${repeatIndex}-${itemIndex}`}">
+                            <div class="tiny-note mb-2">Item ${itemIndex + 1}</div>
+                            ${itemFields.map((fieldElement, fieldIndex) => {
+                              const editableType = String(
+                                fieldElement.getAttribute("data-editable") || "",
+                              ).toLowerCase();
+                              const fieldName =
+                                fieldElement.getAttribute("data-name") ||
+                                `field-${fieldIndex + 1}`;
+                              const fieldValue = readEditableValue(fieldElement);
+                              const allowedMarks = parseAllowedMarks(fieldElement);
+                              const linesLimit = parseLinesLimit(fieldElement);
+                              const fieldKey = `repeat-field-${repeatIndex}-${itemIndex}-${fieldName}-${fieldIndex}`;
+                              if (editableType === "image") {
+                                return html`<div class="mb-3" key="${fieldKey}">
+                                  <label class="form-label text-muted mb-1">
+                                    ${fieldName}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    class="form-control mb-2"
+                                    value="${fieldValue}"
+                                    onInput="${(e) =>
+                                      updateMarkup((root) => {
+                                        const repeats = getRepeatElements(root);
+                                        const targetRepeat = repeats[repeatIndex];
+                                        const items = getRepeatItemElements(targetRepeat);
+                                        const targetItem = items[itemIndex];
+                                        const fields = Array.from(
+                                          targetItem.querySelectorAll(
+                                            "[data-editable][data-name]",
+                                          ),
+                                        );
+                                        writeEditableValue(
+                                          fields[fieldIndex],
+                                          e.target.value,
+                                        );
+                                      })}"
+                                  />
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    class="form-control"
+                                    onChange="${(e) =>
+                                      handleImageFileSelected(
+                                        (uploadedHref) =>
+                                          updateMarkup((root) => {
+                                            const repeats = getRepeatElements(root);
+                                            const targetRepeat = repeats[repeatIndex];
+                                            const items = getRepeatItemElements(
+                                              targetRepeat,
+                                            );
+                                            const targetItem = items[itemIndex];
+                                            const fields = Array.from(
+                                              targetItem.querySelectorAll(
+                                                "[data-editable][data-name]",
+                                              ),
+                                            );
+                                            writeEditableValue(
+                                              fields[fieldIndex],
+                                              uploadedHref,
+                                            );
+                                          }),
+                                        e.target.files?.[0],
+                                      )}"
+                                  />
+                                </div>`;
+                              }
+                              if (editableType === "text") {
+                                return html`<div class="mb-3" key="${fieldKey}">
+                                  <label class="form-label text-muted mb-1">
+                                    ${fieldName}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    class="form-control"
+                                    value="${fieldValue}"
+                                    onInput="${(e) =>
+                                      updateMarkup((root) => {
+                                        const repeats = getRepeatElements(root);
+                                        const targetRepeat = repeats[repeatIndex];
+                                        const items = getRepeatItemElements(targetRepeat);
+                                        const targetItem = items[itemIndex];
+                                        const fields = Array.from(
+                                          targetItem.querySelectorAll(
+                                            "[data-editable][data-name]",
+                                          ),
+                                        );
+                                        writeEditableValue(
+                                          fields[fieldIndex],
+                                          e.target.value,
+                                        );
+                                      })}"
+                                  />
+                                </div>`;
+                              }
+                              return html`<div class="mb-3" key="${fieldKey}">
+                                <label class="form-label text-muted mb-1">
+                                  ${fieldName}
+                                </label>
+                                <${ProseRichTextEditor}
+                                  value="${fieldValue}"
+                                  allowedMarks="${allowedMarks}"
+                                  linesLimit="${linesLimit}"
+                                  onChange="${(nextValue) =>
+                                    updateMarkup((root) => {
+                                      const repeats = getRepeatElements(root);
+                                      const targetRepeat = repeats[repeatIndex];
+                                      const items = getRepeatItemElements(
+                                        targetRepeat,
+                                      );
+                                      const targetItem = items[itemIndex];
+                                      const fields = Array.from(
+                                        targetItem.querySelectorAll(
+                                          "[data-editable][data-name]",
+                                        ),
+                                      );
+                                      writeEditableValue(
+                                        fields[fieldIndex],
+                                        nextValue,
+                                      );
+                                    })}"
+                                />
+                              </div>`;
+                            })}
+                          </div>`;
+                        })}
+                      </div>`;
+                    })}
+
+                    ${isUploadingImage
+                      ? html`<div class="tiny-note">Uploading image...</div>`
+                      : null}
+
+                    <div class="tiny-note">
+                      Auto-saves fields to <code>${QTI_ASSESSMENT_ITEM_FILE_NAME}</code>.
+                    </div>
+                  </div>
+                `
+              : null}
           </aside>
         `;
       }
@@ -508,6 +1379,50 @@
         const getCurrentAssessmentItem = () =>
           currentAssessmentItem || getQtiAssessmentItemElement();
 
+        function applyInteractionResponseToAssessmentItem(event) {
+          const assessmentItem = getCurrentAssessmentItem();
+          if (!assessmentItem) {
+            return;
+          }
+          const detail = event?.detail || {};
+          const responseIdentifier = String(
+            detail.responseIdentifier || "RESPONSE",
+          );
+          const responseValue = detail.value;
+          if (typeof responseValue === "undefined") {
+            return;
+          }
+          if (typeof assessmentItem.updateResponseVariable === "function") {
+            try {
+              assessmentItem.updateResponseVariable(
+                responseIdentifier,
+                responseValue,
+              );
+              return;
+            } catch (error) {
+              try {
+                assessmentItem.updateResponseVariable(
+                  responseIdentifier,
+                  JSON.stringify(responseValue),
+                );
+                return;
+              } catch {
+                // Fall through to other possible APIs.
+              }
+            }
+          }
+          if (typeof assessmentItem.setResponseVariable === "function") {
+            try {
+              assessmentItem.setResponseVariable(
+                responseIdentifier,
+                responseValue,
+              );
+            } catch {
+              // Ignore if the runtime does not support this signature.
+            }
+          }
+        }
+
         function refreshLiveData() {
           const assessmentItem = getCurrentAssessmentItem();
           let responseValue = undefined;
@@ -553,6 +1468,7 @@
             }
           };
           const onInteractionChanged = (event) => {
+            applyInteractionResponseToAssessmentItem(event);
             if (interactionRefreshTimer.current) {
               clearTimeout(interactionRefreshTimer.current);
             }
@@ -587,6 +1503,7 @@
 
         useEffect(() => {
           const onGlobalInteractionChanged = (event) => {
+            applyInteractionResponseToAssessmentItem(event);
             if (interactionRefreshTimer.current) {
               clearTimeout(interactionRefreshTimer.current);
             }
@@ -618,6 +1535,10 @@
             if (interactionRefreshTimer.current) {
               clearTimeout(interactionRefreshTimer.current);
               interactionRefreshTimer.current = null;
+            }
+            if (markupSaveTimer) {
+              clearTimeout(markupSaveTimer);
+              markupSaveTimer = null;
             }
           };
         }, []);
@@ -694,13 +1615,7 @@
         if (localStorageState) {
           state = JSON.parse(localStorageState);
         }
-        let props = {};
-        const localStorageProps = localStorage.getItem(
-          item.typeIdentifier + "_props",
-        );
-        if (localStorageProps) {
-          props = JSON.parse(localStorageProps);
-        }
+        const props = {};
         const dataProperties = mergeConfigPropertiesIntoDataProperties(props);
         item.qtiHostDataProperties = dataProperties;
         const dom = createQtiPciHost(item, dataProperties);
@@ -717,6 +1632,7 @@
         const interaction = item.getInstance(dom, config, state);
         setCurrentRuntime(item, interaction, config, dataProperties);
         syncConfigPropertiesToHostDataProperties(config, dataProperties);
+        localStorage.removeItem(item.typeIdentifier + "_props");
         localStorage.removeItem(item.typeIdentifier + "_state");
       }
 
@@ -757,46 +1673,71 @@
         }
 
         const typeIdentifier = item.typeIdentifier || "pci";
-        const escapedTypeIdentifier = escapeHtmlAttribute(typeIdentifier);
-        const dataAttributes = Object.keys(dataProperties || {})
-          .map((key) => {
+        const parser = new DOMParser();
+        const sourceXml = String(currentAssessmentItemTemplateXml || "").trim();
+        const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item identifier="PREVIEW-ITEM" title="${escapeHtmlAttribute(typeIdentifier)}" adaptive="false" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"></qti-response-declaration>
+  <qti-item-body>
+    <qti-portable-custom-interaction response-identifier="RESPONSE" module="pci" custom-interaction-type-identifier="${escapeHtmlAttribute(typeIdentifier)}">
+      <qti-interaction-markup><div data-qti-pci-runtime-host style="height:100%"></div></qti-interaction-markup>
+    </qti-portable-custom-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+        const xmlDoc = parser.parseFromString(sourceXml || defaultXml, "application/xml");
+        const parseError = xmlDoc.querySelector("parsererror");
+        const workingXmlDoc = parseError
+          ? parser.parseFromString(defaultXml, "application/xml")
+          : xmlDoc;
+        const pciElement =
+          workingXmlDoc.querySelector("qti-portable-custom-interaction") ||
+          workingXmlDoc.getElementsByTagName("qti-portable-custom-interaction")[0] ||
+          null;
+        if (pciElement) {
+          pciElement.setAttribute("custom-interaction-type-identifier", typeIdentifier);
+          const moduleId = pciElement.getAttribute("module") || "pci";
+          let interactionModules =
+            pciElement.querySelector("qti-interaction-modules") ||
+            pciElement.getElementsByTagName("qti-interaction-modules")[0] ||
+            null;
+          if (!interactionModules) {
+            interactionModules = workingXmlDoc.createElement("qti-interaction-modules");
+            const interactionModule = workingXmlDoc.createElement("qti-interaction-module");
+            interactionModule.setAttribute("id", moduleId);
+            interactionModule.setAttribute("primary-path", "./index");
+            interactionModules.appendChild(interactionModule);
+            pciElement.insertBefore(interactionModules, pciElement.firstChild);
+          }
+          Object.keys(dataProperties || {}).forEach((key) => {
             const normalizedKey = String(key || "")
               .trim()
               .replace(/^data-/, "");
             if (!normalizedKey) {
-              return "";
+              return;
             }
             const value = dataProperties[key];
             if (value === null || typeof value === "undefined") {
-              return "";
+              return;
             }
-            return ` data-${normalizedKey}="${escapeHtmlAttribute(value)}"`;
-          })
-          .join("");
+            pciElement.setAttribute(`data-${normalizedKey}`, String(value));
+          });
+        }
+        const serialized = new XMLSerializer()
+          .serializeToString(workingXmlDoc)
+          .replace(/^\s*<\?xml[^>]*>\s*/i, "")
+          .replace(
+            /<(qti-[a-z0-9-]+)([^>]*)\/>/gi,
+            "<$1$2></$1>",
+          );
 
         const qtiItem = document.createElement("qti-item");
-        qtiItem.innerHTML = `
-          <qti-assessment-item identifier="PREVIEW-ITEM" title="${escapedTypeIdentifier}" adaptive="false" time-dependent="false">
-            <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"></qti-response-declaration>
-            <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"></qti-outcome-declaration>
-            <qti-item-body>
-              <qti-portable-custom-interaction response-identifier="RESPONSE" module="pci" custom-interaction-type-identifier="${escapedTypeIdentifier}"${dataAttributes}>
-                <qti-interaction-modules>
-                  <qti-interaction-module id="pci" primary-path="./index"></qti-interaction-module>
-                </qti-interaction-modules>
-                <qti-interaction-markup>
-                  <div data-qti-pci-runtime-host style="height:100%"></div>
-                </qti-interaction-markup>
-              </qti-portable-custom-interaction>
-            </qti-item-body>
-          </qti-assessment-item>
-        `;
+        qtiItem.innerHTML = serialized;
         container.appendChild(qtiItem);
 
         return (
-          qtiItem.querySelector(
-            "[data-qti-pci-runtime-host]",
-          ) || qtiItem.querySelector("qti-portable-custom-interaction")
+          qtiItem.querySelector("[data-qti-pci-runtime-host]") ||
+          qtiItem.querySelector("qti-interaction-markup > *") ||
+          qtiItem.querySelector("qti-portable-custom-interaction")
         );
       }
 
@@ -811,6 +1752,7 @@
             currentPciFactory = itemInstance;
           }
           renderDevtools();
+          renderConfigPanel();
         });
       }
       window.onload = async () => {
@@ -819,7 +1761,11 @@
         if (typeof globalThis.off !== "function") {
           globalThis.off = () => {};
         }
+        await loadConfigSchemaKeys();
         await loadQtiComponents();
+        const loadedAssessmentItem = await loadAssessmentItemXmlFromFile();
+        currentAssessmentItemTemplateXml = loadedAssessmentItem.xmlText || "";
+        currentQtiMarkup = loadedAssessmentItem.interactionMarkupHtml || "";
         loadItem();
       };
     </script>
