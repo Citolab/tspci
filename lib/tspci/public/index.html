@@ -345,6 +345,7 @@
       let currentPciHostDataProperties = {};
       let currentPciInteraction = null;
       let currentAssessmentItem = null;
+      let currentPciResponseInfo = null;
       let configUpdateTimer = null;
       let currentQtiMarkup = "";
       let currentAssessmentItemTemplateXml = "";
@@ -409,6 +410,282 @@
         return {
           interactionMarkupHtml: interactionMarkupElement?.innerHTML || "",
         };
+      }
+
+      function getResponseIdentifierFromXmlText(xmlText) {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(String(xmlText || ""), "application/xml");
+        const pciElement =
+          xmlDoc.querySelector("qti-portable-custom-interaction") ||
+          xmlDoc.getElementsByTagName("qti-portable-custom-interaction")[0] ||
+          null;
+        const responseIdentifier = String(
+          pciElement?.getAttribute?.("response-identifier") ||
+            pciElement?.getAttribute?.("responseIdentifier") ||
+            "RESPONSE",
+        ).trim();
+        return responseIdentifier || "RESPONSE";
+      }
+
+      function getCorrectResponseDefinitionFromXmlText(xmlText) {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(String(xmlText || ""), "application/xml");
+        if (xmlDoc.querySelector("parsererror")) {
+          return {
+            responseIdentifier: "RESPONSE",
+            baseType: "identifier",
+            cardinality: "multiple",
+            values: [],
+          };
+        }
+        const responseIdentifier = getResponseIdentifierFromXmlText(xmlText);
+        const declarations = Array.from(
+          xmlDoc.getElementsByTagName("qti-response-declaration"),
+        );
+        const declaration =
+          declarations.find(
+            (node) => node.getAttribute("identifier") === responseIdentifier,
+          ) || declarations[0] || null;
+        const correctResponse =
+          declaration?.querySelector?.("qti-correct-response") ||
+          declaration?.getElementsByTagName?.("qti-correct-response")?.[0] ||
+          null;
+        const values = correctResponse
+          ? Array.from(correctResponse.getElementsByTagName("qti-value")).map((node) =>
+              String(node.textContent || "").trim(),
+            )
+          : [];
+        return {
+          responseIdentifier,
+          baseType:
+            String(declaration?.getAttribute?.("base-type") || "")
+              .trim()
+              .toLowerCase() || "identifier",
+          cardinality:
+            String(declaration?.getAttribute?.("cardinality") || "")
+              .trim()
+              .toLowerCase() || "multiple",
+          values: values.filter(Boolean),
+        };
+      }
+
+      function qtiVariableJsonToStringValues(input) {
+        if (!input || typeof input !== "object") {
+          return null;
+        }
+        for (const topLevelKey in input) {
+          if (!Object.prototype.hasOwnProperty.call(input, topLevelKey)) {
+            continue;
+          }
+          const nestedObject = input[topLevelKey];
+          if (!nestedObject || typeof nestedObject !== "object") {
+            continue;
+          }
+          for (const nestedKey in nestedObject) {
+            if (!Object.prototype.hasOwnProperty.call(nestedObject, nestedKey)) {
+              continue;
+            }
+            const value = nestedObject[nestedKey];
+            const cardinality = topLevelKey === "list" ? "multiple" : "single";
+            if (Array.isArray(value)) {
+              return {
+                values: value.map((entry) => String(entry)),
+                cardinality: "multiple",
+                baseType: String(nestedKey || "identifier"),
+              };
+            }
+            if (value !== undefined && value !== null) {
+              return {
+                values: [String(value)],
+                cardinality,
+                baseType: String(nestedKey || "identifier"),
+              };
+            }
+          }
+        }
+        return null;
+      }
+
+      function getCurrentPciResponseInfo() {
+        const interaction =
+          currentPciInteraction && typeof currentPciInteraction.getResponse === "function"
+            ? currentPciInteraction
+            : currentPciFactory && typeof currentPciFactory.getResponse === "function"
+              ? currentPciFactory
+              : null;
+        if (!interaction) {
+          return null;
+        }
+        try {
+          const responseValue = interaction.getResponse();
+          const liveInfo = qtiVariableJsonToStringValues(responseValue);
+          if (liveInfo) {
+            currentPciResponseInfo = liveInfo;
+            return liveInfo;
+          }
+        } catch {
+          // Fallback to last known response from interaction event.
+        }
+        const assessmentItem =
+          currentAssessmentItem || getQtiAssessmentItemElement();
+        if (assessmentItem) {
+          try {
+            const variables = Array.isArray(assessmentItem.variables)
+              ? assessmentItem.variables
+              : [];
+            const responseVariable = variables.find(
+              (entry) => entry?.identifier === "RESPONSE",
+            );
+            const rawValue = responseVariable?.value;
+            if (typeof rawValue === "string") {
+              const trimmed = rawValue.trim();
+              if (trimmed) {
+                return {
+                  values: [trimmed],
+                  cardinality: "single",
+                  baseType: "identifier",
+                };
+              }
+            }
+            if (Array.isArray(rawValue) && rawValue.length > 0) {
+              return {
+                values: rawValue.map((value) => String(value)),
+                cardinality: "multiple",
+                baseType: "identifier",
+              };
+            }
+            if (rawValue && typeof rawValue === "object") {
+              const parsed = qtiVariableJsonToStringValues(rawValue);
+              if (parsed) {
+                return parsed;
+              }
+            }
+          } catch {
+            // Ignore and fallback to cached value.
+          }
+        }
+        return currentPciResponseInfo;
+      }
+
+      function updateCorrectResponsesInXmlText(
+        sourceXml,
+        { responseIdentifier, baseType, cardinality, values },
+      ) {
+        const parser = new DOMParser();
+        const source = String(sourceXml || "").trim();
+        if (!source) {
+          return sourceXml;
+        }
+        const xmlDoc = parser.parseFromString(source, "application/xml");
+        if (xmlDoc.querySelector("parsererror")) {
+          return sourceXml;
+        }
+        const root =
+          xmlDoc.querySelector("qti-assessment-item") ||
+          xmlDoc.getElementsByTagName("qti-assessment-item")[0] ||
+          null;
+        const rootNamespace = root?.namespaceURI || null;
+        const itemBody =
+          xmlDoc.querySelector("qti-item-body") ||
+          xmlDoc.getElementsByTagName("qti-item-body")[0] ||
+          null;
+        const declarations = Array.from(
+          xmlDoc.getElementsByTagName("qti-response-declaration"),
+        );
+        let declaration =
+          declarations.find(
+            (node) => node.getAttribute("identifier") === responseIdentifier,
+          ) || null;
+        if (!declaration) {
+          declaration = rootNamespace
+            ? xmlDoc.createElementNS(rootNamespace, "qti-response-declaration")
+            : xmlDoc.createElement("qti-response-declaration");
+          if (itemBody && itemBody.parentNode) {
+            itemBody.parentNode.insertBefore(declaration, itemBody);
+          } else if (root) {
+            root.insertBefore(declaration, root.firstChild);
+          }
+        }
+        declaration.setAttribute("identifier", responseIdentifier);
+        declaration.setAttribute("base-type", String(baseType || "identifier"));
+        declaration.setAttribute("cardinality", String(cardinality || "multiple"));
+
+        const existingCorrectResponse =
+          declaration.querySelector("qti-correct-response") ||
+          declaration.getElementsByTagName("qti-correct-response")[0] ||
+          null;
+        if (existingCorrectResponse) {
+          existingCorrectResponse.remove();
+        }
+        if (Array.isArray(values) && values.length > 0) {
+          const correctResponse = rootNamespace
+            ? xmlDoc.createElementNS(rootNamespace, "qti-correct-response")
+            : xmlDoc.createElement("qti-correct-response");
+          values.forEach((value) => {
+            const qtiValue = rootNamespace
+              ? xmlDoc.createElementNS(rootNamespace, "qti-value")
+              : xmlDoc.createElement("qti-value");
+            qtiValue.textContent = String(value);
+            correctResponse.appendChild(qtiValue);
+          });
+          declaration.appendChild(correctResponse);
+        }
+        return new XMLSerializer().serializeToString(xmlDoc);
+      }
+
+      function addCurrentResponseAsCorrect() {
+        const responseInfo = getCurrentPciResponseInfo();
+        if (!responseInfo || !Array.isArray(responseInfo.values)) {
+          return;
+        }
+        const definition = getCorrectResponseDefinitionFromXmlText(
+          currentAssessmentItemTemplateXml,
+        );
+        const uniqueValues = Array.from(
+          new Set(
+            [...definition.values, ...responseInfo.values.map((value) => String(value))]
+              .map((value) => value.trim())
+              .filter(Boolean),
+          ),
+        );
+        const nextBaseType = definition.baseType || responseInfo.baseType || "identifier";
+        const nextCardinality =
+          uniqueValues.length > 1
+            ? "multiple"
+            : definition.cardinality || responseInfo.cardinality || "single";
+        currentAssessmentItemTemplateXml = updateCorrectResponsesInXmlText(
+          currentAssessmentItemTemplateXml,
+          {
+            responseIdentifier: definition.responseIdentifier || "RESPONSE",
+            baseType: nextBaseType,
+            cardinality: nextCardinality,
+            values: uniqueValues,
+          },
+        );
+        saveAssessmentItemXmlToFileDebounced();
+        renderConfigPanel();
+      }
+
+      function removeCorrectResponseValue(valueToRemove) {
+        const definition = getCorrectResponseDefinitionFromXmlText(
+          currentAssessmentItemTemplateXml,
+        );
+        const remainingValues = definition.values.filter(
+          (value) => value !== String(valueToRemove),
+        );
+        const nextCardinality =
+          remainingValues.length > 1 ? "multiple" : definition.cardinality || "single";
+        currentAssessmentItemTemplateXml = updateCorrectResponsesInXmlText(
+          currentAssessmentItemTemplateXml,
+          {
+            responseIdentifier: definition.responseIdentifier || "RESPONSE",
+            baseType: definition.baseType || "identifier",
+            cardinality: nextCardinality,
+            values: remainingValues,
+          },
+        );
+        saveAssessmentItemXmlToFileDebounced();
+        renderConfigPanel();
       }
 
       async function loadAssessmentItemXmlFromFile() {
@@ -989,6 +1266,20 @@
               value: safeProperties[keyName],
             }))
           : [];
+        const correctResponseDefinition = getCorrectResponseDefinitionFromXmlText(
+          currentAssessmentItemTemplateXml,
+        );
+        const currentResponseInfo = getCurrentPciResponseInfo();
+        const currentResponseValues = Array.isArray(currentResponseInfo?.values)
+          ? currentResponseInfo.values.map((value) => String(value).trim()).filter(Boolean)
+          : [];
+        const currentCorrectSet = new Set(correctResponseDefinition.values);
+        const newCurrentValues = currentResponseValues.filter(
+          (value) => !currentCorrectSet.has(value),
+        );
+        const canAddCurrentResponse =
+          newCurrentValues.length > 0 &&
+          String(currentResponseInfo?.baseType || "").toLowerCase() !== "record";
 
         return html`
           <aside class="dev-sidepane">
@@ -1311,6 +1602,45 @@
                   </div>
                 `
               : null}
+            <hr />
+            <div class="mb-2">
+              <label class="form-label text-muted mb-1">Correct Responses</label>
+              <div class="tiny-note mb-2">
+                Response identifier: <code>${correctResponseDefinition.responseIdentifier}</code>
+                | base-type: <code>${correctResponseDefinition.baseType}</code>
+                | cardinality: <code>${correctResponseDefinition.cardinality}</code>
+              </div>
+              <button
+                type="button"
+                class="btn btn-outline-primary btn-sm mb-2"
+                disabled="${!canAddCurrentResponse}"
+                onClick="${() => addCurrentResponseAsCorrect()}"
+              >
+                Add current response as correct
+              </button>
+              <div class="tiny-note mb-2">
+                Current response: ${currentResponseValues.length > 0
+                  ? currentResponseValues.join(", ")
+                  : "none"}
+              </div>
+              ${correctResponseDefinition.values.length === 0
+                ? html`<div class="tiny-note">No correct responses configured.</div>`
+                : html`${correctResponseDefinition.values.map(
+                    (value, index) => html`<div
+                      class="d-flex align-items-center justify-content-between border rounded p-2 mb-1"
+                      key="${`correct-${index}-${value}`}"
+                    >
+                      <code>${value}</code>
+                      <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm"
+                        onClick="${() => removeCorrectResponseValue(value)}"
+                      >
+                        Remove
+                      </button>
+                    </div>`,
+                  )}`}
+            </div>
           </aside>
         `;
       }
@@ -1389,6 +1719,7 @@
             detail.responseIdentifier || "RESPONSE",
           );
           const responseValue = detail.value;
+          currentPciResponseInfo = qtiVariableJsonToStringValues(responseValue);
           if (typeof responseValue === "undefined") {
             return;
           }
@@ -1474,6 +1805,7 @@
             }
             interactionRefreshTimer.current = setTimeout(() => {
               refreshLiveData();
+              renderConfigPanel();
               interactionRefreshTimer.current = null;
             }, INTERACTION_REFRESH_DELAY_MS);
           };
@@ -1509,6 +1841,7 @@
             }
             interactionRefreshTimer.current = setTimeout(() => {
               refreshLiveData();
+              renderConfigPanel();
               interactionRefreshTimer.current = null;
             }, INTERACTION_REFRESH_DELAY_MS);
           };
