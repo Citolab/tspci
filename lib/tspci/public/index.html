@@ -37,6 +37,19 @@
         box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
       }
 
+      .preview-shell {
+        position: relative;
+        max-width: 1024px;
+        margin: 0 auto;
+      }
+
+      .preview-process-btn {
+        position: absolute;
+        right: 1.25rem;
+        bottom: 0.85rem;
+        z-index: 10;
+      }
+
       qti-portable-custom-interaction {
         display: block;
         width: 100%;
@@ -233,6 +246,52 @@
         padding: 0.35rem;
         vertical-align: top;
       }
+
+      .variables-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        z-index: 1050;
+      }
+
+      .variables-modal {
+        width: min(980px, 96vw);
+        height: 88vh;
+        max-height: 88vh;
+        background: #fff;
+        border-radius: 0.5rem;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .variables-modal-body {
+        padding: 1rem;
+      }
+
+      .variables-modal > .variables-modal-body:last-child {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+      }
+
+      .variables-modal-textarea {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        resize: vertical;
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        line-height: 1.4;
+      }
     </style>
   </head>
 
@@ -249,8 +308,17 @@
           undefined.
         </div>
 
-        <div id="pciContainer" class="shadow-sm">
-          <div id="loading" class="text-muted mx-auto p-4">Loading...</div>
+        <div class="preview-shell">
+          <div id="pciContainer" class="shadow-sm">
+            <div id="loading" class="text-muted mx-auto p-4">Loading...</div>
+          </div>
+          <button
+            id="process-responses-btn"
+            type="button"
+            class="btn btn-outline-secondary btn-sm preview-process-btn"
+          >
+            Process Responses
+          </button>
         </div>
         <div id="devtools"></div>
       </div>
@@ -258,10 +326,7 @@
     </div>
 
     <script type="module">
-      import {
-        h,
-        render,
-      } from "https://unpkg.com/preact@latest?module";
+      import { h, render } from "https://unpkg.com/preact@latest?module";
       import {
         useState,
         useEffect,
@@ -354,7 +419,8 @@
       let currentConfigSchemaKeys = null;
 
       function sanitizeConfigProperties(properties) {
-        const source = properties && typeof properties === "object" ? properties : {};
+        const source =
+          properties && typeof properties === "object" ? properties : {};
         if (Array.isArray(currentConfigSchemaKeys)) {
           const allowed = new Set(currentConfigSchemaKeys);
           return Object.fromEntries(
@@ -390,7 +456,10 @@
 
       function getPortableCustomInteractionElementFromXml(xmlText) {
         const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(String(xmlText || ""), "application/xml");
+        const xmlDoc = parser.parseFromString(
+          String(xmlText || ""),
+          "application/xml",
+        );
         return (
           xmlDoc.querySelector("qti-portable-custom-interaction") ||
           xmlDoc.getElementsByTagName("qti-portable-custom-interaction")[0] ||
@@ -414,7 +483,10 @@
 
       function getResponseIdentifierFromXmlText(xmlText) {
         const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(String(xmlText || ""), "application/xml");
+        const xmlDoc = parser.parseFromString(
+          String(xmlText || ""),
+          "application/xml",
+        );
         const pciElement =
           xmlDoc.querySelector("qti-portable-custom-interaction") ||
           xmlDoc.getElementsByTagName("qti-portable-custom-interaction")[0] ||
@@ -429,7 +501,10 @@
 
       function getCorrectResponseDefinitionFromXmlText(xmlText) {
         const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(String(xmlText || ""), "application/xml");
+        const xmlDoc = parser.parseFromString(
+          String(xmlText || ""),
+          "application/xml",
+        );
         if (xmlDoc.querySelector("parsererror")) {
           return {
             responseIdentifier: "RESPONSE",
@@ -445,14 +520,16 @@
         const declaration =
           declarations.find(
             (node) => node.getAttribute("identifier") === responseIdentifier,
-          ) || declarations[0] || null;
+          ) ||
+          declarations[0] ||
+          null;
         const correctResponse =
           declaration?.querySelector?.("qti-correct-response") ||
           declaration?.getElementsByTagName?.("qti-correct-response")?.[0] ||
           null;
         const values = correctResponse
-          ? Array.from(correctResponse.getElementsByTagName("qti-value")).map((node) =>
-              String(node.textContent || "").trim(),
+          ? Array.from(correctResponse.getElementsByTagName("qti-value")).map(
+              (node) => String(node.textContent || "").trim(),
             )
           : [];
         return {
@@ -482,7 +559,9 @@
             continue;
           }
           for (const nestedKey in nestedObject) {
-            if (!Object.prototype.hasOwnProperty.call(nestedObject, nestedKey)) {
+            if (
+              !Object.prototype.hasOwnProperty.call(nestedObject, nestedKey)
+            ) {
               continue;
             }
             const value = nestedObject[nestedKey];
@@ -508,9 +587,11 @@
 
       function getCurrentPciResponseInfo() {
         const interaction =
-          currentPciInteraction && typeof currentPciInteraction.getResponse === "function"
+          currentPciInteraction &&
+          typeof currentPciInteraction.getResponse === "function"
             ? currentPciInteraction
-            : currentPciFactory && typeof currentPciFactory.getResponse === "function"
+            : currentPciFactory &&
+                typeof currentPciFactory.getResponse === "function"
               ? currentPciFactory
               : null;
         if (!interaction) {
@@ -589,6 +670,12 @@
           xmlDoc.querySelector("qti-item-body") ||
           xmlDoc.getElementsByTagName("qti-item-body")[0] ||
           null;
+        const responseProcessingTemplate =
+          "https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct";
+        let responseProcessing =
+          xmlDoc.querySelector("qti-response-processing") ||
+          xmlDoc.getElementsByTagName("qti-response-processing")[0] ||
+          null;
         const declarations = Array.from(
           xmlDoc.getElementsByTagName("qti-response-declaration"),
         );
@@ -608,7 +695,10 @@
         }
         declaration.setAttribute("identifier", responseIdentifier);
         declaration.setAttribute("base-type", String(baseType || "identifier"));
-        declaration.setAttribute("cardinality", String(cardinality || "multiple"));
+        declaration.setAttribute(
+          "cardinality",
+          String(cardinality || "multiple"),
+        );
 
         const existingCorrectResponse =
           declaration.querySelector("qti-correct-response") ||
@@ -630,6 +720,26 @@
           });
           declaration.appendChild(correctResponse);
         }
+
+        if (!responseProcessing) {
+          responseProcessing = rootNamespace
+            ? xmlDoc.createElementNS(rootNamespace, "qti-response-processing")
+            : xmlDoc.createElement("qti-response-processing");
+          responseProcessing.setAttribute(
+            "template",
+            responseProcessingTemplate,
+          );
+          if (itemBody && itemBody.parentNode) {
+            itemBody.parentNode.insertBefore(responseProcessing, itemBody);
+          } else if (root) {
+            root.appendChild(responseProcessing);
+          }
+        } else {
+          responseProcessing.setAttribute(
+            "template",
+            responseProcessingTemplate,
+          );
+        }
         return new XMLSerializer().serializeToString(xmlDoc);
       }
 
@@ -643,12 +753,16 @@
         );
         const uniqueValues = Array.from(
           new Set(
-            [...definition.values, ...responseInfo.values.map((value) => String(value))]
+            [
+              ...definition.values,
+              ...responseInfo.values.map((value) => String(value)),
+            ]
               .map((value) => value.trim())
               .filter(Boolean),
           ),
         );
-        const nextBaseType = definition.baseType || responseInfo.baseType || "identifier";
+        const nextBaseType =
+          definition.baseType || responseInfo.baseType || "identifier";
         const nextCardinality =
           uniqueValues.length > 1
             ? "multiple"
@@ -674,7 +788,9 @@
           (value) => value !== String(valueToRemove),
         );
         const nextCardinality =
-          remainingValues.length > 1 ? "multiple" : definition.cardinality || "single";
+          remainingValues.length > 1
+            ? "multiple"
+            : definition.cardinality || "single";
         currentAssessmentItemTemplateXml = updateCorrectResponsesInXmlText(
           currentAssessmentItemTemplateXml,
           {
@@ -709,6 +825,13 @@
           String(sourceXml || "").trim() ||
           `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item identifier="PREVIEW-ITEM" title="PCI Item" adaptive="false" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"></qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value>
+      <qti-value>0</qti-value>
+    </qti-default-value>
+  </qti-outcome-declaration>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"></qti-response-processing>
   <qti-item-body>
     <qti-portable-custom-interaction response-identifier="RESPONSE" module="pci" custom-interaction-type-identifier="pci"></qti-portable-custom-interaction>
   </qti-item-body>
@@ -731,9 +854,12 @@
           pciElement.getElementsByTagName("qti-interaction-markup")[0] ||
           null;
         const interactionMarkupElement =
-          existingInteractionMarkup || xmlDoc.createElement("qti-interaction-markup");
+          existingInteractionMarkup ||
+          xmlDoc.createElement("qti-interaction-markup");
         while (interactionMarkupElement.firstChild) {
-          interactionMarkupElement.removeChild(interactionMarkupElement.firstChild);
+          interactionMarkupElement.removeChild(
+            interactionMarkupElement.firstChild,
+          );
         }
         const markupNodes = htmlFragmentToXmlNodes(
           xmlDoc,
@@ -774,7 +900,10 @@
           );
           Array.from(sourceElement.attributes || []).forEach((attr) => {
             const attributeName = String(attr.name || "").toLowerCase();
-            if (attributeName === "xmlns" || attributeName.startsWith("xmlns:")) {
+            if (
+              attributeName === "xmlns" ||
+              attributeName.startsWith("xmlns:")
+            ) {
               return;
             }
             xmlElement.setAttribute(attr.name, attr.value);
@@ -995,9 +1124,9 @@
       }
 
       function getEditableElementsOutsideRepeats(wrapper) {
-        return Array.from(wrapper.querySelectorAll("[data-editable][data-name]")).filter(
-          (element) => !element.closest("[data-repeat]"),
-        );
+        return Array.from(
+          wrapper.querySelectorAll("[data-editable][data-name]"),
+        ).filter((element) => !element.closest("[data-repeat]"));
       }
 
       function readEditableValue(element) {
@@ -1030,7 +1159,9 @@
 
       function applyRepeatItemDefaults(itemElement, itemIndex) {
         const labelElements = Array.from(
-          itemElement.querySelectorAll('[data-editable="text"][data-name="label"]'),
+          itemElement.querySelectorAll(
+            '[data-editable="text"][data-name="label"]',
+          ),
         );
         labelElements.forEach((labelElement) => {
           labelElement.textContent = `Image ${String.fromCharCode(65 + itemIndex)}`;
@@ -1086,7 +1217,12 @@
         return String(payload?.href || "");
       }
 
-      function ProseRichTextEditor({ value, onChange, allowedMarks, linesLimit }) {
+      function ProseRichTextEditor({
+        value,
+        onChange,
+        allowedMarks,
+        linesLimit,
+      }) {
         const editorElementRef = useRef(null);
         const editorRef = useRef(null);
         const onChangeRef = useRef(onChange);
@@ -1259,19 +1395,24 @@
         }
 
         const configSource = currentPciConfig;
-        const safeProperties = sanitizeConfigProperties(configSource?.properties);
+        const safeProperties = sanitizeConfigProperties(
+          configSource?.properties,
+        );
         const keyArray = safeProperties
           ? Object.keys(safeProperties).map((keyName) => ({
               key: keyName,
               value: safeProperties[keyName],
             }))
           : [];
-        const correctResponseDefinition = getCorrectResponseDefinitionFromXmlText(
-          currentAssessmentItemTemplateXml,
-        );
+        const correctResponseDefinition =
+          getCorrectResponseDefinitionFromXmlText(
+            currentAssessmentItemTemplateXml,
+          );
         const currentResponseInfo = getCurrentPciResponseInfo();
         const currentResponseValues = Array.isArray(currentResponseInfo?.values)
-          ? currentResponseInfo.values.map((value) => String(value).trim()).filter(Boolean)
+          ? currentResponseInfo.values
+              .map((value) => String(value).trim())
+              .filter(Boolean)
           : [];
         const currentCorrectSet = new Set(correctResponseDefinition.values);
         const newCurrentValues = currentResponseValues.filter(
@@ -1279,7 +1420,8 @@
         );
         const canAddCurrentResponse =
           newCurrentValues.length > 0 &&
-          String(currentResponseInfo?.baseType || "").toLowerCase() !== "record";
+          String(currentResponseInfo?.baseType || "").toLowerCase() !==
+            "record";
 
         return html`
           <aside class="dev-sidepane">
@@ -1321,14 +1463,17 @@
                         element.getAttribute("data-editable") || "",
                       ).toLowerCase();
                       const fieldName =
-                        element.getAttribute("data-name") || `field-${fieldIndex + 1}`;
+                        element.getAttribute("data-name") ||
+                        `field-${fieldIndex + 1}`;
                       const fieldValue = readEditableValue(element);
                       const allowedMarks = parseAllowedMarks(element);
                       const linesLimit = parseLinesLimit(element);
                       const elementKey = `standalone-${fieldName}-${fieldIndex}`;
                       if (editableType === "image") {
                         return html`<div class="mb-3" key="${elementKey}">
-                          <label class="form-label text-muted mb-1">${fieldName}</label>
+                          <label class="form-label text-muted mb-1"
+                            >${fieldName}</label
+                          >
                           <input
                             type="text"
                             class="form-control mb-2"
@@ -1365,7 +1510,9 @@
                       }
                       if (editableType === "text") {
                         return html`<div class="mb-3" key="${elementKey}">
-                          <label class="form-label text-muted mb-1">${fieldName}</label>
+                          <label class="form-label text-muted mb-1"
+                            >${fieldName}</label
+                          >
                           <input
                             type="text"
                             class="form-control"
@@ -1374,13 +1521,18 @@
                               updateMarkup((root) => {
                                 const candidates =
                                   getEditableElementsOutsideRepeats(root);
-                                writeEditableValue(candidates[fieldIndex], e.target.value);
+                                writeEditableValue(
+                                  candidates[fieldIndex],
+                                  e.target.value,
+                                );
                               })}"
                           />
                         </div>`;
                       }
                       return html`<div class="mb-3" key="${elementKey}">
-                        <label class="form-label text-muted mb-1">${fieldName}</label>
+                        <label class="form-label text-muted mb-1"
+                          >${fieldName}</label
+                        >
                         <${ProseRichTextEditor}
                           value="${fieldValue}"
                           allowedMarks="${allowedMarks}"
@@ -1389,12 +1541,14 @@
                             updateMarkup((root) => {
                               const candidates =
                                 getEditableElementsOutsideRepeats(root);
-                              writeEditableValue(candidates[fieldIndex], nextValue);
+                              writeEditableValue(
+                                candidates[fieldIndex],
+                                nextValue,
+                              );
                             })}"
                         />
                       </div>`;
                     })}
-
                     ${repeatElements.map((repeatElement, repeatIndex) => {
                       const repeatName =
                         repeatElement.getAttribute("data-repeat") ||
@@ -1409,8 +1563,13 @@
                       );
                       const repeatItems = getRepeatItemElements(repeatElement);
                       const currentCount = repeatItems.length;
-                      return html`<div class="mb-4 border rounded p-2" key="${`repeat-${repeatName}-${repeatIndex}`}">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
+                      return html`<div
+                        class="mb-4 border rounded p-2"
+                        key="${`repeat-${repeatName}-${repeatIndex}`}"
+                      >
+                        <div
+                          class="d-flex justify-content-between align-items-center mb-2"
+                        >
                           <strong>${repeatName}</strong>
                           <div class="d-flex align-items-center gap-2">
                             <button
@@ -1422,7 +1581,8 @@
                                   const repeats = getRepeatElements(root);
                                   const targetRepeat = repeats[repeatIndex];
                                   if (!targetRepeat) return;
-                                  const items = getRepeatItemElements(targetRepeat);
+                                  const items =
+                                    getRepeatItemElements(targetRepeat);
                                   if (items.length > min) {
                                     items[items.length - 1].remove();
                                   }
@@ -1442,7 +1602,8 @@
                                   const repeats = getRepeatElements(root);
                                   const targetRepeat = repeats[repeatIndex];
                                   if (!targetRepeat) return;
-                                  const items = getRepeatItemElements(targetRepeat);
+                                  const items =
+                                    getRepeatItemElements(targetRepeat);
                                   if (items.length >= max) return;
                                   const template = items[0];
                                   if (!template) return;
@@ -1462,17 +1623,25 @@
                               "[data-editable][data-name]",
                             ),
                           );
-                          return html`<div class="mb-3 p-2 border rounded" key="${`repeat-item-${repeatIndex}-${itemIndex}`}">
-                            <div class="tiny-note mb-2">Item ${itemIndex + 1}</div>
+                          return html`<div
+                            class="mb-3 p-2 border rounded"
+                            key="${`repeat-item-${repeatIndex}-${itemIndex}`}"
+                          >
+                            <div class="tiny-note mb-2">
+                              Item ${itemIndex + 1}
+                            </div>
                             ${itemFields.map((fieldElement, fieldIndex) => {
                               const editableType = String(
-                                fieldElement.getAttribute("data-editable") || "",
+                                fieldElement.getAttribute("data-editable") ||
+                                  "",
                               ).toLowerCase();
                               const fieldName =
                                 fieldElement.getAttribute("data-name") ||
                                 `field-${fieldIndex + 1}`;
-                              const fieldValue = readEditableValue(fieldElement);
-                              const allowedMarks = parseAllowedMarks(fieldElement);
+                              const fieldValue =
+                                readEditableValue(fieldElement);
+                              const allowedMarks =
+                                parseAllowedMarks(fieldElement);
                               const linesLimit = parseLinesLimit(fieldElement);
                               const fieldKey = `repeat-field-${repeatIndex}-${itemIndex}-${fieldName}-${fieldIndex}`;
                               if (editableType === "image") {
@@ -1487,8 +1656,10 @@
                                     onInput="${(e) =>
                                       updateMarkup((root) => {
                                         const repeats = getRepeatElements(root);
-                                        const targetRepeat = repeats[repeatIndex];
-                                        const items = getRepeatItemElements(targetRepeat);
+                                        const targetRepeat =
+                                          repeats[repeatIndex];
+                                        const items =
+                                          getRepeatItemElements(targetRepeat);
                                         const targetItem = items[itemIndex];
                                         const fields = Array.from(
                                           targetItem.querySelectorAll(
@@ -1509,11 +1680,14 @@
                                       handleImageFileSelected(
                                         (uploadedHref) =>
                                           updateMarkup((root) => {
-                                            const repeats = getRepeatElements(root);
-                                            const targetRepeat = repeats[repeatIndex];
-                                            const items = getRepeatItemElements(
-                                              targetRepeat,
-                                            );
+                                            const repeats =
+                                              getRepeatElements(root);
+                                            const targetRepeat =
+                                              repeats[repeatIndex];
+                                            const items =
+                                              getRepeatItemElements(
+                                                targetRepeat,
+                                              );
                                             const targetItem = items[itemIndex];
                                             const fields = Array.from(
                                               targetItem.querySelectorAll(
@@ -1542,8 +1716,10 @@
                                     onInput="${(e) =>
                                       updateMarkup((root) => {
                                         const repeats = getRepeatElements(root);
-                                        const targetRepeat = repeats[repeatIndex];
-                                        const items = getRepeatItemElements(targetRepeat);
+                                        const targetRepeat =
+                                          repeats[repeatIndex];
+                                        const items =
+                                          getRepeatItemElements(targetRepeat);
                                         const targetItem = items[itemIndex];
                                         const fields = Array.from(
                                           targetItem.querySelectorAll(
@@ -1570,9 +1746,8 @@
                                     updateMarkup((root) => {
                                       const repeats = getRepeatElements(root);
                                       const targetRepeat = repeats[repeatIndex];
-                                      const items = getRepeatItemElements(
-                                        targetRepeat,
-                                      );
+                                      const items =
+                                        getRepeatItemElements(targetRepeat);
                                       const targetItem = items[itemIndex];
                                       const fields = Array.from(
                                         targetItem.querySelectorAll(
@@ -1591,24 +1766,28 @@
                         })}
                       </div>`;
                     })}
-
                     ${isUploadingImage
                       ? html`<div class="tiny-note">Uploading image...</div>`
                       : null}
 
                     <div class="tiny-note">
-                      Auto-saves fields to <code>${QTI_ASSESSMENT_ITEM_FILE_NAME}</code>.
+                      Auto-saves fields to
+                      <code>${QTI_ASSESSMENT_ITEM_FILE_NAME}</code>.
                     </div>
                   </div>
                 `
               : null}
             <hr />
             <div class="mb-2">
-              <label class="form-label text-muted mb-1">Correct Responses</label>
+              <label class="form-label text-muted mb-1"
+                >Correct Responses</label
+              >
               <div class="tiny-note mb-2">
-                Response identifier: <code>${correctResponseDefinition.responseIdentifier}</code>
-                | base-type: <code>${correctResponseDefinition.baseType}</code>
-                | cardinality: <code>${correctResponseDefinition.cardinality}</code>
+                Response identifier:
+                <code>${correctResponseDefinition.responseIdentifier}</code> |
+                base-type: <code>${correctResponseDefinition.baseType}</code> |
+                cardinality:
+                <code>${correctResponseDefinition.cardinality}</code>
               </div>
               <button
                 type="button"
@@ -1619,26 +1798,30 @@
                 Add current response as correct
               </button>
               <div class="tiny-note mb-2">
-                Current response: ${currentResponseValues.length > 0
+                Current response:
+                ${currentResponseValues.length > 0
                   ? currentResponseValues.join(", ")
                   : "none"}
               </div>
               ${correctResponseDefinition.values.length === 0
-                ? html`<div class="tiny-note">No correct responses configured.</div>`
+                ? html`<div class="tiny-note">
+                    No correct responses configured.
+                  </div>`
                 : html`${correctResponseDefinition.values.map(
-                    (value, index) => html`<div
-                      class="d-flex align-items-center justify-content-between border rounded p-2 mb-1"
-                      key="${`correct-${index}-${value}`}"
-                    >
-                      <code>${value}</code>
-                      <button
-                        type="button"
-                        class="btn btn-outline-danger btn-sm"
-                        onClick="${() => removeCorrectResponseValue(value)}"
+                    (value, index) =>
+                      html`<div
+                        class="d-flex align-items-center justify-content-between border rounded p-2 mb-1"
+                        key="${`correct-${index}-${value}`}"
                       >
-                        Remove
-                      </button>
-                    </div>`,
+                        <code>${value}</code>
+                        <button
+                          type="button"
+                          class="btn btn-outline-danger btn-sm"
+                          onClick="${() => removeCorrectResponseValue(value)}"
+                        >
+                          Remove
+                        </button>
+                      </div>`,
                   )}`}
             </div>
           </aside>
@@ -1705,6 +1888,9 @@
         const [responseSnapshot, setResponseSnapshot] = useState("undefined");
         const [stateSnapshot, setStateSnapshot] = useState("undefined");
         const [isRestoringState, setIsRestoringState] = useState(false);
+        const [isVariablesModalOpen, setIsVariablesModalOpen] = useState(false);
+        const [variablesSnapshotText, setVariablesSnapshotText] =
+          useState("undefined");
         const interactionRefreshTimer = useRef(null);
         const getCurrentAssessmentItem = () =>
           currentAssessmentItem || getQtiAssessmentItemElement();
@@ -1860,6 +2046,18 @@
         }, []);
 
         useEffect(() => {
+          const button = document.getElementById("process-responses-btn");
+          if (!button) return;
+          const onClick = () => {
+            processResponsesAndShowVariables();
+          };
+          button.addEventListener("click", onClick);
+          return () => {
+            button.removeEventListener("click", onClick);
+          };
+        }, []);
+
+        useEffect(() => {
           return () => {
             if (configUpdateTimer) {
               clearTimeout(configUpdateTimer);
@@ -1908,12 +2106,73 @@
           });
         }
 
+        async function processResponsesAndShowVariables() {
+          const assessmentItem = getCurrentAssessmentItem();
+          if (!assessmentItem) {
+            setVariablesSnapshotText("[]");
+            setIsVariablesModalOpen(true);
+            return;
+          }
+
+          let processingCalled = false;
+          const processingMethods = [
+            "processResponses",
+            "processResponse",
+            "endAttempt",
+          ];
+          for (const methodName of processingMethods) {
+            if (typeof assessmentItem?.[methodName] !== "function") {
+              continue;
+            }
+            processingCalled = true;
+            try {
+              await Promise.resolve(assessmentItem[methodName]());
+              break;
+            } catch (error) {
+              console.warn(
+                `[tspci] ${methodName} threw on qti-assessment-item`,
+                error,
+              );
+            }
+          }
+          if (processingCalled) {
+            // Some runtimes update variables asynchronously after processing.
+            await new Promise((resolve) => setTimeout(resolve, 30));
+          }
+
+          let variablesSummary = [];
+          try {
+            const rawVariables = assessmentItem.variables;
+            const normalized = Array.isArray(rawVariables)
+              ? rawVariables
+              : rawVariables &&
+                  typeof rawVariables[Symbol.iterator] === "function"
+                ? Array.from(rawVariables)
+                : [];
+            variablesSummary = normalized.map((variable, index) => ({
+              index,
+              identifier: variable?.identifier ?? `[${index}]`,
+              response: variable?.value,
+            }));
+          } catch {
+            variablesSummary = [];
+          }
+
+          setVariablesSnapshotText(toPrettyJson(variablesSummary));
+          setIsVariablesModalOpen(true);
+          refreshLiveData();
+        }
+
         return html`
           <div class="dev-layout">
             <div class="dev-main">
               <div class="row g-3 mt-1">
                 <div class="col-md-6">
-                  <h6 class="mb-1">Response</h6>
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-1"
+                  >
+                    <h6 class="mb-0">Response</h6>
+                  </div>
                   <pre class="json-block"><code dangerouslySetInnerHTML=${{
                     __html: highlightJson(responseSnapshot),
                   }}></code></pre>
@@ -1937,6 +2196,37 @@
                 </div>
               </div>
             </div>
+            ${isVariablesModalOpen
+              ? html`<div
+                  class="variables-modal-backdrop"
+                  onClick="${(event) => {
+                    if (event.target === event.currentTarget) {
+                      setIsVariablesModalOpen(false);
+                    }
+                  }}"
+                >
+                  <div class="variables-modal">
+                    <div
+                      class="variables-modal-body d-flex align-items-center justify-content-between pb-0"
+                    >
+                      <h6 class="mb-0">Variables (Response + State)</h6>
+                      <button
+                        type="button"
+                        class="btn-close"
+                        aria-label="Close"
+                        onClick="${() => setIsVariablesModalOpen(false)}"
+                      ></button>
+                    </div>
+                    <div class="variables-modal-body pt-2">
+                      <textarea
+                        class="form-control variables-modal-textarea"
+                        value="${variablesSnapshotText}"
+                        readonly
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>`
+              : null}
           </div>
         `;
       }
@@ -2011,31 +2301,49 @@
         const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item identifier="PREVIEW-ITEM" title="${escapeHtmlAttribute(typeIdentifier)}" adaptive="false" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"></qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value>
+      <qti-value>0</qti-value>
+    </qti-default-value>
+  </qti-outcome-declaration>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"></qti-response-processing>
   <qti-item-body>
     <qti-portable-custom-interaction response-identifier="RESPONSE" module="pci" custom-interaction-type-identifier="${escapeHtmlAttribute(typeIdentifier)}">
       <qti-interaction-markup><div data-qti-pci-runtime-host style="height:100%"></div></qti-interaction-markup>
     </qti-portable-custom-interaction>
   </qti-item-body>
 </qti-assessment-item>`;
-        const xmlDoc = parser.parseFromString(sourceXml || defaultXml, "application/xml");
+        const xmlDoc = parser.parseFromString(
+          sourceXml || defaultXml,
+          "application/xml",
+        );
         const parseError = xmlDoc.querySelector("parsererror");
         const workingXmlDoc = parseError
           ? parser.parseFromString(defaultXml, "application/xml")
           : xmlDoc;
         const pciElement =
           workingXmlDoc.querySelector("qti-portable-custom-interaction") ||
-          workingXmlDoc.getElementsByTagName("qti-portable-custom-interaction")[0] ||
+          workingXmlDoc.getElementsByTagName(
+            "qti-portable-custom-interaction",
+          )[0] ||
           null;
         if (pciElement) {
-          pciElement.setAttribute("custom-interaction-type-identifier", typeIdentifier);
+          pciElement.setAttribute(
+            "custom-interaction-type-identifier",
+            typeIdentifier,
+          );
           const moduleId = pciElement.getAttribute("module") || "pci";
           let interactionModules =
             pciElement.querySelector("qti-interaction-modules") ||
             pciElement.getElementsByTagName("qti-interaction-modules")[0] ||
             null;
           if (!interactionModules) {
-            interactionModules = workingXmlDoc.createElement("qti-interaction-modules");
-            const interactionModule = workingXmlDoc.createElement("qti-interaction-module");
+            interactionModules = workingXmlDoc.createElement(
+              "qti-interaction-modules",
+            );
+            const interactionModule = workingXmlDoc.createElement(
+              "qti-interaction-module",
+            );
             interactionModule.setAttribute("id", moduleId);
             interactionModule.setAttribute("primary-path", "./index");
             interactionModules.appendChild(interactionModule);
@@ -2058,10 +2366,7 @@
         const serialized = new XMLSerializer()
           .serializeToString(workingXmlDoc)
           .replace(/^\s*<\?xml[^>]*>\s*/i, "")
-          .replace(
-            /<(qti-[a-z0-9-]+)([^>]*)\/>/gi,
-            "<$1$2></$1>",
-          );
+          .replace(/<(qti-[a-z0-9-]+)([^>]*)\/>/gi, "<$1$2></$1>");
 
         const qtiItem = document.createElement("qti-item");
         qtiItem.innerHTML = serialized;

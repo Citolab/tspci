@@ -6,6 +6,13 @@
   adaptive="false"
   time-dependent="false"
 >
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string" />
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value>
+      <qti-value>0</qti-value>
+    </qti-default-value>
+  </qti-outcome-declaration>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />
   <qti-item-body>
     <qti-portable-custom-interaction
       response-identifier="RESPONSE"

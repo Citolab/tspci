@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?><qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="PREVIEW-ITEM" title="TspciDevApp" adaptive="false" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"><qti-correct-response><qti-value>A</qti-value></qti-correct-response></qti-response-declaration>
-  <qti-item-body>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+    
+  <qti-correct-response><qti-value>B</qti-value></qti-correct-response></qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value>
+      <qti-value>0</qti-value>
+    </qti-default-value>
+  </qti-outcome-declaration>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/><qti-item-body>
     <qti-portable-custom-interaction response-identifier="RESPONSE" module="pci" custom-interaction-type-identifier="TspciDevApp">
       <qti-interaction-markup>
         <div xmlns="" class="max-w-5xl mx-auto p-6">
-          <h2 class="text-2xl font-bold mb-6" data-editable="richtext" data-name="galleryTitle" data-allowed="bold italic underline" data-lines="1"><p>Selecteer de eikenboom</p></h2>
+          <h2 class="text-2xl font-bold mb-6" data-editable="richtext" data-name="galleryTitle" data-allowed="bold italic underline" data-lines="1">
+            <p>Selecteer de eikenboom</p>
+          </h2>
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6" data-repeat="images" data-min="2" data-max="5">
             <div class="flex flex-col items-center">
-              <label class="mb-2 text-sm font-medium text-gray-700" data-editable="text" data-name="label">Plaatje 1      </label>
+              <label class="mb-2 text-sm font-medium text-gray-700" data-editable="text" data-name="label">Plaatje een</label>
               <img src="/assets/tree_clean_1.png" class="w-full h-64 object-cover rounded-lg shadow" data-editable="image" data-name="image"/>
             </div>
             <div class="flex flex-col items-center">
@@ -16,10 +25,11 @@
               </label>
               <img src="/assets/tree_clean_2.png" class="w-full h-64 object-cover rounded-lg shadow" data-editable="image" data-name="image"/>
             </div>
-          <div class="flex flex-col items-center">
+            <div class="flex flex-col items-center">
               <label class="mb-2 text-sm font-medium text-gray-700" data-editable="text" data-name="label">Image C</label>
               <img src="/assets/tree_clean_1.png" class="w-full h-64 object-cover rounded-lg shadow" data-editable="image" data-name="image"/>
-            </div></div>
+            </div>
+          </div>
         </div>
       </qti-interaction-markup>
     </qti-portable-custom-interaction>
