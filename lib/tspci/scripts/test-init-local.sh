@@ -68,7 +68,6 @@ echo ""
 echo "Installing dependencies in generated project..."
 (cd "${TARGET_DIR}" && npm install --cache "${NPM_CACHE_DIR}" --workspaces=false)
 
-echo ""
 echo "Running production build smoke test..."
 node -e "
   const { spawnSync } = require('child_process');
