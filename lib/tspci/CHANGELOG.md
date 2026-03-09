@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.9.0](/compare/v2.8.4...v2.9.0) (2026-03-09)
+
+
+### Features
+
+* **tspci-dev-app:** add local development app for testing @citolab/tspci changes e87ac7d
+
+
+
+
+
 ## [2.8.4](/compare/v2.8.3...v2.8.4) (2026-02-25)
 
 **Note:** Version bump only for package @citolab/tspci

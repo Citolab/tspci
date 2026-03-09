@@ -1,6 +1,6 @@
 {
   "name": "@citolab/tspci",
-  "version": "2.8.4",
+  "version": "2.9.0",
   "description": "an opiniated typescript ims-pci builder with tao integration",
   "author": "patrick <patrick.deklein@cito.nl>",
   "repository": "@citolab/tspci",
@@ -18,6 +18,7 @@
   "types": "types/index.d.ts",
   "dependencies": {
     "@compodoc/live-server": "^1.2.3",
+    "@inquirer/prompts": "^8.2.0",
     "@rollup/plugin-alias": "^6.0.0",
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-image": "^3.0.3",
@@ -35,7 +36,6 @@
     "deepmerge": "^4.3.1",
     "fast-glob": "^3.3.3",
     "figlet": "1.10.0",
-    "@inquirer/prompts": "^8.2.0",
     "is-module": "^1.0.0",
     "postcss": "^8.5.6",
     "postcss-import": "^16.1.1",
