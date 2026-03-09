@@ -26,8 +26,8 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "publish-packages": "npm exec -- lerna publish --force-publish",
-    "publish-packages-next": "npm exec -- lerna publish prerelease --dist-tag next --force-publish --preid beta",
+    "publish-packages": "npm exec -- lerna publish --force-publish --no-private",
+    "publish-packages-next": "npm exec -- lerna publish prerelease --dist-tag next --force-publish --preid beta --no-private",
     "diff": "npm exec -- lerna diff",
     "list": "npm exec -- lerna list",
     "changed": "npm exec -- lerna changed",
