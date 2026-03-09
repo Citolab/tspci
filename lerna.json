@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/lerna/schemas/lerna-schema.json",
-  "version": "2.9.3",
+  "version": "2.9.4",
   "npmClient": "npm",
   "packages": [
     "lib/*"
@@ -13,7 +13,6 @@
       "message": "chore(release): publish",
       "registry": "https://registry.npmjs.org/",
       "access": "public",
-      "verifyAccess": true,
       "yes": true,
       "conventionalCommits": true,
       "distTag": "latest",
