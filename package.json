@@ -26,11 +26,11 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "publish-packages": "lerna publish --force-publish",
-    "publish-packages-next": "lerna publish prerelease --dist-tag next --force-publish --preid beta",
-    "diff": "lerna diff",
-    "list": "lerna list",
-    "changed": "lerna changed",
+    "publish-packages": "npm exec -- lerna publish --force-publish",
+    "publish-packages-next": "npm exec -- lerna publish prerelease --dist-tag next --force-publish --preid beta",
+    "diff": "npm exec -- lerna diff",
+    "list": "npm exec -- lerna list",
+    "changed": "npm exec -- lerna changed",
     "dev:tspci": "npm --prefix pcis/tspci-dev-app run dev",
     "build:tspci": "npm --prefix pcis/tspci-dev-app run prod",
     "test:init:local": "npm --prefix lib/tspci run test:init:local",
