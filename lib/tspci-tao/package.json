@@ -1,6 +1,6 @@
 {
   "name": "@citolab/tspci-tao",
-  "version": "2.9.1",
+  "version": "2.9.2",
   "description": "create a zip file that can be imported into TAO",
   "author": "patrick <patrick.deklein@cito.nl>, Marcel Hoekstra <marcel.hoekstra@cito.nl>",
   "repository": "",
@@ -16,5 +16,5 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
-  "gitHead": "a6611de68c160d32d9353c7e5ed56eafc4bd59a2"
+  "gitHead": "04beb964445a49ea1d30fbbd28d3244d5845aa86"
 }
