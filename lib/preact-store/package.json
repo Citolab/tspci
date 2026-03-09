@@ -1,6 +1,6 @@
 {
   "name": "@citolab/preact-store",
-  "version": "2.9.5",
+  "version": "2.9.6",
   "description": "simple preact store",
   "author": "patrick <patrick.deklein@cito.nl>, marcel  <marcel.hoekstra@cito.nl>",
   "homepage": "",
@@ -22,5 +22,5 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
-  "gitHead": "27241ceb9700e0f81e655813a5c9d4dc2fb19c0b"
+  "gitHead": "d970d054d1d3ae84605aa940cae29dc71b004425"
 }
