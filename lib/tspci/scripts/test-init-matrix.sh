@@ -121,8 +121,10 @@ run_dev_start_smoke() {
   node -e '
     const { spawn } = require("child_process");
     const targetDir = process.argv[1];
-    const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
-    const child = spawn(npmCmd, ["run", "dev"], { cwd: targetDir });
+    const child = spawn("npm", ["run", "dev"], {
+      cwd: targetDir,
+      shell: process.platform === "win32"
+    });
     let logs = "";
     const onData = (chunk) => {
       logs += chunk.toString();

@@ -85,10 +85,10 @@ echo "Running production build smoke test..."
 node -e "
   const { spawnSync } = require('child_process');
   const targetDir = process.argv[1];
-  const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  const result = spawnSync(npmCmd, ['run', 'prod'], {
+  const result = spawnSync('npm', ['run', 'prod'], {
     cwd: targetDir,
     stdio: 'inherit',
+    shell: process.platform === 'win32',
     timeout: 180000
   });
   if (result.error) {
@@ -116,8 +116,10 @@ echo "Running dev startup smoke test (timeout 20s)..."
 node -e "
   const { spawn } = require('child_process');
   const targetDir = process.argv[1];
-  const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  const child = spawn(npmCmd, ['run', 'dev'], { cwd: targetDir });
+  const child = spawn('npm', ['run', 'dev'], {
+    cwd: targetDir,
+    shell: process.platform === 'win32'
+  });
   let logs = '';
   const onData = (chunk) => {
     logs += chunk.toString();
