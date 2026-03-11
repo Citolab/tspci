@@ -88,6 +88,17 @@ create_project() {
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
   ' "${project_dir}/package.json" "$(npm_path "${TSPCI_TGZ}")" "$(npm_path "${PREACT_STORE_TGZ}")"
 
+  node -e '
+    const fs = require("fs");
+    const pkgPath = process.argv[1];
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+    const hasTslib = Boolean(pkg.devDependencies && pkg.devDependencies.tslib);
+    if (!hasTslib) {
+      console.error("ERROR: expected devDependency \"tslib\" in generated package.json");
+      process.exit(1);
+    }
+  ' "${project_dir}/package.json"
+
   (cd "${project_dir}" && npm install --cache "${NPM_CACHE_DIR}" --workspaces=false)
 }
 
@@ -105,6 +116,40 @@ run_base_build() {
   assert_file "${project_dir}/dist/index.js"
 }
 
+run_dev_start_smoke() {
+  local project_dir="$1"
+  node -e '
+    const { spawn } = require("child_process");
+    const targetDir = process.argv[1];
+    const child = spawn("npm", ["run", "dev"], { cwd: targetDir });
+    let logs = "";
+    const onData = (chunk) => {
+      logs += chunk.toString();
+    };
+    child.stdout.on("data", onData);
+    child.stderr.on("data", onData);
+    child.on("error", (err) => {
+      console.error(err.message);
+      process.exit(1);
+    });
+    setTimeout(() => {
+      child.kill("SIGTERM");
+      const hasReady = logs.includes("Ready for changes");
+      const missingTslib = logs.includes("Could not find module '\''tslib'\''");
+      if (missingTslib) {
+        console.error("ERROR: dev startup failed due to missing tslib");
+        process.exit(1);
+      }
+      if (!hasReady) {
+        console.error("ERROR: dev startup did not reach \"Ready for changes\" within timeout");
+        console.error(logs);
+        process.exit(1);
+      }
+      process.exit(0);
+    }, 20000);
+  ' "${project_dir}"
+}
+
 echo "Scenario 1: vanilla PCI creates and builds"
 create_project "VanillaPci" "javascript" "Vanilla PCI matrix test"
 assert_file "${TEST_ROOT}/VanillaPci/src/index.js"
@@ -114,6 +159,7 @@ echo "Scenario 2: TypeScript PCI (without tailwind/preact) creates and builds"
 create_project "TypeScriptPci" "typescript" "TypeScript PCI matrix test"
 assert_file "${TEST_ROOT}/TypeScriptPci/src/index.ts"
 run_base_build "${TEST_ROOT}/TypeScriptPci"
+run_dev_start_smoke "${TEST_ROOT}/TypeScriptPci"
 
 echo "Scenario 3: TypeScript + tailwind PCI creates and builds"
 create_project "TypeScriptTailwindPci" "preact+tailwind" "TypeScript + tailwind PCI matrix test"

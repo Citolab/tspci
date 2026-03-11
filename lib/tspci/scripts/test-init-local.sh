@@ -46,6 +46,19 @@ node -e "
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
 " "${TARGET_DIR}/package.json" "file:${PACK_PATH}"
 
+echo "Verifying generated package.json contains required dev dependencies..."
+node -e "
+  const fs = require('fs');
+  const pkgPath = process.argv[1];
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  const hasTslib = Boolean(pkg.devDependencies && pkg.devDependencies.tslib);
+  if (!hasTslib) {
+    console.error('ERROR: expected devDependency \"tslib\" in generated package.json');
+    process.exit(1);
+  }
+  console.log('OK: required devDependency \"tslib\" is present');
+" "${TARGET_DIR}/package.json"
+
 echo ""
 echo "Generated files:"
 find "${TARGET_DIR}" -maxdepth 3 -type f | sort
@@ -97,6 +110,38 @@ if [[ ! -f "${DIST_TYPES}" ]]; then
   echo "ERROR: expected type output not found: ${DIST_TYPES}" >&2
   exit 1
 fi
+
+echo "Running dev startup smoke test (timeout 20s)..."
+node -e "
+  const { spawn } = require('child_process');
+  const targetDir = process.argv[1];
+  const child = spawn('npm', ['run', 'dev'], { cwd: targetDir });
+  let logs = '';
+  const onData = (chunk) => {
+    logs += chunk.toString();
+  };
+  child.stdout.on('data', onData);
+  child.stderr.on('data', onData);
+  child.on('error', (err) => {
+    console.error(err.message);
+    process.exit(1);
+  });
+  setTimeout(() => {
+    child.kill('SIGTERM');
+    const hasReady = logs.includes('Ready for changes');
+    const missingTslib = logs.includes(\"Could not find module 'tslib'\");
+    if (missingTslib) {
+      console.error('ERROR: dev startup failed due to missing tslib');
+      process.exit(1);
+    }
+    if (!hasReady) {
+      console.error('ERROR: dev startup did not reach \"Ready for changes\" within timeout');
+      console.error(logs);
+      process.exit(1);
+    }
+    process.exit(0);
+  }, 20000);
+" "${TARGET_DIR}"
 
 echo ""
 echo "OK: found expected entry file: ${EXPECTED_FILE}"
