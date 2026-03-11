@@ -42,7 +42,8 @@
     "postcss-load-config": "^6.0.1",
     "rollup": "^4.59.0",
     "rollup-plugin-livereload": "^2.0.5",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",

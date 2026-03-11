@@ -31,8 +31,9 @@
     "diff": "npm exec -- lerna diff",
     "list": "npm exec -- lerna list",
     "changed": "npm exec -- lerna changed",
-    "dev:tspci": "npm --prefix pcis/tspci-dev-app run dev",
-    "build:tspci": "npm --prefix pcis/tspci-dev-app run prod",
+    "generate:pcis": "node ./scripts/generate-pcis.mjs",
+    "dev:tspci": "npm run generate:pcis && npm --prefix pcis/typescript run dev",
+    "build:tspci": "npm run generate:pcis && npm --prefix pcis/typescript run prod",
     "test:init:local": "npm --prefix lib/tspci run test:init:local",
     "test:init:smoke": "npm --prefix lib/tspci run test:init:smoke",
     "test:init:matrix": "npm --prefix lib/tspci run test:init:matrix"
@@ -42,8 +43,7 @@
     "lib/tspci",
     "lib/tspci-qbci",
     "lib/tspci-qti3",
-    "lib/tspci-tao",
-    "pcis/**/*"
+    "lib/tspci-tao"
   ],
   "contributors": [
     {
