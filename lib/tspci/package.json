@@ -1,6 +1,6 @@
 {
   "name": "@citolab/tspci",
-  "version": "2.9.8",
+  "version": "2.9.9",
   "description": "an opiniated typescript ims-pci builder with tao integration",
   "author": "patrick <patrick.deklein@cito.nl>",
   "repository": "@citolab/tspci",
@@ -53,5 +53,5 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
-  "gitHead": "786712333e262fa3ab9bc226d736a69c08233d5b"
+  "gitHead": "46e46b803a45fa750585f00f1112190104dd0fa4"
 }
