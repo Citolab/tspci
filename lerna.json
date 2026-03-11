@@ -1,11 +1,15 @@
 {
   "$schema": "node_modules/lerna/schemas/lerna-schema.json",
-  "version": "2.9.11",
+  "version": "2.9.12",
   "npmClient": "npm",
-  "packages": ["lib/*"],
+  "packages": [
+    "lib/*"
+  ],
   "command": {
     "publish": {
-      "ignoreChanges": ["*.md"],
+      "ignoreChanges": [
+        "*.md"
+      ],
       "message": "chore(release): publish",
       "registry": "https://registry.npmjs.org/",
       "access": "public",
