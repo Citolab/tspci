@@ -20,22 +20,26 @@ const Interaction = ({ config, dom, store }: { config: PropTypes; dom: Document 
   };
 
   return <div className="pci-container">
-    <h1>{config.title}</h1>
+    <h1 className="title">{config.title}</h1>
     <div className="body">
-      <img width={config.width} height={+config.height} src={procenten} />
+      <img className="body-image" width={config.width} height={+config.height} src={procenten} alt="Percentages visual" />
     </div>
     <div className="interaction">
-      <label htmlFor="tentacles">{config.prompt}</label>
-      <input type="number"
-        value={state.input}
-        onInput={handleInput}
-        onPaste={() => setEventHandled(false)}
-        onKeyDown={() => setEventHandled(false)}
-        min="0" max="100" />%
+      <label className="prompt" htmlFor="percentage-input">{config.prompt}</label>
+      <div className="answer-row">
+        <input className="answer-input"
+          id="percentage-input"
+          type="number"
+          value={state.input}
+          onInput={handleInput}
+          onPaste={() => setEventHandled(false)}
+          onKeyDown={() => setEventHandled(false)}
+          min="0" max="100" />
+        <span className="answer-suffix">%</span>
+      </div>
     </div>
   </div>;
 };
 
 
 export default Interaction;
-
