@@ -110,6 +110,15 @@ assert_file() {
   fi
 }
 
+assert_file_contains() {
+  local file_path="$1"
+  local expected_text="$2"
+  if ! grep -Fq "${expected_text}" "${file_path}"; then
+    echo "ERROR: expected '${expected_text}' in ${file_path}" >&2
+    exit 1
+  fi
+}
+
 run_base_build() {
   local project_dir="$1"
   (cd "${project_dir}" && npm run prod)
@@ -167,7 +176,10 @@ run_dev_start_smoke "${TEST_ROOT}/TypeScriptPci"
 echo "Scenario 3: TypeScript + tailwind PCI creates and builds"
 create_project "TypeScriptTailwindPci" "preact+tailwind" "TypeScript + tailwind PCI matrix test"
 assert_file "${TEST_ROOT}/TypeScriptTailwindPci/src/index.tsx"
+# Tailwind regression guard: ensure content scanning picks up utility classes from TSX.
+echo '<div className="bg-amber-500">Tailwind scan smoke</div>' >> "${TEST_ROOT}/TypeScriptTailwindPci/src/interaction.tsx"
 run_base_build "${TEST_ROOT}/TypeScriptTailwindPci"
+assert_file_contains "${TEST_ROOT}/TypeScriptTailwindPci/dist/index.js" "bg-amber-500"
 
 echo "Scenario 4: add tspci-qbci and export .ci package"
 create_project "QbciPci" "typescript" "QBCI export matrix test"
@@ -187,6 +199,21 @@ echo "Scenario 6: add tspci-tao and export tao zip"
 create_project "TaoPci" "typescript" "TAO export matrix test"
 (cd "${TEST_ROOT}/TaoPci" && npm install --save-dev "file:$(npm_path "${TAO_TGZ}")" --cache "${NPM_CACHE_DIR}" --workspaces=false)
 (cd "${TEST_ROOT}/TaoPci" && npm run tspci -- add --target tao --ci)
+node -e '
+  const fs = require("fs");
+  const pkgPath = process.argv[1];
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+  const hasTaoDevDep = Boolean(pkg.devDependencies && pkg.devDependencies["@citolab/tspci-tao"]);
+  if (!hasTaoDevDep) {
+    console.error("ERROR: expected devDependency \"@citolab/tspci-tao\" after tspci add --target tao");
+    process.exit(1);
+  }
+  const hasPackageScript = Boolean(pkg.scripts && pkg.scripts["package:tao"]);
+  if (!hasPackageScript) {
+    console.error("ERROR: expected script \"package:tao\" after tspci add --target tao");
+    process.exit(1);
+  }
+' "${TEST_ROOT}/TaoPci/package.json"
 node -e '
   const fs = require("fs");
   const pkgPath = process.argv[1];
