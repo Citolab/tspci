@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.9.8](https://github.com/Citolab/tspci/compare/v2.9.7...v2.9.8) (2026-03-11)
+
+**Note:** Version bump only for package @citolab/tspci-qbci
+
+
+
+
+
 ## [2.9.7](https://github.com/Citolab/tspci/compare/v2.9.6...v2.9.7) (2026-03-09)
 
 **Note:** Version bump only for package @citolab/tspci-qbci
