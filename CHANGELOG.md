@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.9.13](https://github.com/Citolab/qti-pci-bundler/compare/v2.9.12...v2.9.13) (2026-03-18)
+
+**Note:** Version bump only for package qti-pci-bundler
+
+
+
+
+
 ## [2.9.12](https://github.com/Citolab/qti-pci-bundler/compare/v2.9.11-beta.1...v2.9.12) (2026-03-11)
 
 **Note:** Version bump only for package qti-pci-bundler
