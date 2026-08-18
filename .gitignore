@@ -10,3 +10,4 @@ pcis/**/*
 *.DS_Store
 /.idea
 *.tgz
+.opencode
