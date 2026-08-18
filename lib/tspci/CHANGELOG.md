@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.10.0](/compare/v2.9.13...v2.10.0) (2026-08-18)
+
+
+### Features
+
+* **types:** carry the response declaration in the getInstance configuration 9e92da8, closes 1EdTech/qti-project-management#210
+* update dependencies and add settings for npm-check-updates 1b65ffe
+
+
+
+
+
 ## [2.9.13](/compare/v2.9.12...v2.9.13) (2026-03-18)
 
 **Note:** Version bump only for package @citolab/tspci

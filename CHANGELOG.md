@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.10.0](https://github.com/Citolab/qti-pci-bundler/compare/v2.9.13...v2.10.0) (2026-08-18)
+
+
+### Features
+
+* **types:** carry the response declaration in the getInstance configuration ([9e92da8](https://github.com/Citolab/qti-pci-bundler/commit/9e92da8705c22c8d8c6f35a1a1a50175ee904f02)), closes [1EdTech/qti-project-management#210](https://github.com/1EdTech/qti-project-management/issues/210)
+* update dependencies and add settings for npm-check-updates ([1b65ffe](https://github.com/Citolab/qti-pci-bundler/commit/1b65ffea6376b9de72ab1fa3cd17f9ec7c27b28f))
+
+
+
+
+
 ## [2.9.13](https://github.com/Citolab/qti-pci-bundler/compare/v2.9.12...v2.9.13) (2026-03-18)
 
 **Note:** Version bump only for package qti-pci-bundler
