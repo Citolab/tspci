@@ -6,6 +6,32 @@ export interface QtiInteractionChangedDetail {
   value?: QtiVariableJSON; // Optional value returned by getResponse()
 }
 
+/**
+ * Correct response of a response declaration, mirroring qti-correct-response.
+ *
+ * `value` holds the authored qti-value content: a single value for `single`
+ * cardinality, an array of values for every other cardinality.
+ */
+export interface CorrectResponse {
+  value: ResponseType | ResponseType[];
+}
+
+/**
+ * Response declaration passed into the getInstance configuration, so a PCI can
+ * render the correct response itself when it is constructed with status "solution".
+ *
+ * Mirrors qti-response-declaration with camelCased names. Every field is optional,
+ * a delivery engine passes as much or as little as it has, and correctResponse is
+ * absent when the response variable has none.
+ *
+ * See https://github.com/1EdTech/qti-project-management/issues/210
+ */
+export interface ResponseDeclaration {
+  baseType?: BaseType;
+  cardinality?: Cardinality;
+  correctResponse?: CorrectResponse;
+}
+
 // Define the ConfigProperties interface
 export interface ConfigProperties<T> {
   properties: T; // Follows dataset conversion rules (camelCased keys)
@@ -13,6 +39,7 @@ export interface ConfigProperties<T> {
   contextVariables: Record<string, QtiVariableJSON>; // Follows structure in Appendix C
   boundTo: Record<string, QtiVariableJSON>; // Follows structure in Appendix C
   responseIdentifier: string; // Unique within interaction scope
+  responseDeclaration?: ResponseDeclaration; // Optional, carries the correct response when the item declares one
 
   onready: (interaction: IMSpci<T>, state?: string) => void; // Callback when PCI is fully constructed and ready
   ondone?: (
