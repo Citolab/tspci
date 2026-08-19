@@ -1,3 +1,14 @@
+# 2.12.0
+
+- the SBOM is now included in the exported package by default, next to the bundle it describes: `resources/pci/sbom.cdx.json` (qti3), `interaction/runtime/js/sbom.cdx.json` (tao), `ref/script/sbom.cdx.json` (qbci)
+- a copy is still written next to the package as `<package-name>.sbom.cdx.json` for your own technical documentation
+- `--no-include-sbom` (or `config.tspci.sbom.includeInPackage: false`) keeps it out of the package, `--no-sbom` still skips it altogether
+- replaces `--include-sbom` from 2.11.0, which is now the default. The flag is still accepted and does nothing
+
+  A file next to the zip does not survive an import into an authoring system, and that system is exactly
+  the party that needs the SBOM: it is the manufacturer of the complete product and has to document the
+  components it integrates.
+
 # 2.11.0
 
 - every production build writes a CycloneDX 1.6 SBOM of the bundle to `dist/sbom.cdx.json`, and a package export copies it next to the package as `<package-name>.sbom.cdx.json`

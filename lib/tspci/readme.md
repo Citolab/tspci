@@ -85,8 +85,9 @@ For more info: [@citolab/tspci-qti3](https://github.com/Citolab/tspci/tree/main/
 ### SBOM
 
 Every production build (`tspci`, `tspci --target ...`) writes a [CycloneDX](https://cyclonedx.org/) 1.6
-SBOM to `dist/sbom.cdx.json`. When you export a package, a copy is placed next to the package as
-`<package-name>.sbom.cdx.json`, so you keep one SBOM per released version.
+SBOM to `dist/sbom.cdx.json`. A package export puts it in two places: inside the package next to the
+bundle it describes, and next to the package as `<package-name>.sbom.cdx.json` so you keep one SBOM per
+released version for your own technical documentation.
 
 The SBOM is built from the rollup module graph, so it lists the packages whose code actually ended up
 in the bundle. That is different from what `npm sbom`, `cyclonedx-npm` or Syft produce for a PCI: those
@@ -97,16 +98,30 @@ It also records a SHA-512 hash of the built bundle. A customer who integrates yo
 manufacturer of the complete product and has to do due diligence on integrated third party components;
 the hash lets them verify that the SBOM belongs to the bundle they received.
 
-The Cyber Resilience Act asks for an SBOM as part of the technical documentation, not as something you
-deliver with the product, so it is not put inside the package by default. Add `--include-sbom` if a
-customer wants it in the package anyway:
+The SBOM ships inside the package because a file next to the zip does not survive an import into an
+authoring system, and that system is exactly the party that needs it: it is the manufacturer of the
+complete product and has to document the components it integrates. The Cyber Resilience Act does not
+require in band delivery, so `--no-include-sbom` (or `config.tspci.sbom.includeInPackage: false`) keeps
+it out of the package while still writing it to `dist` and next to the package:
 
 ```sh
-  tspci --target qti3 --include-sbom
+  tspci --target qti3 --no-include-sbom
 ```
 
-Generating the SBOM needs no flag, it happens on every production build. Use `--no-sbom` to skip it for
-a single build, or `config.tspci.sbom.enabled: false` to switch it off for a project:
+Where it lands inside the package differs per target, always next to the bundle:
+
+| target | in the package |
+| --- | --- |
+| qti3 | `resources/pci/sbom.cdx.json`, listed as a file of the PCI resource in the manifest |
+| tao | `interaction/runtime/js/sbom.cdx.json` |
+| qbci | `ref/script/sbom.cdx.json` |
+
+For qti3 it is a `<file>` of the existing PCI resource rather than a resource of its own. QTI has no
+resource type for a bill of materials, and an unreferenced resource is what manifest driven tooling
+drops first.
+
+Generating the SBOM needs no flag either, it happens on every production build. Use `--no-sbom` to skip
+it for a single build, or `config.tspci.sbom.enabled: false` to switch it off for a project:
 
 ```sh
   tspci --target qti3 --no-sbom
@@ -165,7 +180,7 @@ All settings are optional and live in `config.tspci.sbom` in your `package.json`
 | `supportPeriodEnd` | - | Recorded as a property on the PCI component |
 | `externalReferences` | - | CycloneDX external references for the PCI, e.g. your disclosure policy |
 | `additionalComponents` | `[]` | Components the bundler cannot see, e.g. CDN or vendored code |
-| `includeInPackage` | `false` | Always include the SBOM in the exported package |
+| `includeInPackage` | `true` | Set to `false` to keep the SBOM out of the exported package |
 | `properties` | `[]` | Extra CycloneDX properties on the PCI component |
 | `warnings` | `true` | Set to `false` to silence the warnings about gaps |
 | `timestamp` | `false` | Include a build timestamp. Off by default so a rebuild of the same sources gives an identical document |
@@ -291,8 +306,8 @@ Available Commands
   --targetExt -tx Same as -target but reffering to a fully qualified package (not in @citolab)
   init            Init PCI development environment.
   add --target    Add specific implementation to the PCI.
-  --include-sbom  Include the generated SBOM in the exported package
-  --no-sbom       Do not generate an SBOM for this build
+  --no-include-sbom  Keep the SBOM out of the exported package (included by default)
+  --no-sbom          Do not generate an SBOM for this build
 
 Examples package.json scripts
 	$ "dev": "tspci --dev",

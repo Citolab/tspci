@@ -1,3 +1,9 @@
+# 2.12.0
+
+- the SBOM is included in the package as `ref/script/sbom.cdx.json`, next to the bundle
+- it is deliberately not registered in `ref/json/manifest.json`: the `script` array drives what the player loads and the SBOM is data, not a script
+- `--no-include-sbom` keeps it out of the package
+
 # 2.11.0
 
 - a CycloneDX SBOM of the bundle is copied next to the `.ci` package in `ci-dist/` as `<name>_<version>.sbom.cdx.json`

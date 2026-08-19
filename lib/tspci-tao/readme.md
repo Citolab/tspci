@@ -134,7 +134,14 @@ Add a svg file with the name {typeIdentifier}.svg in the root of the PCI directo
 
 ## sbom
 
-A CycloneDX SBOM of the bundle is copied next to the zip in `dist/` as
-`tao-pci-<typeIdentifier>_<version>.sbom.cdx.json`. Pass `--include-sbom` to also add `sbom.cdx.json`
-to the package itself, or `--no-sbom` to skip generating one. See [@citolab/tspci](https://github.com/Citolab/tspci/tree/main/lib/tspci#sbom)
-for the configuration.
+A CycloneDX SBOM of the bundle is included in the package as `interaction/runtime/js/sbom.cdx.json`,
+next to the bundle it describes, and copied next to the zip in `dist/` as
+`tao-pci-<typeIdentifier>_<version>.sbom.cdx.json` for your own technical documentation.
+
+Note that `imsPciCreator.json` does not list the SBOM in `runtime.src`. It travels with the zip you hand
+over, but whether TAO keeps the file after registering the PCI is untested: TAO copies the files from
+the src lists. Adding it there is a one line change, but a rejected registration is worse than a missing
+file, so that is not done by default.
+
+Use `--no-include-sbom` to keep it out of the package, or `--no-sbom` to skip generating one. See
+[@citolab/tspci](https://github.com/Citolab/tspci/tree/main/lib/tspci#sbom) for the configuration.

@@ -21,8 +21,11 @@ tspci --target qti3
 
 The zip is created in `qti3-dist/` and includes your PCI bundle from `dist/index.js` (or `package.json` `main`).
 
-A CycloneDX SBOM of the bundle is copied next to the zip as
-`qti3-pci-<typeIdentifier>_<version>.sbom.cdx.json`. QTI has no resource type for a bill of materials,
-so it is not part of the package unless you pass `--include-sbom`, which adds `sbom.cdx.json` to the
-package and references it in the manifest as `webcontent`, or `--no-sbom` to skip generating one. See
+A CycloneDX SBOM of the bundle is included in the package as `resources/pci/sbom.cdx.json`, listed as a
+file of the PCI resource in the manifest. QTI has no resource type for a bill of materials, and a
+resource that nothing depends on is what manifest driven tooling drops first, so it is a `<file>` of the
+existing PCI resource. A copy is also written next to the zip as
+`qti3-pci-<typeIdentifier>_<version>.sbom.cdx.json` for your own technical documentation.
+
+Use `--no-include-sbom` to keep it out of the package, or `--no-sbom` to skip generating one. See
 [@citolab/tspci](https://github.com/Citolab/tspci/tree/main/lib/tspci#sbom) for the configuration.

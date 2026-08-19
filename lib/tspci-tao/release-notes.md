@@ -1,3 +1,9 @@
+# 2.12.0
+
+- the SBOM is included in the package as `interaction/runtime/js/sbom.cdx.json`, next to the bundle
+- it is not listed in `runtime.src` of `imsPciCreator.json`, so whether TAO keeps the file after registering the PCI is untested
+- `--no-include-sbom` keeps it out of the package
+
 # 2.11.0
 
 - a CycloneDX SBOM of the bundle is copied next to the zip in `dist/` as `tao-pci-<typeIdentifier>_<version>.sbom.cdx.json`
