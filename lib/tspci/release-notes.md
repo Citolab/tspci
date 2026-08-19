@@ -1,3 +1,67 @@
+# 2.11.0
+
+- every production build writes a CycloneDX 1.6 SBOM of the bundle to `dist/sbom.cdx.json`, and a package export copies it next to the package as `<package-name>.sbom.cdx.json`
+- the SBOM is built from the rollup module graph, so it lists the packages whose code is actually in the bundle instead of the build time dependency tree
+- `--include-sbom` also puts the SBOM inside the exported package, `--no-sbom` skips generating one
+- configurable with `config.tspci.sbom` in package.json: supplier, support period, external references (disclosure policy, security contact) and manually declared components
+- the build warns about code the bundler cannot see: vendored files, `*.min.js` and scripts that are loaded from a cdn at runtime
+
+_The notes for 2.4.0 up to and including 2.10.0 were reconstructed from the git history afterwards, so
+they list the highlights per minor version. The patch versions in between are mostly lockstep publishes
+of all packages in this repository; `CHANGELOG.md` has the complete list of published versions._
+
+# 2.10.0
+
+- a delivery engine can pass the response declaration of the response variable a PCI is bound to in the `getInstance` configuration, so the PCI can render the correct response itself in solution status (see 1EdTech/qti-project-management#210)
+- the cli detects a missing `tslib` dependency and reports it with an install hint
+- added `generate:pcis` and a dev startup smoke test to develop and test tspci changes against real PCIs
+- improved layout and styling of the generated example interaction
+- updated dependencies, added npm-check-updates settings
+
+# 2.9.0
+
+- added a local development app to test changes in @citolab/tspci against generated PCI variants
+- replaced inquirer with @inquirer/prompts
+- test scripts and npm path handling work on Windows, CI runs on a matrix of operating systems
+
+# 2.8.0
+
+- `tspci init` can run without prompts using `--name`, `--description`, `--project-type` and `--ci`
+- `--path` accepts both `--path=folder` and `--path folder` (or `-p`) and is resolved relative to the current directory, nested paths are created automatically
+- the project type is now a single choice instead of a multi select
+- added local test scripts to initialize and smoke test all project variants
+
+# 2.7.0
+
+- added QTI 3 package export: `tspci --target qti3` creates a QTI 3 package with an assessment item, an assessment test and a manifest
+- added `setResponse`, so a delivery engine can push a response into the PCI
+- completed the QTI type definitions
+- the preact preset uses a factory pattern with improved state management
+- added a GPL-3.0 LICENSE file to the package
+- fixed the tailwindcss version in the preset
+
+# 2.6.0
+
+- added a javascript project type next to typescript and preact+tailwind, including TAO support for javascript PCIs with `onCompleted` implemented by default
+- added `--targetExt` (`-tx`) to export with a plugin that is not published under @citolab
+- the PCI dispatches a `qti-interaction-changed` event
+- renamed the `Configuration` type to `ConfigProperties` and improved type safety of the PCI interfaces
+- tailwindcss is added to devDependencies with the version that matches @tailwindcss/postcss
+- switched to chokidar for watching, fixed watching assets and building for the selected target
+
+# 2.5.0
+
+- removed node-builtins and node-globals from the rollup configuration
+- TAO specific functions are ignored when a PCI only implements the IMS interface
+- fixed actions in the state of the development app
+
+# 2.4.0
+
+- added replay functionality with a scrubber to the development app
+- refactored the store, the presets are based on the new store
+- the development environment uses an html template
+- `typeIdentifier` is restricted to alphanumeric characters, because a hyphen breaks the PCI in TAO
+- fixed installing the right version of the dependencies
 
 # 2.3.0
 - added a cli to initialize a PCI workspace (```tspci init```)

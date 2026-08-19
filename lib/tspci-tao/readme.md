@@ -131,3 +131,10 @@ Other config properties should be placed under: config -> tspci:
 Add a svg file with the name {typeIdentifier}.svg in the root of the PCI directory to have a custom icon for the PCI in TAO.
 
 ![custom icon](https://github.com/Citolab/tspci/blob/main/lib/tspci-tao/readme-images/icon.png)
+
+## sbom
+
+A CycloneDX SBOM of the bundle is copied next to the zip in `dist/` as
+`tao-pci-<typeIdentifier>_<version>.sbom.cdx.json`. Pass `--include-sbom` to also add `sbom.cdx.json`
+to the package itself, or `--no-sbom` to skip generating one. See [@citolab/tspci](https://github.com/Citolab/tspci/tree/main/lib/tspci#sbom)
+for the configuration.

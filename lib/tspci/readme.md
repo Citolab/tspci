@@ -20,6 +20,7 @@
 - Postcss support, use CSS nesting out of the box.
 - First class (p)react and tailwind support
 - Extension for TAO, configuring icon, label, support for setting correct response and pci-properties
+- Generates a CycloneDX SBOM of the components that are actually in your bundle
 
 ## 🔧 Installation & Setup
 
@@ -80,6 +81,97 @@ Then build the package:
 ```
 
 For more info: [@citolab/tspci-qti3](https://github.com/Citolab/tspci/tree/main/lib/tspci-qti3)
+
+### SBOM
+
+Every production build (`tspci`, `tspci --target ...`) writes a [CycloneDX](https://cyclonedx.org/) 1.6
+SBOM to `dist/sbom.cdx.json`. When you export a package, a copy is placed next to the package as
+`<package-name>.sbom.cdx.json`, so you keep one SBOM per released version.
+
+The SBOM is built from the rollup module graph, so it lists the packages whose code actually ended up
+in the bundle. That is different from what `npm sbom`, `cyclonedx-npm` or Syft produce for a PCI: those
+read the dependency tree and would list build-time packages (rollup, typescript, tailwind, terser) that
+are never delivered, while missing dependencies that got inlined into the bundle.
+
+It also records a SHA-512 hash of the built bundle. A customer who integrates your PCI is the
+manufacturer of the complete product and has to do due diligence on integrated third party components;
+the hash lets them verify that the SBOM belongs to the bundle they received.
+
+The Cyber Resilience Act asks for an SBOM as part of the technical documentation, not as something you
+deliver with the product, so it is not put inside the package by default. Add `--include-sbom` if a
+customer wants it in the package anyway:
+
+```sh
+  tspci --target qti3 --include-sbom
+```
+
+Generating the SBOM needs no flag, it happens on every production build. Use `--no-sbom` to skip it for
+a single build, or `config.tspci.sbom.enabled: false` to switch it off for a project:
+
+```sh
+  tspci --target qti3 --no-sbom
+```
+
+#### Known limitations
+
+The SBOM can only describe what passes through the bundler. It does not cover:
+
+- code loaded at runtime from a CDN (MathJax, MathLive, chart libraries)
+- third party code that was copied into your own `src` folder
+- the delivery engine itself (`qtiCustomInteractionContext` is external on purpose)
+
+The build warns about the first two when it can detect them (a script url in the bundle or in
+`src/index.html`, a path that looks like `src/vendor/...` or a `*.min.js` file). Declare those
+components manually so they end up in the SBOM.
+
+#### Configuration
+
+All settings are optional and live in `config.tspci.sbom` in your `package.json`:
+
+```json
+{
+  "config": {
+    "tspci": {
+      "typeIdentifier": "myPci",
+      "sbom": {
+        "supplier": { "name": "Cito", "url": "https://www.cito.nl" },
+        "supportPeriodEnd": "2032-12-31",
+        "externalReferences": [
+          { "type": "vulnerability-disclosure", "url": "https://www.cito.nl/security" },
+          { "type": "security-contact", "url": "mailto:security@example.org" }
+        ],
+        "additionalComponents": [
+          {
+            "name": "mathjax",
+            "version": "3.2.2",
+            "license": "Apache-2.0",
+            "purl": "pkg:npm/mathjax@3.2.2",
+            "externalReferences": [
+              { "type": "distribution", "url": "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `enabled` | `true` | Set to `false` to skip SBOM generation |
+| `fileName` | `sbom.cdx.json` | Name of the generated file |
+| `supplier` | `author` from `package.json` | Supplier of the PCI, as name or `{ name, url, contact }` |
+| `supportPeriodEnd` | - | Recorded as a property on the PCI component |
+| `externalReferences` | - | CycloneDX external references for the PCI, e.g. your disclosure policy |
+| `additionalComponents` | `[]` | Components the bundler cannot see, e.g. CDN or vendored code |
+| `includeInPackage` | `false` | Always include the SBOM in the exported package |
+| `properties` | `[]` | Extra CycloneDX properties on the PCI component |
+| `warnings` | `true` | Set to `false` to silence the warnings about gaps |
+| `timestamp` | `false` | Include a build timestamp. Off by default so a rebuild of the same sources gives an identical document |
+
+Declaring a component in `additionalComponents` also silences the warning about the matching runtime
+url. Set `TSPCI_SBOM_TIMESTAMP=1` to add a timestamp for a single build.
 
 ### Manual
 
@@ -199,6 +291,8 @@ Available Commands
   --targetExt -tx Same as -target but reffering to a fully qualified package (not in @citolab)
   init            Init PCI development environment.
   add --target    Add specific implementation to the PCI.
+  --include-sbom  Include the generated SBOM in the exported package
+  --no-sbom       Do not generate an SBOM for this build
 
 Examples package.json scripts
 	$ "dev": "tspci --dev",
