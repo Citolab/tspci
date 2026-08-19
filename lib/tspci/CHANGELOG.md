@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.12.0](/compare/v2.11.0...v2.12.0) (2026-08-19)
+
+
+### Features
+
+* include the SBOM in the exported package by default 376b89a
+
+
+
+
+
 # [2.11.0](/compare/v2.10.0...v2.11.0) (2026-08-19)
 
 
