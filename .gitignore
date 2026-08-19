@@ -5,6 +5,7 @@ tmp
 tao_pci/tmp
 **/tao_pci/*.zip
 dist
+*.tsbuildinfo
 *.log
 pcis/**/*
 *.DS_Store

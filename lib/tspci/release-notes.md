@@ -1,3 +1,8 @@
+# 2.12.1
+
+- `tspci init` now writes a tsconfig that is ready for TypeScript 6: an explicit `rootDir` of `./src`, `moduleResolution: "bundler"` instead of the deprecated node10 resolution, `module: "esnext"` and `lib: es2017`
+- existing PCIs keep their own tsconfig.json, apply the same four changes there to silence the TypeScript 6 warnings
+
 # 2.12.0
 
 - the SBOM is now included in the exported package by default, next to the bundle it describes: `resources/pci/sbom.cdx.json` (qti3), `interaction/runtime/js/sbom.cdx.json` (tao), `ref/script/sbom.cdx.json` (qbci)

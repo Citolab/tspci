@@ -1,14 +1,15 @@
 {
   "compilerOptions": {
     "declaration": true,
-    "lib": ["es6", "dom", "dom.iterable"],
-    "module": "es6",
-    "moduleResolution": "node",
+    "lib": ["es2017", "dom", "dom.iterable"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "removeComments": true,
     "sourceMap": true,
     "strict": false,
     "target": "es6",
     "outDir": "./dist",
+    "rootDir": "./src",
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
     "allowSyntheticDefaultImports": true,
