@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.12.1](https://github.com/Citolab/qti-pci-bundler/compare/v2.12.0...v2.12.1) (2026-08-19)
+
+
+### Bug Fixes
+
+* make the generated tsconfig ready for TypeScript 6 ([cdcc84d](https://github.com/Citolab/qti-pci-bundler/commit/cdcc84d8c45b6c39555f983b3488a32152df0b95))
+
+
+
+
+
 # [2.12.0](https://github.com/Citolab/qti-pci-bundler/compare/v2.11.0...v2.12.0) (2026-08-19)
 
 
