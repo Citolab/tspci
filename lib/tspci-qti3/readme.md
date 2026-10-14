@@ -29,3 +29,13 @@ existing PCI resource. A copy is also written next to the zip as
 
 Use `--no-include-sbom` to keep it out of the package, or `--no-sbom` to skip generating one. See
 [@citolab/tspci](https://github.com/Citolab/tspci/tree/main/lib/tspci#sbom) for the configuration.
+
+## Authoring systems
+
+The item declares the response your PCI fills, from `config.tspci.response` in `package.json`
+(`{ "cardinality": "single", "baseType": "integer" }`, or a `record` with `fields`); without it, `single` / `string`.
+The authoring descriptor the build writes (`dist/authoring.json`) is included as `resources/pci/authoring.json`, a file
+of the PCI resource like the SBOM, so an authoring system that imports the package can offer typed settings for your
+`config.json` properties and set up scoring. Use `--no-authoring` to keep it out. See
+[@citolab/tspci](https://github.com/Citolab/tspci/tree/main/lib/tspci#authoring-systems) and the `AUTHORING.md` of
+your project.
