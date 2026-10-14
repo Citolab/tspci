@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.14.0](https://github.com/Citolab/qti-pci-bundler/compare/v2.13.0...v2.14.0) (2026-10-14)
+
+
+### Features
+
+* **preact-store:** unsubscribe functions, typed actions and listeners told about reset and restore ([ca79fe0](https://github.com/Citolab/qti-pci-bundler/commit/ca79fe0bc80046eab51876a3aa45aea01bc697aa))
+* **tspci:** the preact template uses typed store actions and the unsubscribe function ([5297db7](https://github.com/Citolab/qti-pci-bundler/commit/5297db72a3d2c62cdba58c1b2fe49bbbdee1e024))
+
+
+
+
+
 # [2.13.0](https://github.com/Citolab/qti-pci-bundler/compare/v2.12.1...v2.13.0) (2026-10-14)
 
 

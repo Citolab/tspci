@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.14.0](https://github.com/Citolab/tspci/compare/v2.13.0...v2.14.0) (2026-10-14)
+
+
+### Features
+
+* **tspci:** the preact template uses typed store actions and the unsubscribe function ([5297db7](https://github.com/Citolab/tspci/commit/5297db72a3d2c62cdba58c1b2fe49bbbdee1e024))
+
+
+
+
+
 # [2.13.0](/compare/v2.12.1...v2.13.0) (2026-10-14)
 
 
