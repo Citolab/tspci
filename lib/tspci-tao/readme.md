@@ -13,6 +13,53 @@ This package allows the @citolab/tspci-bundler to create a package which can be 
 
 PCI's can be imported in TAO as a ZIP file. The ZIP generated contains the PCI itself and metadata enabling the PCI to be shown in the TAO creator platform.
 Configuration of a PCI can be done by the author because this packager reads the config.json file in the src folder
+A `config.json` value may also be an object with a `default` and editor hints (the authoring descriptor, see
+[@citolab/tspci](https://github.com/Citolab/tspci/tree/main/lib/tspci#authoring-systems)). TAO's properties form then
+shows the setting's `label` (the English one when it is given per language), with its `hint` (else the label) in the
+tooltip, and a control for its `editor`:
+
+| editor | TAO's form shows | the PCI gets |
+| --- | --- | --- |
+| `text` | a text field | the text |
+| `textarea` | a larger text field | the text |
+| `integer`, `number` | a number field with `min`, `max` and `step` (1 for an integer) | `"200"` |
+| `boolean` | a checkbox | `"true"` / `"false"` |
+| `enum` | a dropdown with the labels of the `options` | the option's value |
+| `color` | a colour picker and a hex field, kept in sync | `"#4b9f4a"` |
+| `colorList` | a colour picker per colour, with a button to add one and one to remove each (at least one stays) | `"#c91a09, #0055bf"` |
+| `hidden` | nothing; the interaction keeps the default | the default |
+| `pci` | a text field below the "Configure…" button (see below) | what the PCI's editor writes |
+| another | a text field | the text |
+
+A setting given as a plain default (`"width": "200"`) keeps the field it always had: its name as the label, and a
+number field for a whole number, else a text field. Every change is written to the interaction and passed to the
+PCI's `trigger`, as text, the way a `data-` attribute gives it.
+
+The editor hints are read by `buildDescriptor` of the project's `@citolab/tspci` (as for `dist/authoring.json`). With
+an older `@citolab/tspci` without it, every setting gets a text field.
+
+### Authoring mode: "Configure…"
+
+Settings with `editor: "pci"` are filled by the PCI itself, in its authoring mode (`getAuthoringInstance`, see
+[@citolab/tspci](https://github.com/Citolab/tspci/tree/main/lib/tspci) AUTHORING.md, "Authoring mode"). For such a PCI
+the properties form gets a button above the first of those settings. Its text is `config.tspci.authoring.label` in
+package.json (the English one when it is given per language, through TAO's translations), or "Configure…".
+
+The button opens TAO's modal with the PCI's authoring UI in it, sized after `config.tspci.authoring.width/height` (at
+most 70% of the window height). The PCI gets all current settings of the interaction and TAO's UI language.
+
+- **Done** asks the PCI to `validate()`. Problems are shown, and the dialog stays open. Otherwise the settings that
+  `getConfig()` returns (only the `pci` ones) are written to the interaction and passed to the PCI's `trigger`,
+  like a change in the form, and the dialog closes.
+- **Cancel**, the close button or Escape close it without changes.
+
+The text field of a `pci` setting stays below the button: it is the way to clear the value (back to the PCI's
+default), to copy it from another item, and the only way to change it when the module has no authoring mode. In
+that case the dialog says so instead of showing the editor.
+
+TAO runs the creator in its own page with RequireJS, so the button calls the runtime module directly; there is no
+iframe and no message protocol, unlike authoring systems that sandbox the PCI. A PCI without `pci` settings gets
+exactly the package it got before.
 
 If scoring can be done with a MATCH_CORRECT (single string comparison) the item author can provide the correct answer in TAO by interaction with the PCI.
 This way one PCI can be re-used in different configurations supporting multiple items.
