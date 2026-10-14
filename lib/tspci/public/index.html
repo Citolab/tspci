@@ -1,19 +1,25 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <meta charset="utf-8" />
     <title>Hello RequireJS</title>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"
-      integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    ></script>
+    <!--
+      Everything this page loads comes from /vendor/<package>: tspci's own dependencies, served by the dev server
+      (src/rollup.config.dev.js). No public CDN, and the versions in the lockfile.
+    -->
+    <script src="/vendor/requirejs/require.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "preact": "/vendor/preact/dist/preact.module.js",
+          "preact/hooks": "/vendor/preact/hooks/dist/hooks.module.js",
+          "htm": "/vendor/htm/dist/htm.module.js"
+        }
+      }
+    </script>
     <!-- <link rel="stylesheet" class="bootswatcher" href="//bootswatch.com/5/lumen/bootstrap.min.css" /> -->
 
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
-    />
+    <link rel="stylesheet" href="/vendor/bootstrap/dist/css/bootstrap.min.css" />
 
     <style>
       html {
@@ -203,22 +209,16 @@
       import {
         h,
         render,
-      } from "https://unpkg.com/preact@latest?module";
+      } from "preact";
       import {
         useState,
         useEffect,
         useRef,
-      } from "https://unpkg.com/preact@latest/hooks/dist/hooks.module.js?module";
-      import htm from "https://unpkg.com/htm?module";
+      } from "preact/hooks";
+      import htm from "htm";
       // Initialize htm with Preact
       const html = htm.bind(h);
 
-      const CONFIG_TO_DATA_PROPERTY_KEYS = [
-        "title",
-        "prompt",
-        "width",
-        "height",
-      ];
       const CONFIG_CHANGE_DEBOUNCE_MS = 1000;
       const INTERACTION_REFRESH_DELAY_MS = 120;
 
@@ -413,33 +413,167 @@
         applyConfigChangesDebounced();
       }
 
+      // dist/authoring.json (written by the build, see AUTHORING.md): the same typed form an authoring system shows the
+      // item author. Without it every property is a text field, as before.
+      let authoringDescriptor = null;
+      const authoringLoaded = fetch("authoring.json")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          authoringDescriptor = d && d.properties ? d : null;
+          renderConfigPanel();
+        })
+        .catch(() => {});
+
+      const authoringText = (text, fallback) =>
+        !text ? fallback : typeof text === "string" ? text : text.en || Object.values(text)[0] || fallback;
+      const toHex = (c) => {
+        const v = String(c || "").trim();
+        if (/^#[0-9a-f]{6}$/i.test(v)) return v.toLowerCase();
+        if (/^#[0-9a-f]{3}$/i.test(v)) return "#" + v.slice(1).split("").map((x) => x + x).join("").toLowerCase();
+        return "#000000";
+      };
+
+      function PropertyControl({ name, spec, value }) {
+        const set = (v) => changeConfigProperty(name, v);
+        switch (spec?.editor) {
+          case "enum":
+            return html`<select class="form-select" onChange="${(e) => set(e.target.value)}">
+              ${(spec.options || []).map(
+                (o) => html`<option value="${o.value}" selected=${String(o.value) === String(value)}>${authoringText(o.label, o.value)}</option>`,
+              )}
+            </select>`;
+          case "boolean":
+            return html`<div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" checked=${value === "true"} onChange="${(e) => set(e.target.checked ? "true" : "false")}" />
+            </div>`;
+          case "integer":
+          case "number":
+            return html`<input type="number" class="form-control" value="${value}" min="${spec.min ?? ""}" max="${spec.max ?? ""}"
+              step="${spec.editor === "integer" ? 1 : "any"}" onInput="${(e) => set(e.target.value)}" />`;
+          case "pci": // the PCI fills it in its authoring mode (button above)
+            return html`<code class="d-block small text-truncate" title="${value}">${value || "(default)"}</code>`;
+          case "textarea":
+            return html`<textarea class="form-control" rows="2" onInput="${(e) => set(e.target.value)}">${value}</textarea>`;
+          case "color":
+            return html`<div class="d-flex gap-2">
+              <input type="color" class="form-control form-control-color" value="${toHex(value)}" onInput="${(e) => set(e.target.value)}" />
+              <input type="text" class="form-control" value="${value}" onInput="${(e) => set(e.target.value)}" />
+            </div>`;
+          case "colorList": {
+            const colors = String(value || "").split(/[,;\s]+/).filter(Boolean);
+            const write = (next) => set(next.join(", "));
+            return html`<div class="d-flex flex-wrap gap-1 align-items-center">
+              ${colors.map(
+                (c, i) => html`<input type="color" class="form-control form-control-color" title="${c}" value="${toHex(c)}"
+                  onInput="${(e) => write(colors.map((x, j) => (j === i ? e.target.value : x)))}" />`,
+              )}
+              <button type="button" class="btn btn-sm btn-outline-secondary" title="add" onClick="${() => write([...colors, colors[colors.length - 1] || "#888888"])}">+</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" title="remove" disabled=${colors.length < 2} onClick="${() => write(colors.slice(0, -1))}">−</button>
+            </div>`;
+          }
+          default:
+            return html`<input type="text" class="form-control" value="${value}" onInput="${(e) => set(e.target.value)}" />`;
+        }
+      }
+
+      // Authoring mode (AUTHORING.md): the PCI's own editor for the properties with editor "pci". An authoring system runs
+      // it in a sandboxed iframe (src/authoring-frame.js); here it runs in place of the preview, which is enough to build it.
+      let authoringSession = null;
+
+      function startAuthoring() {
+        const container = document.getElementById("pciContainer");
+        if (typeof currentPciInteraction?.oncompleted === "function") currentPciInteraction.oncompleted();
+        container.innerHTML = "";
+        const dom = document.createElement("div");
+        container.appendChild(dom);
+        const instance = currentPciFactory.getAuthoringInstance(dom, {
+          properties: { ...(currentPciConfig?.properties || {}) },
+          language: (navigator.language || "en").slice(0, 2),
+          onchange: () => {},
+        });
+        authoringSession = { instance, problems: [] };
+        renderConfigPanel();
+      }
+
+      function finishAuthoring(apply) {
+        const session = authoringSession;
+        if (!session) return;
+        if (apply) {
+          const problems = (typeof session.instance.validate === "function" && session.instance.validate()) || [];
+          if (problems.length) {
+            session.problems = problems;
+            renderConfigPanel();
+            return;
+          }
+          const values = session.instance.getConfig() || {};
+          // only the properties the descriptor says the PCI manages
+          for (const key of authoringDescriptor.authoring.properties) {
+            if (key in values) currentPciConfig.properties[key] = String(values[key]);
+          }
+          localStorage.setItem(currentPciFactory.typeIdentifier + "_props", JSON.stringify(currentPciConfig.properties));
+          syncConfigPropertiesToHostDataProperties(currentPciConfig, currentPciHostDataProperties);
+        }
+        if (typeof session.instance.destroy === "function") session.instance.destroy();
+        authoringSession = null;
+        refreshCurrentPci();
+        renderConfigPanel();
+      }
+
+      function AuthoringControls() {
+        const mode = authoringDescriptor?.authoring;
+        if (!mode) return null;
+        if (typeof currentPciFactory?.getAuthoringInstance !== "function") {
+          return html`<p class="small text-warning mb-3">
+            <code>authoring.json</code> describes an authoring mode, but the PCI has no <code>getAuthoringInstance</code>.
+          </p>`;
+        }
+        if (!authoringSession) {
+          return html`<button type="button" class="btn btn-sm btn-primary mb-3" onClick="${startAuthoring}">
+            ${authoringText(mode.label, "Configure…")}
+          </button>`;
+        }
+        return html`<div class="mb-3">
+          <p class="small text-muted mb-2">Authoring mode: the item author's view. Done writes ${mode.properties.map((k) => html`<code>${k}</code> `)}.</p>
+          ${authoringSession.problems.map((problem) => html`<div class="alert alert-warning py-1 px-2 small mb-2">${problem}</div>`)}
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-primary" onClick="${() => finishAuthoring(true)}">Done</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onClick="${() => finishAuthoring(false)}">Cancel</button>
+          </div>
+        </div>`;
+      }
+
       function ConfigPanel() {
         const configSource = currentPciConfig;
+        const properties = authoringDescriptor?.properties || {};
         const keyArray = configSource?.properties
-          ? Object.keys(configSource.properties).map((keyName) => ({
-              key: keyName,
-              value: configSource.properties[keyName],
-            }))
+          ? Object.keys(configSource.properties)
+              .filter((keyName) => properties[keyName]?.editor !== "hidden")
+              .map((keyName) => ({ key: keyName, value: configSource.properties[keyName], spec: properties[keyName] }))
           : [];
+        const response = authoringDescriptor?.response;
 
         return html`
           <aside class="dev-sidepane">
-            <h6 class="mb-3">Config</h6>
+            <h6 class="mb-1">Config</h6>
+            <p class="text-muted small mb-3">
+              ${authoringDescriptor
+                ? html`As an item author sees it (<code>authoring.json</code>)${response
+                    ? html` · response <code>${response.cardinality}${response.baseType ? " " + response.baseType : ""}</code>`
+                    : ""}`
+                : html`No <code>authoring.json</code> yet: build once, or see AUTHORING.md`}
+            </p>
+            <${AuthoringControls} />
+            <fieldset disabled=${!!authoringSession}>
             <form onSubmit="${(e) => e.preventDefault()}">
               ${keyArray.map(
-                ({ key, value }) =>
-                  html`<div class="mb-2">
-                    <label class="form-label text-muted mb-1">${key}</label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      value="${value}"
-                      onInput="${(e) =>
-                        changeConfigProperty(key, e.target.value)}"
-                    />
+                ({ key, value, spec }) =>
+                  html`<div class="mb-3">
+                    <label class="form-label text-muted mb-1" title="${key}">${authoringText(spec?.label, key)}</label>
+                    <${PropertyControl} name="${key}" spec="${spec}" value="${value}" />
                   </div>`,
               )}
             </form>
+            </fieldset>
           </aside>
         `;
       }
@@ -720,25 +854,26 @@
         localStorage.removeItem(item.typeIdentifier + "_state");
       }
 
+      // qti-components runs the PCI in an iframe. Give it these copies, so the iframe loads nothing from a CDN either
+      // (qti-components 9.5 still defaults to cdnjs and unpkg there; later versions inline what the iframe needs).
+      const QTI_COMPONENTS = {
+        bundle: new URL("/vendor/@citolab/qti-components/cdn/index.js", location.href).href,
+        css: new URL("/vendor/@citolab/qti-components/dist/item.css", location.href).href,
+        requireJs: new URL("/vendor/requirejs/require.js", location.href).href,
+      };
+
       async function loadQtiComponents() {
         if (customElements.get("qti-portable-custom-interaction")) {
           return true;
         }
-        const moduleCandidates = [
-          "https://cdn.jsdelivr.net/npm/@citolab/qti-components/+esm",
-          "https://cdn.jsdelivr.net/npm/@citolab/qti-components/dist/index.js",
-          "https://unpkg.com/@citolab/qti-components/dist/index.js?module",
-        ];
-
-        for (const modulePath of moduleCandidates) {
-          try {
-            await import(modulePath);
-            if (customElements.get("qti-portable-custom-interaction")) {
-              return true;
-            }
-          } catch (error) {
-            // Try the next candidate.
+        try {
+          // The self-contained bundle of tspci's own qti-components dependency (see the head).
+          await import(QTI_COMPONENTS.bundle);
+          if (customElements.get("qti-portable-custom-interaction")) {
+            return true;
           }
+        } catch (error) {
+          console.error(error);
         }
 
         console.warn(
@@ -747,6 +882,14 @@
         return false;
       }
 
+      // Declare the response as config.tspci.response describes it (authoring.json), so the preview reports an integer
+      // as an integer; a record, or no authoring.json yet, falls back to single/string.
+      function responseDeclarationXml() {
+        const response = authoringDescriptor?.response;
+        const cardinality = response && response.cardinality !== "record" ? response.cardinality : "single";
+        const baseType = response && response.cardinality !== "record" && response.baseType ? response.baseType : "string";
+        return `<qti-response-declaration identifier="RESPONSE" cardinality="${escapeHtmlAttribute(cardinality)}" base-type="${escapeHtmlAttribute(baseType)}"></qti-response-declaration>`;
+      }
       function createQtiPciHost(item, dataProperties = {}) {
         const container = document.getElementById("pciContainer");
         container.innerHTML = "";
@@ -777,10 +920,12 @@
         const qtiItem = document.createElement("qti-item");
         qtiItem.innerHTML = `
           <qti-assessment-item identifier="PREVIEW-ITEM" title="${escapedTypeIdentifier}" adaptive="false" time-dependent="false">
-            <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"></qti-response-declaration>
+            ${responseDeclarationXml()}
             <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"></qti-outcome-declaration>
             <qti-item-body>
-              <qti-portable-custom-interaction response-identifier="RESPONSE" module="pci" custom-interaction-type-identifier="${escapedTypeIdentifier}"${dataAttributes}>
+              <qti-portable-custom-interaction response-identifier="RESPONSE" module="pci" custom-interaction-type-identifier="${escapedTypeIdentifier}"
+                data-require-js-url="${escapeHtmlAttribute(QTI_COMPONENTS.requireJs)}" data-components-cdn-url="${escapeHtmlAttribute(QTI_COMPONENTS.bundle)}"
+                data-components-css-url="${escapeHtmlAttribute(QTI_COMPONENTS.css)}"${dataAttributes}>
                 <qti-interaction-modules>
                   <qti-interaction-module id="pci" primary-path="./index"></qti-interaction-module>
                 </qti-interaction-modules>
@@ -819,7 +964,7 @@
         if (typeof globalThis.off !== "function") {
           globalThis.off = () => {};
         }
-        await loadQtiComponents();
+        await Promise.all([loadQtiComponents(), authoringLoaded]);
         loadItem();
       };
     </script>

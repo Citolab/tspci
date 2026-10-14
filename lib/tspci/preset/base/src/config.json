@@ -1,6 +1,38 @@
 {
-  "title" : "Percentages",
-  "prompt" : "What percentage is colored green?",
-  "width": "200",
-  "height": "200"
+  "title": {
+    "default": "Percentages",
+    "editor": "text",
+    "label": { "en": "Title", "nl": "Titel" }
+  },
+  "question": {
+    "default": "What percentage of the circle is coloured?",
+    "editor": "textarea",
+    "label": { "en": "Question", "nl": "Vraag" }
+  },
+  "segments": {
+    "default": "10",
+    "editor": "integer",
+    "min": 2,
+    "max": 24,
+    "label": { "en": "Number of slices", "nl": "Aantal stukken" }
+  },
+  "colored": {
+    "default": "3",
+    "editor": "integer",
+    "min": 0,
+    "max": 24,
+    "label": { "en": "Coloured slices", "nl": "Gekleurde stukken" }
+  },
+  "color": {
+    "default": "#3b82f6",
+    "editor": "color",
+    "label": { "en": "Colour", "nl": "Kleur" }
+  },
+  "size": {
+    "default": "200",
+    "editor": "integer",
+    "min": 100,
+    "max": 400,
+    "label": { "en": "Size of the circle (px)", "nl": "Grootte van de cirkel (px)" }
+  }
 }

@@ -1,19 +1,16 @@
 import { Store } from "@citolab/preact-store";
 
-export type ActionType = "SET_INPUT" | "RESTORE_STATE";
-export type StateModel = { input: number | undefined };
+/**
+ * The state of the PCI. Every change goes through an action (store.dispatch), and the store keeps the list of actions:
+ * getState() saves both, so a session can be restored, and even replayed (store.replay), action by action.
+ */
+export type StateModel = { value: string }; // the text in the input, also when it is not a number yet
+export type ActionType = "SET_VALUE";
 
-export const initStore = (
-  initialState: StateModel,
-  restoreData?: {
-    state: StateModel;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    actions: { type: string; payload: any; timestamp?: number }[];
-  }
-) => {
-  const store = new Store<StateModel>(initialState, restoreData);
-  store.addReducer<{ input: number | undefined }>("SET_INPUT", (state, { input }) => {
-    return { ...state, input };
-  });
+export const initialState: StateModel = { value: "" };
+
+export const initStore = (state: StateModel = initialState) => {
+  const store = new Store<StateModel>(state);
+  store.addReducer<{ value: string }>("SET_VALUE", (current, { value }) => ({ ...current, value }));
   return store;
 };

@@ -21,6 +21,7 @@
 - First class (p)react and tailwind support
 - Extension for TAO, configuring icon, label, support for setting correct response and pci-properties
 - Generates a CycloneDX SBOM of the components that are actually in your bundle
+- Tells authoring systems how to configure and score your PCI (`authoring.json`, see [Authoring systems](#authoring-systems))
 
 ## 🔧 Installation & Setup
 
@@ -41,9 +42,27 @@ Run: `npx @citolab/tspci@latest init`
 4. You should provide a description.
 5. Last option is to choose how you want to build your pci, using tailwind and preact, typescript or javascript
 
+Every choice gives the same working demo, each in its own idiom: "what percentage of the circle is coloured?". The
+circle is an SVG drawn from the settings in `src/config.json` (`title`, `question`, `segments`, `colored`, `color`,
+`size`, each with an editor and an English and Dutch label for authoring systems), and the candidate types a whole
+number. It shows what every PCI needs:
+
+- `getResponse()` reports `{ base: { integer: 30 } }`, or `undefined` while nothing is answered, matching
+  `config.tspci.response` in `package.json`;
+- `getState()` and the `state` argument, `setResponse()` and `boundTo` restore an answer;
+- `status: "review"`/`"solution"` make it read-only, and with `"solution"` it shows
+  `responseDeclaration.correctResponse`;
+- a labelled input with a focus ring, `aria-invalid` for an answer outside 0-100, and a layout that scales down.
+
+| choice | files in `src` | styling |
+| --- | --- | --- |
+| `typescript` | `index.ts` (the PCI), `pie.ts` (the SVG) | `styles.css`, plain CSS in the shadow root |
+| `javascript` | `index.js`, `pie.js` | `styles.css` |
+| `preact+tailwind` | `index.tsx` (the PCI), `interaction.tsx` and `pie.tsx` (components), `store.ts` | Tailwind classes in the components, `styles.css` loads Tailwind |
+
 #### Tailwind
 
-Tailwind is a popular css framework and can be used to give a nice look and feel of the PCI. The cli will make sure the css is added; and all build stuff that comes with tailwind is setup.
+Tailwind is a popular css framework and can be used to give a nice look and feel of the PCI. The cli will make sure the css is added; and all build stuff that comes with tailwind is setup. The components use Tailwind classes directly; the build compiles Tailwind 4 into the bundle and adds it to the shadow root of the PCI, including the defaults its borders, rings and shadows need there.
 
 #### preact
 
@@ -81,6 +100,59 @@ Then build the package:
 ```
 
 For more info: [@citolab/tspci-qti3](https://github.com/Citolab/tspci/tree/main/lib/tspci-qti3)
+
+### Authoring systems
+
+An item author places your PCI in an item in an authoring system (qti-construction, TAO), sets it up and decides what
+counts as a correct answer. tspci tells the authoring system how, in `authoring.json`: a build output, written to
+`dist/` by every build and packaged next to the bundle (`resources/pci/authoring.json` in a qti3 package, a file of
+the PCI resource in the manifest, like the SBOM). You write nothing extra; it is generated from two files you already
+have:
+
+- **`src/config.json`, the settings.** A value is a plain default (as always), or an object with a `default` and
+  hints for the author's form: `editor` (`text`, `textarea`, `integer`, `number`, `boolean`, `enum` with `options`,
+  `color`, `colorList`, `hidden`), `label` (one string or one per language), `min`/`max`. The bundle gets only the
+  defaults, so `import configProps from "./config.json"` keeps working; type it as `PciProperties<typeof configProps>`.
+- **`package.json` `config.tspci`, the response.** `response` is the variable `getResponse()` fills
+  (`{ "cardinality": "single", "baseType": "integer" }`, or a `record` with typed `fields` for a PCI that reports
+  several values), `score` the scoring it is made for (`MATCH_CORRECT`, `NONE`), `markup` the elements an author puts
+  in the interaction markup (a video, an image).
+
+```jsonc
+// dist/authoring.json (generated)
+{
+  "descriptorVersion": "0",
+  "typeIdentifier": "blocks",
+  "version": "1.0.0",
+  "label": "3d blocks",
+  "properties": {
+    "brickColorMode": { "editor": "enum", "default": "mixed", "options": [{ "value": "mixed" }, { "value": "single" }] },
+    "baseplateColor": { "editor": "color", "default": "#4b9f4a" }
+  },
+  "markup": {},
+  "response": { "cardinality": "single", "baseType": "string" },
+  "score": ["MATCH_CORRECT", "NONE"]
+}
+```
+
+The qti3 export declares the item's response from `config.tspci.response` (it used to be `single`/`string` always),
+and the build warns about what an authoring system could not use: an unknown editor, an enum default that is not one
+of its options, a record field without a base type.
+
+**Scoring.** Authors set the correct answer by answering your PCI in a preview: what `getResponse()` reports becomes
+the correct response, or one of several accepted answers, and scoring compares responses. So report the meaning,
+not the route (the same answer must give the same response), report the declared type, return `undefined` without an
+answer, and show a given response (`setResponse`, `boundTo`, and `responseDeclaration.correctResponse` in
+`status: "solution"`). Margins (a time window, an area) live in the item's response processing, which the authoring
+system writes.
+
+**Authoring mode.** A setting with `"editor": "pci"` is edited by the PCI itself: next to `getInstance`, the registered
+object has `getAuthoringInstance(dom, config)`, which returns `{ getConfig, validate?, destroy? }`. An authoring
+system shows a "Configure…" button and runs it in a sandboxed iframe with a small host page
+(`src/authoring-frame.js`). Delivery never calls it and sees ordinary `data-` attributes. The proposal is in
+[`docs/authoring-mode.md`](../../docs/authoring-mode.md).
+
+Every project made with `tspci init` has an `AUTHORING.md` that explains all of this with examples and a checklist.
 
 ### SBOM
 
@@ -292,6 +364,8 @@ Add a `tsconfig.json` to your project for type checking
 
 **Try it out** by running `tspci --dev`.
 
+The dev page needs no internet connection: it loads RequireJS, Bootstrap, preact/htm and qti-components (which runs the PCI the way a QTI 3 player does) from tspci's own dependencies, served under `/vendor/<package>`. The PCI's iframe gets those copies too, so nothing comes from a public CDN.
+
 ### All CLI Options
 
 ```
@@ -308,6 +382,7 @@ Available Commands
   add --target    Add specific implementation to the PCI.
   --no-include-sbom  Keep the SBOM out of the exported package (included by default)
   --no-sbom          Do not generate an SBOM for this build
+  --no-authoring     Keep authoring.json out of the exported package (included by default)
 
 Examples package.json scripts
 	$ "dev": "tspci --dev",
@@ -331,12 +406,13 @@ your-pci-project
 │   tsconfig.json      // Typescript configuration, also for type checking your code
 │
 └───src
-│   │   config.json    // Used to configure PCI, and in TAO for authors
+│   │   config.json    // The settings: defaults plus editor hints for authors (TAO, authoring.json)
 │   │   index.ts       // The api for the player and bootstraps your interaction
-│   │   interaction.ts // the actual interaction, preferably a main preact component
+│   │   interaction.tsx // the actual interaction, preferably a main preact component
 │   │   store.ts       // definition of the state and all possible state mutations of your pci
-│   └───style.css      // css styles, imported by your pci and possible to use tailwind classes
+│   └───styles.css     // css styles, imported by your pci and possible to use tailwind classes
 │
+│   AUTHORING.md       // How authoring systems configure and score your PCI, with a checklist
 │   postcss.config.js  // optionally adds postcss processing of css
 │   tailwind.config.js // include tailwind classes
 ```
@@ -415,12 +491,15 @@ module.exports = {
 ### Bundle all your images
 
 Images are bundled in the js by importing them in code:
-imports JPG, PNG, GIF, SVG, and WebP files
+imports JPG, PNG, GIF, SVG, and WebP files (`global.d.ts` declares the types for `.png`, `.jpg` and `.svg`)
 
 ```ts
-import procenten from "./assets/procenten.png";
-<img src={procenten} />;
+import logo from "./assets/logo.png"; // a data URL
+<img src={logo} alt="" />;
 ```
+
+The build also copies `src/assets` to `dist`. The demo has no images: it draws its circle as SVG from its settings,
+so an author can change it without a new image.
 
 ### Create advanced PCIs with 3D libraries
 
@@ -449,8 +528,9 @@ dispatch<{ x: number }>("ADD_ACTION", { x: +inputValue });
 
 ### Let authors configure your PCI in QTI
 
-Use properties in config.json to let authors configure your PCI
-Also used in the TAO export for configuring PCIs in TAO
+Use properties in config.json to let authors configure your PCI. Each one becomes a `data-` attribute of the
+interaction in an item. They are also used in the TAO export, and described for other authoring systems in
+`authoring.json` (see [Authoring systems](#authoring-systems): a value can carry an editor, a label and options).
 `// src/config.json`
 
 ```json
@@ -458,14 +538,14 @@ Also used in the TAO export for configuring PCIs in TAO
   "buttonText": "Calculate",
   "sum1": "$1 * 14 + 1",
   "sum2": "$1 * 2 + 21",
-  "tableSize": "4"
+  "tableSize": { "default": "4", "editor": "integer", "min": 2, "label": "Table size" }
 }
 ```
 
 ```ts
 // src/index.ts
   + import configProps from "./config.json";
-  + type PropTypes = typeof configProps;
+  + type PropTypes = PciProperties<typeof configProps>; // every property arrives as a string
 
   // add to types
   + private config: ConfigProperties<PropTypes>;

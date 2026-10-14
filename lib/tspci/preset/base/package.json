@@ -17,7 +17,16 @@
   },
   "config": {
     "tspci": {
-      "typeIdentifier": "myPci"
+      "typeIdentifier": "myPci",
+      "label": "My PCI",
+      "response": {
+        "cardinality": "single",
+        "baseType": "integer"
+      },
+      "score": [
+        "MATCH_CORRECT",
+        "NONE"
+      ]
     }
   },
   "source": "src/index.ts"

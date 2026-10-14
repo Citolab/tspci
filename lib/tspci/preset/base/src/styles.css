@@ -1,3 +1,96 @@
-h1 {
-    color: red;
+/* Rendered inside the PCI's shadow root: these rules do not leak into the item, and the item's CSS does not leak in. */
+
+:host {
+  display: block;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: #1f2933;
+}
+
+.pci {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 24px 28px;
+  border: 1px solid #e3e8ee;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9fb 100%);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px rgba(16, 24, 40, 0.06);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+/* Scales down on a narrow screen; the viewBox keeps the drawing sharp. */
+.pie {
+  max-width: 100%;
+  height: auto;
+  filter: drop-shadow(0 2px 3px rgba(16, 24, 40, 0.15));
+}
+
+.slice {
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+/* Coloured slices carry a fill attribute (the author's colour); the others are grey. */
+.slice:not([fill]) {
+  fill: #e5e9f0;
+}
+
+.question {
+  max-width: 32ch;
+  text-align: center;
+  color: #52606d;
+  cursor: pointer;
+}
+
+.answer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+input {
+  width: 4.5ch;
+  padding: 8px 10px;
+  font: inherit;
+  text-align: right;
+  color: inherit;
+  border: 1.5px solid #cbd2d9;
+  border-radius: 10px;
+  background: #ffffff;
+  transition: border-color 120ms, box-shadow 120ms;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+/* A percentage is typed, not stepped: hide the spin buttons. */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* Keep a clearly visible focus ring for keyboard users. */
+input:focus-visible {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+input[aria-invalid="true"] {
+  border-color: #e11d48;
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.2);
+}
+input:disabled {
+  background: #f1f5f9;
+  color: #52606d;
+  cursor: not-allowed;
 }

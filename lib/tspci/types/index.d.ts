@@ -32,6 +32,132 @@ export interface ResponseDeclaration {
   correctResponse?: CorrectResponse;
 }
 
+/**
+ * The properties a PCI receives, for a config.json whose values may carry editor hints
+ * (`{ "default": "640", "editor": "integer" }`): the build passes only the defaults, and like every data-
+ * attribute they arrive as strings. Use `type PropTypes = PciProperties<typeof configProps>`.
+ */
+export type PciProperties<T> = { [K in keyof T]: string };
+
+/** A translatable text in the authoring descriptor: one string, or one per language (`{ "en": …, "nl": … }`). */
+export type AuthoringText = string | Record<string, string>;
+
+/**
+ * How an authoring system edits a data- property (config.json). Unknown editors fall back to a text field.
+ * `pci`: the PCI fills it itself in its authoring mode (see IMSpciAuthoringFactory).
+ */
+export type AuthoringPropertyEditor =
+  | "text" | "textarea" | "integer" | "number" | "boolean" | "enum" | "color" | "colorList" | "hidden" | "pci";
+
+export interface AuthoringProperty {
+  editor: AuthoringPropertyEditor;
+  /** The default, as the data- attribute holds it. */
+  default: string;
+  label?: AuthoringText;
+  /** enum: the values to choose from. */
+  options?: { value: string; label?: AuthoringText }[];
+  /** integer / number */
+  min?: number;
+  max?: number;
+  [hint: string]: unknown;
+}
+
+/** A field of a record response (several values in one response variable). */
+export interface AuthoringResponseField {
+  baseType: string;
+  /** How the authoring system edits the correct value (e.g. "mediaTime", "mediaPoint"); a text field by default. */
+  editor?: string;
+  label?: AuthoringText;
+  /** The kind of margin a score rule may give it: "range" (numbers), "area" (points). */
+  tolerance?: string;
+  [hint: string]: unknown;
+}
+
+/**
+ * dist/authoring.json, generated from src/config.json and package.json config.tspci, and shipped next to the bundle.
+ * See AUTHORING.md.
+ */
+export interface AuthoringDescriptor {
+  descriptorVersion: string;
+  typeIdentifier: string;
+  version: string;
+  label: string;
+  properties: Record<string, AuthoringProperty>;
+  /** Elements the item puts in qti-interaction-markup, e.g. `{ "video": { "editor": "media", "accept": ["video/*"] } }`. */
+  markup: Record<string, { editor: string; element?: string; accept?: string[]; required?: boolean; label?: AuthoringText }>;
+  response:
+    | { cardinality: "single" | "multiple" | "ordered"; baseType: string }
+    | { cardinality: "record"; fields: Record<string, AuthoringResponseField> };
+  /** The response processing templates the PCI is meant for (TAO's score setting), e.g. ["MATCH_CORRECT", "NONE"]. */
+  score?: string[];
+  /** Present when the PCI has an authoring mode: properties with editor "pci", plus config.tspci.authoring. */
+  authoring?: AuthoringMode;
+}
+
+/** The authoring mode in the descriptor. The authoring system shows one button that opens it. */
+export interface AuthoringMode {
+  /** The properties the PCI fills itself (editor "pci"), in config.json order. */
+  properties: string[];
+  /** The text of the button, e.g. `{ "en": "Draw the shape…", "nl": "Vorm tekenen…" }`. */
+  label?: AuthoringText;
+  /** The size (px) the authoring UI would like; the authoring system may give less. */
+  width?: number;
+  height?: number;
+  [hint: string]: unknown;
+}
+
+/**
+ * What the authoring system passes to getAuthoringInstance. `properties` are the item's data- properties, all of
+ * them (also the ones the PCI does not fill itself, so it can show the shape in the item's colours), as strings.
+ */
+export interface PciAuthoringConfiguration<T> {
+  properties: Partial<T>;
+  /** The UI language of the authoring system ("nl", "en"). */
+  language?: string;
+  /** Call when the authoring UI is ready to be used. */
+  onready?: (instance: PciAuthoringInstance) => void;
+  /** Call after every change the author makes (the host may enable "Done" or warn about unsaved work). */
+  onchange?: () => void;
+}
+
+/** A PCI in authoring mode: the author shapes its configuration, the host asks for it when the author is done. */
+export interface PciAuthoringInstance {
+  /** The managed properties (descriptor authoring.properties) as data- attribute strings; others are ignored. */
+  getConfig: () => Record<string, string>;
+  /** What keeps the configuration from being used (shown to the author, "Done" waits for an empty list). */
+  validate?: () => string[];
+  destroy?: () => void;
+}
+
+
+/**
+ * postMessage protocol between an authoring system (host) and the sandboxed iframe it runs a PCI's authoring mode in.
+ * The frame is the host's own bootstrap page; the PCI itself never posts messages.
+ *
+ * Every message carries `version`: the protocol version of its sender, 1 for this protocol. It goes up only for a change
+ * the other side cannot handle (a new optional field keeps it). The frame checks it on init, the host on hello; a
+ * mismatch is reported as an error.
+ */
+export type PciAuthoringProtocolVersion = 1;
+
+type Versioned<M> = M & { version: PciAuthoringProtocolVersion };
+
+export type PciAuthoringHostMessage = Versioned<
+  /** After the frame said hello: what to load and with which properties. */
+  | { type: "pci-authoring:init"; moduleUrl: string; typeIdentifier: string; properties: Record<string, string>; language?: string }
+  /** The author pressed "Done": reply with pci-authoring:config. */
+  | { type: "pci-authoring:request-config" }
+>;
+
+export type PciAuthoringFrameMessage = Versioned<
+  | { type: "pci-authoring:hello" }
+  | { type: "pci-authoring:ready" }
+  | { type: "pci-authoring:change" }
+  | { type: "pci-authoring:config"; config: Record<string, string>; problems: string[] }
+  /** The module did not load, has no getAuthoringInstance, or the host speaks another protocol version. */
+  | { type: "pci-authoring:error"; message: string }
+>;
+
 // Define the ConfigProperties interface
 export interface ConfigProperties<T> {
   properties: T; // Follows dataset conversion rules (camelCased keys)
@@ -79,6 +205,16 @@ export interface IMSpci<T> {
 export interface IMSpciFactory<T> {
   typeIdentifier: string;
   getInstance: (dom: HTMLElement, configuration: ConfigProperties<T>, state?: string) => IMSpci<T>;
+}
+
+/**
+ * The QTI 3 PCI (the object registered with qtiCustomInteractionContext) extended with an authoring mode:
+ * getAuthoringInstance next to getInstance. Delivery engines only know getInstance and never call it, so the PCI works
+ * in every QTI 3 player as before; an authoring system that supports it checks
+ * `typeof pci.getAuthoringInstance === "function"` and calls it instead of getInstance. See AUTHORING.md, "Authoring mode".
+ */
+export interface IMSpciAuthoringFactory<T> extends IMSpciFactory<T> {
+  getAuthoringInstance: (dom: HTMLElement, configuration: PciAuthoringConfiguration<T>) => PciAuthoringInstance;
 }
 
 export interface directedPair {

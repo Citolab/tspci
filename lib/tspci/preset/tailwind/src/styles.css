@@ -1,30 +1,7 @@
+/*
+ * Tailwind 4, compiled into the bundle and added to the PCI's shadow root (index.tsx): its classes style only this PCI.
+ * The components use the utility classes directly; @source tells Tailwind where to find them.
+ */
 @import "tailwindcss";
 @source "./**/*.{html,js,ts,jsx,tsx}";
 @source "../*.xml";
-.pci-container {
-  @apply mx-auto flex w-full max-w-xl flex-col items-center gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-lg;
-}
-.title {
-  @apply text-center text-2xl font-semibold tracking-tight text-slate-800;
-}
-.body {
-  @apply flex w-full justify-center;
-}
-.body-image {
-  @apply rounded-xl border border-slate-200 bg-slate-50 p-2;
-}
-.interaction {
-  @apply w-full rounded-xl border border-slate-200 bg-slate-50 p-4;
-}
-.prompt {
-  @apply mb-2 block text-sm font-medium text-slate-700;
-}
-.answer-row {
-  @apply flex items-center gap-2;
-}
-.answer-input {
-  @apply w-28 rounded-lg border border-slate-300 bg-white px-3 py-2 text-lg font-medium text-slate-900 shadow-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200;
-}
-.answer-suffix {
-  @apply text-sm font-semibold uppercase tracking-wide text-slate-500;
-}

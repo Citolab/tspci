@@ -1,166 +1,168 @@
-import "preact/debug";
+/*
+ * A Portable Custom Interaction (PCI) with Preact, Tailwind and a store.
+ *
+ * The delivery engine (the player) loads this bundle, which registers a factory with qtiCustomInteractionContext.
+ * For every interaction in an item the engine calls factory.getInstance(dom, config, state); the instance renders
+ * into `dom` and reports its answer through getResponse().
+ *
+ * This file is the PCI API; interaction.tsx is the UI, store.ts the state. The demo: "what percentage of the circle
+ * is coloured?". The circle is drawn from the settings in src/config.json (pie.tsx); the answer is a whole number,
+ * reported as { base: { integer: 30 } } (see config.tspci.response in package.json and AUTHORING.md).
+ */
+import "preact/debug"; // readable warnings in the browser console while developing
 import { render } from "preact";
-import { IStore, Listener } from "@citolab/preact-store";
-import * as ctx from "qtiCustomInteractionContext";
+import { Action, IStore, Listener } from "@citolab/preact-store";
+import { ConfigProperties, IMSpci, IMSpciFactory, PciProperties, QtiInteractionChangedDetail, QtiVariableJSON } from "@citolab/tspci";
+import * as ctx from "qtiCustomInteractionContext"; // provided by the delivery engine at runtime
+import configProps from "./config.json"; // the settings; the build passes only their defaults (AUTHORING.md)
+import style from "./styles.css"; // Tailwind, compiled to a string, added to the shadow root below
 import Interaction from "./interaction";
-import style from "./styles.css";
-import { ConfigProperties, IMSpci, IMSpciFactory, QtiInteractionChangedDetail, QtiVariableJSON } from "@citolab/tspci";
-import configProps from "./config.json";
 import { StateModel, initStore } from "./store";
 
-type PropTypes = typeof configProps;
+// Like every data- attribute, each setting arrives as a string.
+type PropTypes = PciProperties<typeof configProps>;
 
-type PciStoredState = {
-  state: StateModel;
-  log: { type: string; payload: unknown; timestamp?: number }[];
-};
+/** What getState() saves: the state and the actions that led to it. */
+type PciStoredState = { state: StateModel; log: Action<unknown>[] };
+
+/** The response for the text in the input: a whole number, or undefined while there is no answer. */
+function toResponse(value: string): QtiVariableJSON | undefined {
+  const trimmed = value.trim();
+  if (trimmed === "") return undefined; // nothing answered, nothing reported
+  const n = Number(trimmed);
+  // One answer, one response: "30", "030" and "30.0" all report 30.
+  return Number.isFinite(n) ? { base: { integer: Math.round(n) } } : undefined;
+}
+
+/** The input text for a response (setResponse, boundTo) or a correct response (status "solution"). */
+function fromResponse(value: unknown): string {
+  if (Array.isArray(value)) return fromResponse(value[0]);
+  if (value && typeof value === "object") {
+    const base = (value as QtiVariableJSON).base;
+    return fromResponse(base?.integer ?? base?.float ?? base?.string);
+  }
+  return value === undefined || value === null ? "" : String(value);
+}
 
 class PciInstance implements IMSpci<PropTypes> {
   typeIdentifier = "###___PCI_NAME___###";
   private config: ConfigProperties<PropTypes>;
   private dom: HTMLElement;
   private shadowdom: ShadowRoot;
-  private store: IStore<StateModel>;
-  private storeListener: Listener<StateModel>;
-  private previousResponseJson: string = "";
-  private initialState: StateModel = { input: undefined };
-  private customValidity: string = "";
+  private store: IStore<StateModel> = initStore();
+  private customValidity = "";
 
   constructor(dom: HTMLElement, config: ConfigProperties<PropTypes>, stateString?: string) {
     if (!dom) throw new Error("No DOM Element provided");
-    config.properties = { ...configProps, ...config.properties };
+    // The item's data- attributes override the defaults from config.json.
+    config.properties = { ...(configProps as unknown as PropTypes), ...config.properties };
     this.dom = dom;
     this.config = config;
+    // A closed shadow root keeps the item's CSS out and ours (Tailwind) in.
     this.shadowdom = dom.attachShadow({ mode: "closed" });
 
-    let restoreData: PciStoredState | undefined;
+    // 1. The state from a previous session (whatever getState() returned).
     if (stateString) {
       try {
-        const parsed = JSON.parse(stateString) as Partial<PciStoredState>;
-        if (parsed && parsed.state && Array.isArray(parsed.log)) {
-          restoreData = { state: parsed.state as StateModel, log: parsed.log as PciStoredState["log"] };
-        }
+        const { state, log } = JSON.parse(stateString) as PciStoredState;
+        if (typeof state?.value === "string" && Array.isArray(log)) this.store.restoreState(state, log);
       } catch {
-        // ignore
+        // not ours: start empty
       }
     }
+    // 2. A response the engine binds to the interaction (boundTo) wins over the state.
+    const boundTo = config.boundTo ?? {};
+    const bound = boundTo[config.responseIdentifier] ?? (Object.keys(boundTo).length === 1 ? Object.values(boundTo)[0] : undefined);
+    if (bound) this.setResponse(bound);
+    // 3. Status "solution": show the correct response of the item instead (AUTHORING.md, "Correct answers").
+    if (config.status === "solution") this.showCorrectResponse();
 
-    this.store = initStore(this.initialState);
-    if (restoreData) {
-      this.store.restoreState(restoreData.state, restoreData.log);
-    }
-
-    const boundResponse =
-      this.config.boundTo?.[this.config.responseIdentifier] ??
-      (this.config.boundTo && Object.keys(this.config.boundTo).length === 1
-        ? this.config.boundTo[Object.keys(this.config.boundTo)[0]]
-        : undefined);
-    if (boundResponse) {
-      this.setResponse?.(boundResponse);
-    }
+    // From here on, tell the engine when the response changes.
+    this.previousResponse = JSON.stringify(this.getResponse() ?? null);
+    this.store.subscribe(this.onStoreChange);
 
     this.render();
-
-    if (this.config.onready) {
-      this.config.onready(this, this.getState());
-    }
-
-    let isFirst = true;
-    this.storeListener = () => {
-      if (isFirst) {
-        isFirst = false;
-        this.previousResponseJson = JSON.stringify(this.getResponse() ?? null);
-        return;
-      }
-      const nextJson = JSON.stringify(this.getResponse() ?? null);
-      if (nextJson === this.previousResponseJson) return;
-      this.previousResponseJson = nextJson;
-
-      const detail: QtiInteractionChangedDetail = {
-        interaction: this,
-        responseIdentifier: this.config.responseIdentifier,
-        valid: true,
-        value: this.getResponse(),
-      };
-      const evt = new CustomEvent("qti-interaction-changed", {
-        bubbles: true,
-        composed: true,
-        cancelable: true,
-        detail,
-      });
-      this.dom.dispatchEvent(evt);
-    };
-    this.store.subscribe(this.storeListener);
+    config.onready?.(this, this.getState());
   }
 
+  private previousResponse: string;
+  private onStoreChange: Listener<StateModel> = () => {
+    const response = JSON.stringify(this.getResponse() ?? null);
+    if (response === this.previousResponse) return; // subscribe() calls us right away, and not every action changes it
+    this.previousResponse = response;
+    // composed lets the event cross the shadow root
+    const detail: QtiInteractionChangedDetail = {
+      interaction: this,
+      responseIdentifier: this.config.responseIdentifier,
+      valid: this.checkValidity(),
+      value: this.getResponse(),
+    };
+    this.dom.dispatchEvent(new CustomEvent("qti-interaction-changed", { bubbles: true, composed: true, detail }));
+  };
+
   private render = () => {
-    render(null, this.shadowdom);
-    const css = document.createElement("style");
-    css.innerHTML = style;
-    this.shadowdom.appendChild(css);
-    render(<Interaction config={this.config.properties} dom={this.shadowdom} store={this.store} />, this.shadowdom);
+    const readOnly = ["review", "solution", "closed"].includes(this.config.status ?? "interacting");
+    render(
+      <>
+        <style>{style}</style>
+        <Interaction config={this.config.properties} store={this.store} readOnly={readOnly} />
+      </>,
+      this.shadowdom
+    );
+    this.input?.setCustomValidity(this.customValidity);
   };
 
-  setResponse = (response: QtiVariableJSON) => {
-    const next =
-      typeof response?.base?.integer === "number"
-        ? response.base.integer
-        : typeof response?.base?.string === "string"
-          ? Number(response.base.string)
-          : undefined;
-    if (typeof next !== "number" || !Number.isFinite(next)) return;
-    this.store.dispatch({ type: "SET_INPUT", payload: { input: Math.trunc(next) } });
+  private get input() {
+    return this.shadowdom.querySelector("input");
+  }
+
+  /** Only a change is an action: keeps the log (and a replay) clean. */
+  private setValue = (value: string) => {
+    if (value !== this.store.getState().value) this.store.dispatch({ type: "SET_VALUE", payload: { value } });
   };
 
-  getState = () =>
-    JSON.stringify({
-      state: this.store.getState(),
-      log: this.store.getActions(),
-    } satisfies PciStoredState);
-
-  getResponse = () => {
-    const value = this.store.getState().input;
-    if (value === undefined) return undefined;
-    return { base: { integer: value } } as QtiVariableJSON;
+  /** Show the correct response the item declares (status "solution"); without one, keep what is there. */
+  showCorrectResponse = () => {
+    const correct = this.config.responseDeclaration?.correctResponse?.value;
+    if (correct !== undefined) this.setValue(fromResponse(correct));
   };
 
-  checkValidity = () => {
-    const input = this.shadowdom.querySelector("input");
-    if (!input) return undefined;
-    return input.checkValidity();
-  };
+  // ---- the IMS PCI API ----
+
+  getResponse = () => toResponse(this.store.getState().value);
+
+  getState = () => JSON.stringify({ state: this.store.getState(), log: this.store.getActions() } satisfies PciStoredState);
+
+  setResponse = (response: QtiVariableJSON) => this.setValue(fromResponse(response));
+
+  checkValidity = () => this.input?.checkValidity() ?? true;
+
+  reportValidity = () => this.input?.reportValidity() ?? true;
 
   setCustomValidity = (message: string) => {
-    this.customValidity = message;
-    const input = this.shadowdom.querySelector("input");
-    if (input) input.setCustomValidity(message);
+    this.customValidity = message ?? "";
+    this.input?.setCustomValidity(this.customValidity);
   };
 
   getCustomValidity = () => this.customValidity;
 
+  /** The engine is done with this instance: unsubscribe and unmount (which also runs the components' cleanups). */
   oncompleted = () => {
-    if (this.storeListener) {
-      this.store.unsubscribe(this.storeListener);
-    }
+    this.store.unsubscribe(this.onStoreChange);
     render(null, this.shadowdom);
   };
 }
 
 const factory: IMSpciFactory<PropTypes> = {
-  typeIdentifier: "###___PCI_NAME___###",
+  typeIdentifier: "###___PCI_NAME___###", // the same as config.tspci.typeIdentifier in package.json
   getInstance: (dom, config, state) => new PciInstance(dom, config, state),
 };
 
-const engineContext =
-  ctx && typeof (ctx as unknown as { register?: unknown }).register === "function"
-    ? (ctx as unknown as { register: (f: IMSpciFactory<PropTypes>) => void })
-    : typeof window !== "undefined" && (window as unknown as { qtiCustomInteractionContext?: unknown }).qtiCustomInteractionContext
-      ? ((window as unknown as { qtiCustomInteractionContext: { register: (f: IMSpciFactory<PropTypes>) => void } })
-          .qtiCustomInteractionContext as { register: (f: IMSpciFactory<PropTypes>) => void })
-      : undefined;
-
-if (engineContext) {
-  engineContext.register(factory);
-}
+// Register with the engine: as an AMD module (qtiCustomInteractionContext), or through the global some engines set.
+type Context = { register: (factory: IMSpciFactory<PropTypes>) => void };
+const engineContext = [ctx as unknown as Context, (globalThis as { qtiCustomInteractionContext?: Context }).qtiCustomInteractionContext].find(
+  (c) => typeof c?.register === "function"
+);
+engineContext?.register(factory);
 
 export default factory;

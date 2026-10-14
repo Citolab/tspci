@@ -112,6 +112,34 @@ if [[ ! -f "${DIST_TYPES}" ]]; then
   exit 1
 fi
 
+if [[ ! -f "${TARGET_DIR}/AUTHORING.md" ]]; then
+  echo ""
+  echo "ERROR: expected AUTHORING.md in the generated project" >&2
+  exit 1
+fi
+
+echo "Verifying the authoring descriptor and the flattened config..."
+node -e "
+  const fs = require('fs');
+  const path = require('path');
+  const dir = process.argv[1];
+  const d = JSON.parse(fs.readFileSync(path.join(dir, 'dist', 'authoring.json'), 'utf8'));
+  if (d.descriptorVersion !== '0' || !d.typeIdentifier || !d.properties.size || d.properties.size.editor !== 'integer' || d.properties.color.editor !== 'color') {
+    console.error('ERROR: unexpected dist/authoring.json', JSON.stringify(d));
+    process.exit(1);
+  }
+  if (d.response.baseType !== 'integer') {
+    console.error('ERROR: response not taken from config.tspci.response');
+    process.exit(1);
+  }
+  const bundle = fs.readFileSync(path.join(dir, 'dist', 'index.js'), 'utf8');
+  if (bundle.includes('Grootte van de cirkel')) {
+    console.error('ERROR: the editor hints of config.json ended up in the bundle');
+    process.exit(1);
+  }
+  console.log('OK: dist/authoring.json is complete and the bundle holds only the defaults');
+" "${TARGET_DIR}"
+
 echo "Running dev startup smoke test (timeout 20s)..."
 node -e "
   const { spawn } = require('child_process');
