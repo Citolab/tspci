@@ -515,16 +515,26 @@ class VoxelPainterClass {
 
 ### Record user interaction
 
-A store will centralize your PCI state but also all mutations.
-This means, this way you could replay everything a user did
-And you can use Redux devtools to debug
+With `@citolab/preact-store` (the `preact+tailwind` template) every change of the PCI state is an action. The
+store keeps the actions with a timestamp, so `getState()` can save how a candidate came to an answer, and
+`store.replay(log)` plays it back.
 
 ```ts
-// src/index.ts
-const [state, dispatch] = useStore<StateModel, ActionType>((type, payload) => {});
+// src/store.ts
+type Actions = { ADD_CUBE: { x: number }; CLEAR: null }; // { type: payload }
+const store = new Store<StateModel, Actions>({ cubes: [] });
+store.addReducer("ADD_CUBE", (state, cube) => ({ ...state, cubes: [...state.cubes, cube] }));
 
-dispatch<{ x: number }>("ADD_ACTION", { x: +inputValue });
+// src/interaction.tsx
+const { cubes } = useStore(store); // re-renders on every change
+store.dispatch({ type: "ADD_CUBE", payload: { x: 1 } });
+
+// src/index.ts
+const unsubscribe = store.subscribe(() => notifyTheEngine(), { immediate: false });
+getState = () => JSON.stringify({ state: store.getState(), log: store.getActions() });
 ```
+
+See [preact-store](../preact-store/readme.md) for the whole API.
 
 ### Let authors configure your PCI in QTI
 

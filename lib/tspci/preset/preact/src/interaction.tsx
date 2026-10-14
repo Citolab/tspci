@@ -3,14 +3,14 @@ import { IStore, useStore } from "@citolab/preact-store";
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import configProps from "./config.json";
 import { Pie } from "./pie";
-import { StateModel } from "./store";
+import { Actions, StateModel } from "./store";
 // Images are bundled too: `import logo from "./assets/logo.png"` gives a data URL for <img src={logo} />.
 
 type PropTypes = PciProperties<typeof configProps>;
 
 type Props = {
   config: PropTypes;
-  store: IStore<StateModel>;
+  store: IStore<StateModel, Actions>;
   readOnly: boolean; // review, solution, closed: show the answer, but do not change it
 };
 

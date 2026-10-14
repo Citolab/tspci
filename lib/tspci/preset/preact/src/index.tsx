@@ -17,7 +17,7 @@ import * as ctx from "qtiCustomInteractionContext"; // provided by the delivery 
 import configProps from "./config.json"; // the settings; the build passes only their defaults (AUTHORING.md)
 import style from "./styles.css"; // Tailwind, compiled to a string, added to the shadow root below
 import Interaction from "./interaction";
-import { StateModel, initStore } from "./store";
+import { Actions, StateModel, initStore } from "./store";
 
 // Like every data- attribute, each setting arrives as a string.
 type PropTypes = PciProperties<typeof configProps>;
@@ -49,7 +49,7 @@ class PciInstance implements IMSpci<PropTypes> {
   private config: ConfigProperties<PropTypes>;
   private dom: HTMLElement;
   private shadowdom: ShadowRoot;
-  private store: IStore<StateModel> = initStore();
+  private store: IStore<StateModel, Actions> = initStore();
   private customValidity = "";
 
   constructor(dom: HTMLElement, config: ConfigProperties<PropTypes>, stateString?: string) {
@@ -79,13 +79,14 @@ class PciInstance implements IMSpci<PropTypes> {
 
     // From here on, tell the engine when the response changes.
     this.previousResponse = JSON.stringify(this.getResponse() ?? null);
-    this.store.subscribe(this.onStoreChange);
+    this.unsubscribe = this.store.subscribe(this.onStoreChange);
 
     this.render();
     config.onready?.(this, this.getState());
   }
 
   private previousResponse: string;
+  private unsubscribe = () => {};
   private onStoreChange: Listener<StateModel> = () => {
     const response = JSON.stringify(this.getResponse() ?? null);
     if (response === this.previousResponse) return; // subscribe() calls us right away, and not every action changes it
@@ -148,7 +149,7 @@ class PciInstance implements IMSpci<PropTypes> {
 
   /** The engine is done with this instance: unsubscribe and unmount (which also runs the components' cleanups). */
   oncompleted = () => {
-    this.store.unsubscribe(this.onStoreChange);
+    this.unsubscribe();
     render(null, this.shadowdom);
   };
 }
