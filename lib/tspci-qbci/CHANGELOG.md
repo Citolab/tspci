@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.13.0](https://github.com/Citolab/tspci/compare/v2.12.1...v2.13.0) (2026-10-14)
+
+
+### Bug Fixes
+
+* **tspci-qbci:** load the dev page libraries from tspci's own dependencies ([90bb3b4](https://github.com/Citolab/tspci/commit/90bb3b4811c2e3d652e7fba9dd2101696dfbd027))
+
+
+
+
+
 ## [2.12.1](https://github.com/Citolab/tspci/compare/v2.12.0...v2.12.1) (2026-08-19)
 
 **Note:** Version bump only for package @citolab/tspci-qbci

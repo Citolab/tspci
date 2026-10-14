@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.13.0](https://github.com/Citolab/qti-pci-bundler/compare/v2.12.1...v2.13.0) (2026-10-14)
+
+
+### Bug Fixes
+
+* **tspci-qbci:** load the dev page libraries from tspci's own dependencies ([90bb3b4](https://github.com/Citolab/qti-pci-bundler/commit/90bb3b4811c2e3d652e7fba9dd2101696dfbd027))
+* **tspci:** give Tailwind 4 variables their defaults in the PCI's shadow root ([3d95703](https://github.com/Citolab/qti-pci-bundler/commit/3d957035fe612c11759803f1f68dcca4305d7dc0))
+
+
+### Features
+
+* **tspci-qti3:** ship authoring.json and declare the response from config.tspci ([8921cb4](https://github.com/Citolab/qti-pci-bundler/commit/8921cb4f7a6e07d1e5170e2646d0d4e98313e149))
+* **tspci-tao:** typed properties form and a Configure button in TAO ([406a940](https://github.com/Citolab/qti-pci-bundler/commit/406a940fde13990c14bda3984a8a4451c49617d1))
+* **tspci:** authoring descriptor, typed settings and a dev page without CDNs ([436ef53](https://github.com/Citolab/qti-pci-bundler/commit/436ef53d2652059ebfd7921d18c2d582f190e0e8))
+* **tspci:** authoring mode for PCIs that fill settings themselves ([5892fa7](https://github.com/Citolab/qti-pci-bundler/commit/5892fa7e39e02abd7988b0539a61bb94927ce46e))
+
+
+
+
+
 ## [2.12.1](https://github.com/Citolab/qti-pci-bundler/compare/v2.12.0...v2.12.1) (2026-08-19)
 
 

@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.13.0](/compare/v2.12.1...v2.13.0) (2026-10-14)
+
+
+### Bug Fixes
+
+* **tspci:** give Tailwind 4 variables their defaults in the PCI's shadow root 3d95703
+
+
+### Features
+
+* **tspci:** authoring descriptor, typed settings and a dev page without CDNs 436ef53
+* **tspci:** authoring mode for PCIs that fill settings themselves 5892fa7
+
+
+
+
+
 ## [2.12.1](/compare/v2.12.0...v2.12.1) (2026-08-19)
 
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.13.0](https://github.com/Citolab/tspci/compare/v2.12.1...v2.13.0) (2026-10-14)
+
+
+### Features
+
+* **tspci-tao:** typed properties form and a Configure button in TAO ([406a940](https://github.com/Citolab/tspci/commit/406a940fde13990c14bda3984a8a4451c49617d1))
+
+
+
+
+
 ## [2.12.1](https://github.com/Citolab/tspci/compare/v2.12.0...v2.12.1) (2026-08-19)
 
 **Note:** Version bump only for package @citolab/tspci-tao

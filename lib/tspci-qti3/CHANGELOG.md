@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.13.0](https://github.com/Citolab/tspci/compare/v2.12.1...v2.13.0) (2026-10-14)
+
+
+### Features
+
+* **tspci-qti3:** ship authoring.json and declare the response from config.tspci ([8921cb4](https://github.com/Citolab/tspci/commit/8921cb4f7a6e07d1e5170e2646d0d4e98313e149))
+
+
+
+
+
 ## [2.12.1](https://github.com/Citolab/tspci/compare/v2.12.0...v2.12.1) (2026-08-19)
 
 **Note:** Version bump only for package @citolab/tspci-qti3
