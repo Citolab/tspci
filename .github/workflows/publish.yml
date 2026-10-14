@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
 
       - name: Install dependencies
@@ -32,6 +32,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     if: ${{ success() }}
+    # Trusted Publishing: npm trusts this workflow (set per package on npmjs.com), lerna exchanges the
+    # GitHub OIDC token for a short-lived publish token. No stored npm token, no 2FA bypass.
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout
@@ -42,7 +47,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
           cache: npm
 
@@ -51,5 +56,3 @@ jobs:
 
       - name: Publish packages
         run: npx lerna publish from-package --yes
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}

@@ -3,7 +3,11 @@
   "version": "2.13.0",
   "description": "create a QTI 3 package zip for a PCI",
   "author": "patrick <patrick.deklein@cito.nl>, Marcel Hoekstra <marcel.hoekstra@cito.nl>",
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Citolab/tspci.git",
+    "directory": "lib/tspci-qti3"
+  },
   "type": "module",
   "types": "types/index.d.ts",
   "dependencies": {

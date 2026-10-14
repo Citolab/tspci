@@ -3,7 +3,11 @@
   "version": "2.13.0",
   "description": "create a zip file that can be imported into TAO",
   "author": "patrick <patrick.deklein@cito.nl>, Marcel Hoekstra <marcel.hoekstra@cito.nl>",
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Citolab/tspci.git",
+    "directory": "lib/tspci-tao"
+  },
   "type": "module",
   "types": "types/index.d.ts",
   "dependencies": {

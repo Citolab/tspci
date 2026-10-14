@@ -22,5 +22,10 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
-  "gitHead": "525a89e24eb69a03fbf3f0b76c33f865f38f44ad"
+  "gitHead": "525a89e24eb69a03fbf3f0b76c33f865f38f44ad",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Citolab/tspci.git",
+    "directory": "lib/preact-store"
+  }
 }

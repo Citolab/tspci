@@ -3,7 +3,11 @@
   "version": "2.13.0",
   "description": "an opiniated typescript ims-pci builder with tao integration",
   "author": "patrick <patrick.deklein@cito.nl>",
-  "repository": "@citolab/tspci",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Citolab/tspci.git",
+    "directory": "lib/tspci"
+  },
   "bin": {
     "tspci": "src/cli.js"
   },
