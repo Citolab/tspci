@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.15.0](https://github.com/Citolab/qti-pci-bundler/compare/v2.14.0...v2.15.0) (2026-10-17)
+
+
+### Features
+
+* **tspci:** correct response from the settings, margins and tools in the authoring descriptor ([86f2628](https://github.com/Citolab/qti-pci-bundler/commit/86f2628b6c71492a9c38db24172ae72701dea645))
+
+
+
+
+
 # [2.14.0](https://github.com/Citolab/qti-pci-bundler/compare/v2.13.0...v2.14.0) (2026-10-14)
 
 
