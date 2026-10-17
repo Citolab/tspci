@@ -31,6 +31,10 @@ tooltip, and a control for its `editor`:
 | `pci` | a text field below the "Configure…" button (see below) | what the PCI's editor writes |
 | another | a text field | the text |
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Citolab/tspci/main/lib/tspci-tao/readme-images/properties.png" alt="the settings of a PCI in TAO's properties form" width="700">
+</p>
+
 A setting given as a plain default (`"width": "200"`) keeps the field it always had: its name as the label, and a
 number field for a whole number, else a text field. Every change is written to the interaction and passed to the
 PCI's `trigger`, as text, the way a `data-` attribute gives it.
@@ -53,6 +57,10 @@ most 70% of the window height). The PCI gets all current settings of the interac
   like a change in the form, and the dialog closes.
 - **Cancel**, the close button or Escape close it without changes.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Citolab/tspci/main/lib/tspci-tao/readme-images/configure.png" alt="the authoring mode of a PCI in TAO's modal" width="700">
+</p>
+
 The text field of a `pci` setting stays below the button: it is the way to clear the value (back to the PCI's
 default), to copy it from another item, and the only way to change it when the module has no authoring mode. In
 that case the dialog says so instead of showing the editor.
@@ -74,7 +82,7 @@ To add TAO support to an existing tspci PCI you can run:
 This command and all the TAO specific changes that are needed to build importable TAO zip file. This will work for a new project created by ``` tspci init ```. For PCI's that are modified, it will do best effort to fully implement TAO specific changes. Please read the rest of this file in case ``` tspci init ``` fails on your PCI.
 
 <p align="center">
-  <img src="https://github.com/Citolab/tspci/blob/main/lib/tspci-tao/readme-images/tspci-tao-console.png" alt="cli in console">
+  <img src="https://raw.githubusercontent.com/Citolab/tspci/main/lib/tspci-tao/readme-images/tspci-tao-console.png" alt="cli in console">
 </p>
 
 The cli will ask a few things before the script is executed:
@@ -171,13 +179,15 @@ Other config properties should be placed under: config -> tspci:
   - CUSTOM: "CUSTOM" allows to add custom response processing in TAO. This is needed if a string comparison is not possible. The item author cannot interact with the PCI to provided the correct answer. The correct answer should in the response processing template.
   - NONE: if the PCI is used as a tool and/or scoring is not needed the scoring method should be set to NONE.
 
-![provide scoring for the PCI in TAO](https://github.com/Citolab/tspci/blob/main/lib/tspci-tao/readme-images/score.png)
+With MATCH_CORRECT the item author switches the interaction to **Response** and answers the PCI; that response becomes the correct response.
+
+![provide scoring for the PCI in TAO](https://raw.githubusercontent.com/Citolab/tspci/main/lib/tspci-tao/readme-images/score.png)
 
 ## icon
 
 Add a svg file with the name {typeIdentifier}.svg in the root of the PCI directory to have a custom icon for the PCI in TAO.
 
-![custom icon](https://github.com/Citolab/tspci/blob/main/lib/tspci-tao/readme-images/icon.png)
+![custom icon](https://raw.githubusercontent.com/Citolab/tspci/main/lib/tspci-tao/readme-images/icon.png)
 
 ## sbom
 
