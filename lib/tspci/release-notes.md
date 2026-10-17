@@ -1,4 +1,4 @@
-# Unreleased
+# 2.15.0
 
 - `getCorrectResponse(properties)` on the registered object (typed on `IMSpciFactory`): the correct response for the item's settings, so an authoring system can fill the correct response and keep it in line when the author changes a setting; `config.tspci.correctResponse: "settings"` puts it in `authoring.json`
 - `tolerance` on a `single` response (it was already on record fields): `range` for an integer or float, `area` for a point, the margin a score rule may give; the build warns when it does not fit the base type
