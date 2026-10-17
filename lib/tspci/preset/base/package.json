@@ -26,7 +26,8 @@
       "score": [
         "MATCH_CORRECT",
         "NONE"
-      ]
+      ],
+      "correctResponse": "settings"
     }
   },
   "source": "src/index.ts"

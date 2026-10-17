@@ -20,7 +20,7 @@ import {
 import * as ctx from "qtiCustomInteractionContext"; // provided by the delivery engine at runtime
 import configProps from "./config.json"; // the settings; the build passes only their defaults (AUTHORING.md)
 import style from "./styles.css"; // bundled as a string, added to the shadow root below
-import { escapeHtml, pieSvg } from "./pie";
+import { escapeHtml, pieSettings, pieSvg } from "./pie";
 // Images are bundled too: `import logo from "./assets/logo.png"` gives a data URL for <img src>.
 
 // Like every data- attribute, each setting arrives as a string.
@@ -172,9 +172,22 @@ class PciInstance implements IMSpci<PropTypes> {
   };
 }
 
+/**
+ * The correct response for a configuration, for authoring systems (config.tspci.correctResponse "settings" in
+ * package.json, AUTHORING.md "Correct answers"): they call it whenever the author changes a setting and fill the item's
+ * correct response with it. It gets the data- properties as strings (a missing one means its default), uses the same
+ * parsing as the drawing, so the two cannot disagree, and returns what getResponse() reports for that answer.
+ * Players never call it, and it must not touch the DOM.
+ */
+function getCorrectResponse(properties: Partial<PropTypes>): QtiVariableJSON | undefined {
+  const { segments, colored } = pieSettings({ ...(configProps as unknown as PropTypes), ...properties });
+  return { base: { integer: Math.round((colored / segments) * 100) } };
+}
+
 const factory: IMSpciFactory<PropTypes> = {
   typeIdentifier: "###___PCI_NAME___###", // the same as config.tspci.typeIdentifier in package.json
   getInstance: (dom, config, state) => new PciInstance(dom, config, state),
+  getCorrectResponse,
 };
 
 // Register with the engine: as an AMD module (qtiCustomInteractionContext), or through the global some engines set.

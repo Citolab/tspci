@@ -43,7 +43,7 @@ or an object with a `default` plus hints for the author's form:
 | `color` | a colour picker | `"#4b9f4a"` |
 | `colorList` | a list of colour pickers | `"#c91a09, #0055bf"` |
 | `hidden` | nothing (set by the system, not the author) | |
-| `pci` | a "Configure…" button that opens your PCI's own editor (section 5) | whatever your editor writes, as a string |
+| `pci` | a "Configure…" button that opens your PCI's own editor (section 6) | whatever your editor writes, as a string |
 
 A plain value gets an editor from its value: `"true"`/`"false"` a switch, a whole number a number field, the rest a
 text field. `label` is one string or one per language. An authoring system that does not know an editor shows a
@@ -75,7 +75,12 @@ type PropTypes = PciProperties<typeof configProps>; // { width: string; mode: st
   `{ base: { integer: 30 } }` is `single` / `integer`. The package's item declares it, and an authoring system uses it
   for every new item with your PCI.
 - **`score`** lists the scoring your PCI is made for: `MATCH_CORRECT` (the response equals the correct one) and/or
-  `NONE` (not scored, or scored by a person). TAO offers exactly these.
+  `NONE` (not scored, or scored by a person). TAO offers exactly these. The first one is the default.
+- **`correctResponse: "settings"`** says your PCI can tell the correct response from its settings
+  (`getCorrectResponse`, section 4). Leave it out when the correct answer is not in the settings.
+- **`tolerance`** on a `single` response (or on a record field) says which margin a score rule may give it: `range`
+  for an `integer` or `float`, `area` for a `point` (section 4).
+- **`role: "tool"`** (or a `score` of only `["NONE"]`) makes your PCI a tool that is never scored (section 5).
 
 A PCI that reports several values (a moment and a position, say) uses one variable with **record** cardinality:
 QTI binds a PCI to exactly one response variable, and a record has named fields of their own type.
@@ -118,8 +123,58 @@ reports becomes the correct response, or one of several accepted answers. Scorin
   author checks the answer and how a candidate sees it in review.
 - **Margins live in the item, not in the PCI.** A time window or an area is response processing
   (`qti-field-value`, `qti-gte`/`qti-lte`, `qti-inside`) that the authoring system writes from the author's rules.
+  Your PCI reports the raw answer and only says which kind of margin fits, with `tolerance`: `range` (0,75 ± 0,05) or
+  `area` (within 1 of the point (3, 4), in your PCI's own units). Prefer snapping when the answer has steps (a number
+  line in quarters): then the exact match already works and nobody needs a margin.
 
-## 5. Authoring mode: settings your PCI edits itself
+### The correct response from the settings
+
+In a configurable PCI the correct answer usually follows from the settings: 3 of 10 slices coloured → 30. Instead of
+letting the author answer your PCI again after every change, export `getCorrectResponse` next to `getInstance`:
+
+```ts
+const factory: IMSpciFactory<PropTypes> = {
+  typeIdentifier: "myPci",
+  getInstance: (dom, config, state) => new PciInstance(dom, config, state),
+  // the data- properties as strings (a missing one means its default) → what getResponse() reports for the answer
+  getCorrectResponse: (properties) => {
+    const { segments, colored } = pieSettings({ ...configProps, ...properties });
+    return { base: { integer: Math.round((colored / segments) * 100) } };
+  },
+};
+```
+
+and set `"correctResponse": "settings"` in `config.tspci`. An authoring system that supports it fills the item's
+correct response with it and keeps it in line when the author changes a setting; the author can still choose another
+answer. Players never call it. Rules:
+
+- **Parse the settings exactly as your drawing does** (share the function), so the correct answer and what the
+  student sees cannot disagree.
+- **The student must be able to see what is asked.** If a setting changes the correct answer, it must change what the
+  student sees before answering (the fraction to place, the coordinates, the number of slices): a "correct value"
+  setting that is never shown makes the question unanswerable.
+- **Return a response your PCI can show**: `setResponse(getCorrectResponse(p))` on an instance with the same settings
+  must give the same `getResponse()`.
+- **`undefined` when there is no single answer** for these settings (3/5 on a line in steps of 0.25): the authoring
+  system then asks the author.
+- **No DOM, no instance**: it may run on its own, in another frame, before any instance exists.
+
+## 5. A tool: never scored
+
+Not every PCI is a question. A ruler, a protractor, a calculator or a scratch number line helps the student, and its
+use is never scored. Mark it with `"role": "tool"` (or a `score` of only `["NONE"]`) in `config.tspci`:
+
+```json
+"config": { "tspci": { "typeIdentifier": "ruler", "role": "tool", "score": ["NONE"],
+  "response": { "cardinality": "single", "baseType": "string" } } }
+```
+
+QTI binds every PCI to a response variable, so a tool still has one; it may stay `undefined`, or carry the tool's
+state (where the ruler lies) for review. An authoring system shows it as "not scored" and offers no correct answer;
+`correctResponse` and `tolerance` make no sense on a tool, and the build warns about them. Everything else still
+applies: settings, `getState()` and restore, the read-only statuses, keyboard use.
+
+## 6. Authoring mode: settings your PCI edits itself
 
 Some settings cannot be a text field or a number: a shape, a set of areas, a path. Give such a setting
 `"editor": "pci"` and let your PCI edit it. Your PCI then has a second mode, for the item author:
@@ -167,5 +222,8 @@ the property. See `docs/authoring-mode.md` in the tspci repository for the proto
 - [ ] `config.tspci.response` matches what `getResponse()` returns
 - [ ] `getResponse()` gives the same response for the same answer, and `undefined` without one
 - [ ] `setResponse()` / `boundTo` and `status: "solution"` show a given response
+- [ ] when the correct answer follows from the settings: `getCorrectResponse` and `"correctResponse": "settings"`, and
+      every setting that changes the correct answer is visible to the student
+- [ ] a tool: `"role": "tool"`, no correct response
 - [ ] `npm run prod` writes `dist/authoring.json` without warnings
 - [ ] with an authoring mode: delivery works without the `pci` properties (it uses the defaults)

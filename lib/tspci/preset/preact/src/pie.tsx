@@ -9,12 +9,15 @@ const toInt = (value: string, fallback: number, min: number, max: number) => {
   return Number.isNaN(n) ? fallback : Math.min(max, Math.max(min, n));
 };
 
+/** The pie the settings describe; the limits match the min/max in config.json. */
+export function pieSettings(p: Partial<PropTypes>) {
+  const segments = toInt(p.segments, 10, 2, 24);
+  return { segments, colored: toInt(p.colored, 0, 0, segments), size: toInt(p.size, 200, 100, 400) };
+}
+
 /** A circle of `segments` equal slices, the first `colored` ones filled, clockwise from the top. */
 export const Pie = ({ config }: { config: PropTypes }) => {
-  // the limits match the min/max in config.json
-  const segments = toInt(config.segments, 10, 2, 24);
-  const colored = toInt(config.colored, 0, 0, segments);
-  const size = toInt(config.size, 200, 100, 400);
+  const { segments, colored, size } = pieSettings(config);
   const c = size / 2; // centre
   const r = c - 4; // leave room for the outline
   const point = (i: number) => {

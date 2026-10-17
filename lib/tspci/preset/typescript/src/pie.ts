@@ -10,7 +10,7 @@ const toInt = (value: string, fallback: number, min: number, max: number) => {
 };
 
 /** The pie the settings describe; the limits match the min/max in config.json. */
-export function pieSettings(p: PropTypes) {
+export function pieSettings(p: Partial<PropTypes>) {
   const segments = toInt(p.segments, 10, 2, 24);
   return {
     segments,

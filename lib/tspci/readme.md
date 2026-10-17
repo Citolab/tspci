@@ -68,6 +68,8 @@ Tailwind is a popular css framework and can be used to give a nice look and feel
 
 preact is a small version of react. You can develop your PCI using hooks and the render function as you are familiar with in react. When preact is selected the cli will also add a store to manage state. This can easily be used to store all user actions in the PCI, and even replay them.
 
+One trap with SVG: Preact writes attributes on SVG elements exactly as you spell them, and SVG attribute names are case-sensitive. `tabIndex` on an SVG element does nothing, so a keyboard user can never reach it; write `tabindex` (on HTML elements both work).
+
 ### specific implementations like TAO.
 
 We also support to create a PCI that can be imported in TAO. Therefor you should use @citolab/tspci-tao.
@@ -131,20 +133,31 @@ have:
   },
   "markup": {},
   "response": { "cardinality": "single", "baseType": "string" },
+  "role": "question",
   "score": ["MATCH_CORRECT", "NONE"]
 }
 ```
 
 The qti3 export declares the item's response from `config.tspci.response` (it used to be `single`/`string` always),
 and the build warns about what an authoring system could not use: an unknown editor, an enum default that is not one
-of its options, a record field without a base type.
+of its options, a record field without a base type, a margin on a type it cannot measure, a correct response on a tool.
 
 **Scoring.** Authors set the correct answer by answering your PCI in a preview: what `getResponse()` reports becomes
 the correct response, or one of several accepted answers, and scoring compares responses. So report the meaning,
 not the route (the same answer must give the same response), report the declared type, return `undefined` without an
 answer, and show a given response (`setResponse`, `boundTo`, and `responseDeclaration.correctResponse` in
 `status: "solution"`). Margins (a time window, an area) live in the item's response processing, which the authoring
-system writes.
+system writes; `tolerance` (`range` for numbers, `area` for points) on the response or a record field says which kind
+fits.
+
+**The correct response from the settings.** When the correct answer follows from the settings (3 of 10 slices → 30),
+the registered object gets `getCorrectResponse(properties)` next to `getInstance`, and `config.tspci.correctResponse`
+is `"settings"`. An authoring system fills the item's correct response with it and keeps it in line when the author
+changes a setting. Every setting that changes the correct answer must be visible to the student, or the question
+cannot be answered. Players never call it; the templates `tspci init` makes have one.
+
+**Tools.** A PCI that helps the student but is never scored (a ruler, a calculator) has `config.tspci.role: "tool"`
+(or a `score` of only `["NONE"]`). It still has a response variable, as QTI requires, but no correct response.
 
 **Authoring mode.** A setting with `"editor": "pci"` is edited by the PCI itself: next to `getInstance`, the registered
 object has `getAuthoringInstance(dom, config)`, which returns `{ getConfig, validate?, destroy? }`. An authoring

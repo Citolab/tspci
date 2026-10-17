@@ -69,9 +69,19 @@ export interface AuthoringResponseField {
   editor?: string;
   label?: AuthoringText;
   /** The kind of margin a score rule may give it: "range" (numbers), "area" (points). */
-  tolerance?: string;
+  tolerance?: AuthoringTolerance;
   [hint: string]: unknown;
 }
+
+/**
+ * The kind of margin a score rule may give a response: "range" (an integer or float between two values, or within a
+ * distance of the correct one), "area" (a point inside a shape, or within a distance of the correct point). The margin
+ * itself is response processing in the item, written by the authoring system; the PCI only says which kind fits.
+ */
+export type AuthoringTolerance = "range" | "area";
+
+/** "question" is scored; a "tool" (a ruler, a protractor, a calculator) never counts towards the score. */
+export type PciRole = "question" | "tool";
 
 /**
  * dist/authoring.json, generated from src/config.json and package.json config.tspci, and shipped next to the bundle.
@@ -86,10 +96,18 @@ export interface AuthoringDescriptor {
   /** Elements the item puts in qti-interaction-markup, e.g. `{ "video": { "editor": "media", "accept": ["video/*"] } }`. */
   markup: Record<string, { editor: string; element?: string; accept?: string[]; required?: boolean; label?: AuthoringText }>;
   response:
-    | { cardinality: "single" | "multiple" | "ordered"; baseType: string }
+    | { cardinality: "single"; baseType: string; tolerance?: AuthoringTolerance }
+    | { cardinality: "multiple" | "ordered"; baseType: string }
     | { cardinality: "record"; fields: Record<string, AuthoringResponseField> };
+  /** config.tspci.role; a score of only ["NONE"] makes a tool. */
+  role: PciRole;
   /** The response processing templates the PCI is meant for (TAO's score setting), e.g. ["MATCH_CORRECT", "NONE"]. */
   score?: string[];
+  /**
+   * "settings": the registered object has getCorrectResponse(properties), so an authoring system can fill the correct
+   * response from the item's settings (and keep it in line when they change). Never on a tool.
+   */
+  correctResponse?: "settings";
   /** Present when the PCI has an authoring mode: properties with editor "pci", plus config.tspci.authoring. */
   authoring?: AuthoringMode;
 }
@@ -205,7 +223,17 @@ export interface IMSpci<T> {
 export interface IMSpciFactory<T> {
   typeIdentifier: string;
   getInstance: (dom: HTMLElement, configuration: ConfigProperties<T>, state?: string) => IMSpci<T>;
+  /**
+   * Not part of QTI 3: the correct response for these settings, for an authoring system (config.tspci.correctResponse
+   * "settings"). Gets the item's data- properties as strings (a missing one means its default) and returns what
+   * getResponse() reports for the correct answer, or undefined when these settings have no single correct answer.
+   * Players never call it. It must not touch the DOM: it may run without an instance, in another frame.
+   */
+  getCorrectResponse?: PciCorrectResponse<T>;
 }
+
+/** See IMSpciFactory.getCorrectResponse. */
+export type PciCorrectResponse<T> = (properties: Partial<T>) => QtiVariableJSON | undefined;
 
 /**
  * The QTI 3 PCI (the object registered with qtiCustomInteractionContext) extended with an authoring mode:

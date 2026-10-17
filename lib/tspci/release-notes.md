@@ -1,3 +1,13 @@
+# Unreleased
+
+- `getCorrectResponse(properties)` on the registered object (typed on `IMSpciFactory`): the correct response for the item's settings, so an authoring system can fill the correct response and keep it in line when the author changes a setting; `config.tspci.correctResponse: "settings"` puts it in `authoring.json`
+- `tolerance` on a `single` response (it was already on record fields): `range` for an integer or float, `area` for a point, the margin a score rule may give; the build warns when it does not fit the base type
+- tools: `config.tspci.role: "tool"` (or a `score` of only `["NONE"]`) marks a PCI that is never scored, such as a ruler or a calculator; every descriptor now has a `role`, and the build warns about a score, a correct response or a margin on a tool
+- the templates of `tspci init` have a `getCorrectResponse` that shares the drawing's parsing of the settings, and `"correctResponse": "settings"`
+- the generated tsconfig uses `lib: es2022` (was es2017), so `Object.fromEntries`, `replaceAll` and `at()` typecheck
+- fix: `tspci init` with the javascript template kept the preset's name, description and `typeIdentifier` ("myPci") in package.json, which the generated code does not register
+- AUTHORING.md: the correct response from the settings, margins, tools, and a checklist item for settings the student must see; the readme warns that Preact needs `tabindex`, not `tabIndex`, on SVG elements
+
 # 2.12.1
 
 - `tspci init` now writes a tsconfig that is ready for TypeScript 6: an explicit `rootDir` of `./src`, `moduleResolution: "bundler"` instead of the deprecated node10 resolution, `module: "esnext"` and `lib: es2017`
