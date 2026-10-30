@@ -1,3 +1,10 @@
+# Unreleased
+
+- `imsPciCreator.json` declares the PCI's own response from `config.tspci.response` (as in `dist/authoring.json`):
+  a `file`, `integer` or `multiple` response, or a `record` (without a base type). It was always `single` / `string`,
+  so TAO gave a new interaction the wrong response declaration. A PCI without `config.tspci.response` keeps
+  `single` / `string`.
+
 # 2.12.0
 
 - the SBOM is included in the package as `interaction/runtime/js/sbom.cdx.json`, next to the bundle
