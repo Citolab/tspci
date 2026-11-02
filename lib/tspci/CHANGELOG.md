@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.16.0](https://github.com/Citolab/tspci/compare/v2.15.1...v2.16.0) (2026-11-02)
+
+### Features
+
+* **cli:** enhance watcher to persist until dev server stops ([169759b](https://github.com/Citolab/tspci/commit/169759ba66b43c92661de5a9d8f59fcb42a96f0b))
+
+
 # [2.15.0](https://github.com/Citolab/tspci/compare/v2.14.0...v2.15.0) (2026-10-17)
 
 
