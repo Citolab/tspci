@@ -15,7 +15,7 @@
     "yazl": "^3.3.1"
   },
   "scripts": {},
-  "gitHead": "525a89e24eb69a03fbf3f0b76c33f865f38f44ad",
+  "gitHead": "3787234364e08437ffc5b60210af5343d067b48b",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
