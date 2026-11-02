@@ -424,6 +424,82 @@
         })
         .catch(() => {});
 
+      // The media slots (authoring.json `markup`, editor "media"): an authoring system with a media bank puts the author's
+      // file in qti-interaction-markup. Here you choose one from disk. It stays in this browser (Cache Storage, per PCI), so
+      // it is still there after the reload every build does; the PCI gets it as a blob: URL (its iframe is of this origin).
+      const devMedia = {}; // slot -> { name, type, url }
+      const mediaSlots = () =>
+        Object.entries(authoringDescriptor?.markup || {}).filter(([, spec]) => (spec?.editor || "media") === "media");
+      const mediaCache = () => caches.open(`tspci-media-${authoringDescriptor?.typeIdentifier || "pci"}`);
+      const mediaKey = (slot) => new URL(`/__tspci_media__/${encodeURIComponent(slot)}`, location.href).href;
+      const mediaLoaded = authoringLoaded
+        .then(async () => {
+          if (!mediaSlots().length || !("caches" in window)) return;
+          const cache = await mediaCache();
+          for (const [slot] of mediaSlots()) {
+            const response = await cache.match(mediaKey(slot));
+            if (!response) continue;
+            const blob = await response.blob();
+            const name = decodeURIComponent(response.headers.get("x-file-name") || slot);
+            devMedia[slot] = { name, type: blob.type, url: URL.createObjectURL(blob) };
+          }
+          renderConfigPanel();
+        })
+        .catch((error) => console.warn("media: could not read Cache Storage", error));
+
+      async function setMedia(slot, file) {
+        const cache = await mediaCache();
+        if (devMedia[slot]) URL.revokeObjectURL(devMedia[slot].url);
+        if (file) {
+          const headers = { "content-type": file.type || "application/octet-stream", "x-file-name": encodeURIComponent(file.name) };
+          await cache.put(mediaKey(slot), new Response(file, { headers }));
+          devMedia[slot] = { name: file.name, type: file.type, url: URL.createObjectURL(file) };
+        } else {
+          await cache.delete(mediaKey(slot));
+          delete devMedia[slot];
+        }
+        renderConfigPanel();
+        refreshCurrentPci();
+      }
+
+      /** The chosen files as the elements an authoring system writes: its `element`, else what `accept` asks for. */
+      function mediaMarkupHtml() {
+        return mediaSlots()
+          .map(([slot, spec]) => {
+            const media = devMedia[slot];
+            if (!media) return "";
+            const element =
+              spec.element || (spec.accept || []).map((type) => type.split("/")[0]).find((kind) => kind === "video" || kind === "audio") || "img";
+            const src = escapeHtmlAttribute(media.url);
+            return element === "img"
+              ? `<img src="${src}" alt="${escapeHtmlAttribute(media.name.replace(/\.[^.]*$/, ""))}">`
+              : `<${element} src="${src}" controls></${element}>`;
+          })
+          .join("");
+      }
+
+      function MediaControls() {
+        const slots = mediaSlots();
+        if (!slots.length) return null;
+        return html`<div class="mb-3 rounded border border-dashed p-2">
+          ${slots.map(([slot, spec]) => {
+            const media = devMedia[slot];
+            return html`<div class="mb-2">
+              <label class="form-label text-muted mb-1" title="markup: ${slot}">${authoringText(spec.label, slot)}${spec.required ? " *" : ""}</label>
+              <input type="file" class="form-control form-control-sm" accept="${(spec.accept || []).join(",")}"
+                onChange="${(e) => e.target.files[0] && setMedia(slot, e.target.files[0])}" />
+              ${media
+                ? html`<div class="d-flex align-items-center gap-2 small mt-1">
+                    <code class="text-truncate" title="${media.name}">${media.name}</code>
+                    <button type="button" class="btn btn-sm btn-link p-0" onClick="${() => setMedia(slot, null)}">remove</button>
+                  </div>`
+                : html`<div class="small text-muted mt-1">None: the markup has no ${spec.element || slot}.</div>`}
+            </div>`;
+          })}
+          <p class="small text-muted mb-0">Goes in <code>qti-interaction-markup</code>, as an authoring system puts it there. The file stays in this browser.</p>
+        </div>`;
+      }
+
       const authoringText = (text, fallback) =>
         !text ? fallback : typeof text === "string" ? text : text.en || Object.values(text)[0] || fallback;
       const toHex = (c) => {
@@ -562,6 +638,7 @@
                     : ""}`
                 : html`No <code>authoring.json</code> yet: build once, or see AUTHORING.md`}
             </p>
+            <${MediaControls} />
             <${AuthoringControls} />
             <fieldset disabled=${!!authoringSession}>
             <form onSubmit="${(e) => e.preventDefault()}">
@@ -930,7 +1007,7 @@
                   <qti-interaction-module id="pci" primary-path="./index"></qti-interaction-module>
                 </qti-interaction-modules>
                 <qti-interaction-markup>
-                  <div data-qti-pci-runtime-host style="height:100%"></div>
+                  <div data-qti-pci-runtime-host style="height:100%"></div>${mediaMarkupHtml()}
                 </qti-interaction-markup>
               </qti-portable-custom-interaction>
             </qti-item-body>
@@ -964,7 +1041,7 @@
         if (typeof globalThis.off !== "function") {
           globalThis.off = () => {};
         }
-        await Promise.all([loadQtiComponents(), authoringLoaded]);
+        await Promise.all([loadQtiComponents(), authoringLoaded, mediaLoaded]);
         loadItem();
       };
     </script>
