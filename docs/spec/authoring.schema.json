@@ -17,7 +17,7 @@
     "properties": {
       "type": "object",
       "description": "The configuration properties: one data- attribute each on qti-portable-custom-interaction.",
-      "propertyNames": { "pattern": "^[a-z][A-Za-z0-9]*$", "not": { "enum": ["version", "baseUrl"] } },
+      "propertyNames": { "pattern": "^[a-z][A-Za-z0-9_]*$", "not": { "enum": ["version", "baseUrl"] } },
       "additionalProperties": { "$ref": "#/definitions/property" }
     },
     "response": { "$ref": "#/definitions/response" },
@@ -29,6 +29,12 @@
       "description": "How an item with the PCI may be scored, the first being the default. [\"none\"] is a tool, never scored.",
       "if": { "contains": { "const": "none" } },
       "then": { "maxItems": 1 }
+    },
+    "toolWhen": {
+      "type": "object",
+      "description": "The PCI is a tool (scoring none) for these property values: property → the values, as `when` on a record field.",
+      "minProperties": 1,
+      "additionalProperties": { "type": "array", "minItems": 1, "items": { "type": "string" } }
     },
     "correctResponse": {
       "const": "properties",

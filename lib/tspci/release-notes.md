@@ -27,6 +27,8 @@ profile on top of QTI 3 PCIs, with QTI's own names and neutral names in item mar
 - `config.tspci.templateVariables`: the template variables your PCI reads; the dev page has a field per variable,
   declares and binds them in the preview and the QTI 3 item
 - the dev page reads the `modules` of a tspci 3 descriptor (`modules.paths`)
+- `config.tspci.toolWhen` (`{ "mode": ["tool"] }`): a PCI that is a tool in one mode is not scored in that mode
+- setting names may contain `_` (`tool_sqrt` is `data-tool_sqrt`)
 - fix: fixed media under `src/assets` are no longer copied to `dist/assets` as well
 
 # 2.15.0

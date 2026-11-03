@@ -71,6 +71,7 @@ A delivery engine ignores the file. All paths in the descriptor are relative to 
 | `properties` | required | The configuration properties (3.4). |
 | `response` | required | The response variable the PCI is bound to (3.5). |
 | `scoring` | required | How an item with the PCI may be scored (3.6). |
+| `toolWhen` | | The PCI is a tool for these property values (3.6). |
 | `correctResponse` | | `"properties"`: the registered object has `getCorrectResponse` (4.1). |
 | `markup` | | Slots the author fills in `qti-interaction-markup` (3.7). |
 | `media` | | The PCI's own media files (3.8). |
@@ -89,8 +90,8 @@ authoring system picks the author's language, then a language it has, then any.
 
 Each key is the name of a property **as the PCI receives it** in `configuration.properties`. QTI 3 (3.7.12.7.1) derives
 these names from the `data-` attributes by the rules of `element.dataset`, so the authoring system writes the property
-`gridDivisions` as `data-grid-divisions`. Names MUST be camelCase (`^[a-z][A-Za-z0-9]*$`), so the mapping goes both
-ways.
+`gridDivisions` as `data-grid-divisions`. Names MUST start with a lowercase letter and contain only letters, digits and
+`_` (`^[a-z][A-Za-z0-9_]*$`), so the mapping goes both ways: `tool_sqrt` is `data-tool_sqrt`.
 
 **Reserved names.** Players and authoring systems put attributes of their own on the interaction, and QTI 3 passes
 those to the PCI as properties too: `data-version` (the version of the PCI an item was written with) and
@@ -168,6 +169,11 @@ says which kind fits:
 
 `none` MUST NOT be combined with other values. A response with base type `file` (also as a record field) cannot be
 compared, so `match_correct` SHOULD NOT be listed for it.
+
+A PCI that is a question in one mode and a tool in another (a sound meter the candidate answers with, or only uses)
+says when it is a tool with `toolWhen`, in the form of `when` (3.5): `"toolWhen": { "mode": ["tool"] }`. For an item
+whose properties meet it, the authoring system treats the PCI as `none`: no correct response and no response processing
+for it. `scoring` then lists how the PCI is scored in its other modes.
 
 #### 3.6.1 Where the correct response comes from
 

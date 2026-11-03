@@ -17,6 +17,8 @@ export interface AuthoringDescriptor {
         fields: Record<string, { baseType: string; tolerance?: "range" | "area"; label?: AuthoringText; when?: Record<string, string[]> }>;
       };
   scoring: Scoring[];
+  /** The PCI is a tool (scoring none) for these property values. */
+  toolWhen?: Record<string, string[]>;
   correctResponse?: "properties";
   markup?: Record<string, MarkupSlot>;
   media?: Record<string, { file: string; type: string; element: "img" | "audio" | "video" | "object"; size?: number }>;
@@ -113,7 +115,7 @@ export declare function correctFromResponse(response: unknown): string | string[
 /** The record fields that are part of the response for these properties (`when`). */
 export declare function appliedFields(descriptor: AuthoringDescriptor, properties?: Record<string, string>): string[];
 /** The scoring an item gets for `asked`: offered by the descriptor, else its first. */
-export declare function itemScoring(descriptor: AuthoringDescriptor, asked?: Scoring): Scoring;
+export declare function itemScoring(descriptor: AuthoringDescriptor, asked?: Scoring, properties?: Record<string, string>): Scoring;
 /** The element of a markup slot: its element, else what accept asks for, else img. */
 export declare function slotElement(slot: MarkupSlot): "img" | "audio" | "video" | "object";
 /** `gridDivisions` → `data-grid-divisions`. */

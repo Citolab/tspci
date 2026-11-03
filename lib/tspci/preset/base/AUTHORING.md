@@ -97,7 +97,8 @@ type PropTypes = PciProperties<typeof configProps>; // { width: string; mode: st
   | `none` | a tool, never scored (section 5); only on its own | no contribution to `SCORE` |
 
   `["human", "match_correct"]` means: by a person by default, and the author may choose automatic. A response with
-  `baseType: "file"` (also as a record field) cannot be compared, so give it `human`. TAO gets `MATCH_CORRECT` for
+  `baseType: "file"` (also as a record field) cannot be compared, so give it `human`. A PCI that is a tool in one
+  mode adds `"toolWhen": { "mode": ["tool"] }`: in that mode it is not scored. TAO gets `MATCH_CORRECT` for
   `match_correct`, `CUSTOM` for `custom` and `NONE` for the others.
 - **`correctResponse: "properties"`** says your PCI can tell the correct response from its settings
   (`getCorrectResponse`, section 4). Leave it out when the correct answer is not in the settings.

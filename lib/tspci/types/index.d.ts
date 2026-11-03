@@ -111,6 +111,8 @@ export interface AuthoringDescriptor {
     | { cardinality: "record"; fields: Record<string, AuthoringResponseField> };
   /** How an item with the PCI may be scored, the first being the default; ["none"] is a tool. */
   scoring: PciScoring[];
+  /** The PCI is a tool (scoring none) for these setting values, e.g. `{ "mode": ["tool"] }`. */
+  toolWhen?: Record<string, string[]>;
   /**
    * "properties": the registered object has getCorrectResponse(properties), so an authoring system can fill the correct
    * response from the item's properties (and keep it in line when they change). Never on a tool.
