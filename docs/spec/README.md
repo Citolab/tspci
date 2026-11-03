@@ -224,6 +224,14 @@ It MUST NOT touch the DOM or depend on an instance: it may run in another frame,
 `getResponse()`. A property that changes the correct answer MUST change what the candidate sees, or the question cannot
 be answered.
 
+`getCorrectResponse` is the authoring half of a round trip. Its result becomes the item's `qti-correct-response`. In
+delivery, with status `solution`, the delivery engine passes that correct response back to the PCI in
+`configuration.responseDeclaration.correctResponse` (agreed by the QTI workgroup, 1EdTech qti-project-management
+issue 210: optional, camelCase names, every field optional), and the PCI shows it. The two use different formats:
+`getCorrectResponse` returns Appendix C JSON (`{ "base": { "integer": 30 } }`), as `getResponse()` does, while
+`responseDeclaration.correctResponse` carries the values (`{ "value": 30 }`). A PCI that shows its solution MUST show
+the same answer for both.
+
 ### 4.2 `getAuthoringInstance(dom, configuration)`
 
 | | |
@@ -403,5 +411,8 @@ The item an authoring system writes with it:
 4. **Live properties.** The authoring mode gets the other properties once, at the start. Should the authoring system
    call the instance again when the author changes one of them while the editor is open?
 5. **Several authoring pages** (`authoring: [{ properties, label }]`) for a PCI with more than one complex setting.
-6. **Template variables.** QTI 3 also configures a PCI through `qti-template-variable` (3.7.19.6). The descriptor
+6. **The correct response of a record in delivery.** Issue 210 passes `correctResponse.value` to the PCI, but does not
+   say what `value` is for a record (a PCI that reports a moment and a position). Appendix C JSON
+   (`{ "record": [...] }`) would fit what `getResponse()` and `getCorrectResponse` already use.
+7. **Template variables.** QTI 3 also configures a PCI through `qti-template-variable` (3.7.19.6). The descriptor
    cannot yet say which template variables a PCI reads.
