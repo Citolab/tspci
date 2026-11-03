@@ -28,5 +28,6 @@ const bytes = zip(
 | `pciFiles(descriptor)` | The files an item needs next to the PCI's module: the module, `authoring.json`, fixed media, further modules |
 | `itemXml(descriptor, options)` | The item alone, with `resolve(file)` for where the PCI's files are (a preview passes absolute URLs) |
 | `qtiPackage(descriptor, options)` | The files of a package with the item, a test and the manifest: `resources/pci/`, `items/`, `items/media/` |
+| `itemProblems(descriptor, { properties, slots, language })` | What keeps the item from being written as set up: a required slot without a file ("Video: choose a file first"), a required property without a value, an enum value not in its options, a number outside `min`/`max`. Check it before `qtiPackage` |
 | `zip(files)` | A zip of path → bytes or text (stored, the same bytes for the same files) |
 | `itemScoring(descriptor, asked)` | The scoring an item gets: `asked` when offered, else the first of `scoring`; `match_correct` on a record is `human` |

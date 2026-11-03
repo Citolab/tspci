@@ -217,7 +217,7 @@
         useRef,
       } from "preact/hooks";
       import htm from "htm";
-      import { pciFiles, qtiPackage, zip } from "@citolab/pci-authoring";
+      import { itemProblems, pciFiles, qtiPackage, zip } from "@citolab/pci-authoring";
       // Initialize htm with Preact
       const html = htm.bind(h);
 
@@ -630,7 +630,7 @@
       // correct response from getCorrectResponse, and the PCI's files. Next to it, a button per exporter the project
       // depends on (@citolab/tspci-tao, -qti3, -qbci, or one of your own: src/dev-exporters.js), which the dev server
       // runs as `tspci --target` does; those package the PCI itself, not these settings.
-      let downloadStatus = null; // { busy } or { error } or { done }
+      let downloadStatus = null; // { busy } or { error } or { problems } or { done }
       let exporters = []; // [{ name, label }]
       // written in this page; never an exporter's name (those are package names)
       const PCI_FILES = "pci-files";
@@ -691,6 +691,13 @@
             saveFile(fileName || `${name}.zip`, await response.blob());
           } else {
             if (!descriptor) throw new Error("No authoring.json yet: build once");
+            const language = (navigator.language || "en").slice(0, 2);
+            // as an authoring system: no item while a required slot or setting is empty or a value does not fit
+            const problems = itemProblems(descriptor, { properties: currentPciConfig?.properties || {}, slots: devMedia, language });
+            if (problems.length) {
+              downloadStatus = { problems: problems.map((p) => p.message) };
+              return renderConfigPanel();
+            }
             const files = {};
             for (const file of pciFiles(descriptor)) files[file] = await bytesOf(file);
             const slots = {};
@@ -700,7 +707,6 @@
             if (descriptor.correctResponse === "properties" && typeof currentPciFactory?.getCorrectResponse === "function") {
               correct = qtiValues(currentPciFactory.getCorrectResponse(properties));
             }
-            const language = (navigator.language || "en").slice(0, 2);
             // qti3-item: the item as configured here, not the sample package of @citolab/tspci-qti3 (qti3-pci-…)
             saveFile(`qti3-item-${name}.zip`, zip(qtiPackage(descriptor, { files, slots, properties, correct, language })));
           }
@@ -728,6 +734,12 @@
             )}
           </div>
           ${downloadStatus?.error ? html`<div class="small text-danger mt-1">${downloadStatus.error}</div>` : ""}
+          ${downloadStatus?.problems
+            ? html`<div class="small text-danger mt-1" role="alert">
+                <div>The QTI 3 item needs:</div>
+                <ul class="mb-0 ps-3">${downloadStatus.problems.map((problem) => html`<li>${problem}</li>`)}</ul>
+              </div>`
+            : ""}
         </div>`;
       }
 

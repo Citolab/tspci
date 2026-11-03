@@ -326,7 +326,10 @@ For a PCI with a descriptor, a conforming authoring system:
    `getCorrectResponse` (4.1) when present;
 5. writes on Done of an authoring mode only the properties of `authoring.properties` (4.2);
 6. puts the module, the descriptor, the fixed media and the further modules in the package as one `webcontent`
-   resource that the item depends on (3.1).
+   resource that the item depends on (3.1);
+7. SHOULD NOT write the item, and SHOULD tell the author why, while a `required` markup slot has no file, a `required`
+   property has no value, an `enum` value is not one of its options, or an `integer`/`number` value is not a number or
+   lies outside `min`/`max`.
 
 ## 7. Example
 

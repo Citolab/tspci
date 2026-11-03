@@ -75,6 +75,22 @@ export declare function itemXml(descriptor: AuthoringDescriptor, options?: ItemO
 export declare function qtiPackage(descriptor: AuthoringDescriptor, options: PackageOptions): Record<string, FileData>;
 /** A zip (stored, no compression) of path → bytes or text. */
 export declare function zip(files: Record<string, FileData>): Uint8Array;
+/** What keeps an item from being written as set up, one message each for the author. */
+export interface ItemProblem {
+  /** `markup.<slot>` or `properties.<name>`. */
+  field: string;
+  message: string;
+}
+/**
+ * A required slot without a file, a required property without a value, an enum value not in its options, a number
+ * that is not one or outside min/max; empty when the item can be written. `slots`: the slots that have a file.
+ */
+export declare function itemProblems(
+  descriptor: AuthoringDescriptor,
+  options?: { properties?: Record<string, string>; slots?: Record<string, unknown>; language?: string }
+): ItemProblem[];
+/** A text of the descriptor in `language`, else any, else `fallback`. */
+export declare function localized(text: AuthoringText | undefined, language: string, fallback?: string): string;
 /** The scoring an item gets for `asked`: offered by the descriptor, else its first; match_correct on a record → human. */
 export declare function itemScoring(descriptor: AuthoringDescriptor, asked?: Scoring): Scoring;
 /** The element of a markup slot: its element, else what accept asks for, else img. */
