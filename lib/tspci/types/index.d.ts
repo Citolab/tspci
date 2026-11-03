@@ -180,7 +180,15 @@ type Versioned<M> = M & { version: PciAuthoringProtocolVersion };
 
 export type PciAuthoringHostMessage = Versioned<
   /** After the frame said hello: what to load and with which properties. */
-  | { type: "pci-authoring:init"; moduleUrl: string; typeIdentifier: string; properties: Record<string, string>; language?: string }
+  | {
+      type: "pci-authoring:init";
+      moduleUrl: string;
+      /** The PCI's other qti-interaction-modules, id → URL (a library in a module of its own, config.tspci.bundle.modules). */
+      modulePaths?: Record<string, string>;
+      typeIdentifier: string;
+      properties: Record<string, string>;
+      language?: string;
+    }
   /** The author pressed "Done": reply with pci-authoring:config. */
   | { type: "pci-authoring:request-config" }
 >;

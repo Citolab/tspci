@@ -7,8 +7,9 @@ fill in two files.
 
 ## 1. Settings: `src/config.json`
 
-Every key is a setting of your PCI. In an item it becomes a `data-` attribute (`width` → `data-width`), and your PCI
-receives it in `config.properties` (always as a string, as attributes are).
+Every key is a setting of your PCI. In an item it becomes a `data-` attribute, the name in kebab-case (`width` →
+`data-width`, `gridDivisions` → `data-grid-divisions`), and your PCI receives it in `config.properties` under its
+own name (always as a string, as attributes are).
 
 A value can be a plain default, as in every tspci project:
 
@@ -49,6 +50,10 @@ A plain value gets an editor from its value: `"true"`/`"false"` a switch, a whol
 text field. `label` is one string or one per language. An authoring system that does not know an editor shows a
 text field, so a hint never makes a setting unusable.
 
+Every other field of a setting goes into `authoring.json` as it is, for the author's form. The ones authoring systems
+read: `hint` (a line of help under the field, one string or one per language), `unit` (shown next to a number, e.g.
+`"px"`) and `required` (the item needs a value). The PCI must still work with the default when a field is ignored.
+
 The build passes **only the defaults** to your PCI, so `import configProps from "./config.json"` keeps working. Type
 it with `PciProperties`:
 
@@ -75,12 +80,23 @@ type PropTypes = PciProperties<typeof configProps>; // { width: string; mode: st
   `{ base: { integer: 30 } }` is `single` / `integer`. The package's item declares it, and an authoring system uses it
   for every new item with your PCI.
 - **`score`** lists the scoring your PCI is made for: `MATCH_CORRECT` (the response equals the correct one) and/or
-  `NONE` (not scored, or scored by a person). TAO offers exactly these. The first one is the default.
+  `NONE` (not scored automatically). TAO offers exactly these. The first one is the default. Whether `NONE` means
+  "never scored" or "scored by a person" follows from `role` (see the table below).
 - **`correctResponse: "settings"`** says your PCI can tell the correct response from its settings
   (`getCorrectResponse`, section 4). Leave it out when the correct answer is not in the settings.
 - **`tolerance`** on a `single` response (or on a record field) says which margin a score rule may give it: `range`
   for an `integer` or `float`, `area` for a `point` (section 4).
 - **`role: "tool"`** (or a `score` of only `["NONE"]`) makes your PCI a tool that is never scored (section 5).
+
+How an authoring system scores your PCI follows from `role`, `score` and the response:
+
+| `config.tspci` | the PCI is | in the item (QTI 3) |
+| --- | --- | --- |
+| `role: "tool"`, or no `role` and a `score` of only `["NONE"]` | never scored (section 5) | no contribution to `SCORE` |
+| `role: "question"` and a `score` of only `["NONE"]` | scored by a person | `external-scored="human"` on the outcome |
+| a response with `baseType: "file"` (also as a record field) | scored by a person: a file cannot be compared | `external-scored="human"` |
+| a `score` that starts with `MATCH_CORRECT` | scored automatically | `qti-correct-response` and a score rule |
+| a `score` that starts with `NONE` and also has `MATCH_CORRECT` | scored by a person by default; the author may choose automatic | the author's choice |
 
 A PCI that reports several values (a moment and a position, say) uses one variable with **record** cardinality:
 QTI binds a PCI to exactly one response variable, and a record has named fields of their own type.

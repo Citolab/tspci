@@ -138,8 +138,9 @@ the same page in `features/pci/authoringFrame.ts`) does this:
 
 ```
 frame → host   pci-authoring:hello                       the page listens
-host → frame   pci-authoring:init { moduleUrl, typeIdentifier, properties, language }
+host → frame   pci-authoring:init { moduleUrl, modulePaths?, typeIdentifier, properties, language }
                (shim: define qtiCustomInteractionContext, require the module; register → getAuthoringInstance)
+               modulePaths: the PCI's other qti-interaction-modules, id → URL
 frame → host   pci-authoring:ready | pci-authoring:change | pci-authoring:error { message }
 host → frame   pci-authoring:request-config              the author pressed Done
 frame → host   pci-authoring:config { config, problems }
@@ -238,8 +239,14 @@ wrapper to the store as if it were the state. It now unwraps it.
 - **Two hosts, one protocol.** The shim exists twice now (tspci reference in JS, qti-construction in TS). It is
   small and has tests on both sides, and every message carries the protocol version (section 3), so a host and a shim
   that drift apart say so instead of failing silently.
-- **Module loading.** The shim uses RequireJS, like delivery. A PCI that needs `require.config` paths or shims, or
-  several modules, needs the same handling as the qti-components loader. The prototype loads one primary module.
+- **Module loading.** The shim uses RequireJS, like delivery. The PCI's other modules (a library tspci built into a
+  module of its own, `config.tspci.bundle.modules`, or any other `qti-interaction-module`) come in `init` as
+  `modulePaths` (id → URL) and are mapped by their id. A PCI that needs RequireJS shims or a
+  `primary-configuration` file still needs the same handling as the qti-components loader.
+- **The frame has no origin.** `srcdoc` with `sandbox="allow-scripts"` and no `allow-same-origin` gives the page an
+  opaque origin. A PCI cannot use `localStorage`, `sessionStorage`, `indexedDB` or cookies there (libraries such as
+  GeoGebra need them), and cannot ask for the microphone or camera (a PCI that records in its authoring mode). Chrome's
+  Local Network Access also blocks such a frame from loading from `localhost`, which matters while developing.
 - **Signed URLs.** The module URL is time-limited (12 h in qti-construction). A dialog left open longer still works,
   because the module is loaded once at the start.
 - **CORS and CSP.** The sandboxed frame loads RequireJS from the app origin and the PCI from the library origin as
@@ -264,3 +271,9 @@ wrapper to the store as if it were the state. It now unwraps it.
 3. Is one button per PCI enough, or do we need several authoring "pages" (`authoring: [{ properties, label }]`)?
 4. TAO has the "Configure…" button now (see "TAO" above), tested with stubbed TAO modules in a browser. Does Done in a
    real TAO creator mark the item as changed and undo in one step, as the form fields do?
+5. **Files made in the authoring mode** (a recording, a drawn image). Today a PCI can only return strings, so it puts
+   a file in a `data-` attribute as a data URL, which makes the item large and is never packaged as media. A setting
+   with `editor: "media"` would not help: a URL in a `data-` attribute is not rewritten or packaged by an authoring
+   system either. A better shape: `getConfig()` may also return files for the descriptor's `markup` slots
+   (`{ config, media: { slot: Blob } }`), and the host stores each as item media and places it in the markup, as it
+   does for a file the author picks. Recording needs a host that allows the microphone (see section 7).
