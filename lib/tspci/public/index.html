@@ -430,8 +430,9 @@
       // file in qti-interaction-markup. Here you choose one from disk. It stays in this browser (Cache Storage, per PCI), so
       // it is still there after the reload every build does; the PCI gets it as a blob: URL (its iframe is of this origin).
       const devMedia = {}; // slot -> { name, type, url }
+      // slots with editor "media" (a file the author picks here) and "pci" (a file the authoring mode makes, getMedia)
       const mediaSlots = () =>
-        Object.entries(authoringDescriptor?.markup || {}).filter(([, spec]) => (spec?.editor || "media") === "media");
+        Object.entries(authoringDescriptor?.markup || {}).filter(([, spec]) => ["media", "pci"].includes(spec?.editor || "media"));
       const mediaCache = () => caches.open(`tspci-media-${authoringDescriptor?.typeIdentifier || "pci"}`);
       const mediaKey = (slot) => new URL(`/__tspci_media__/${encodeURIComponent(slot)}`, location.href).href;
       const mediaLoaded = authoringLoaded
@@ -492,8 +493,10 @@
             const media = devMedia[slot];
             return html`<div class="mb-2">
               <label class="form-label text-muted mb-1" title="markup: ${slot}">${authoringText(spec.label, slot)}${spec.required ? " *" : ""}</label>
-              <input type="file" class="form-control form-control-sm" accept="${(spec.accept || []).join(",")}"
-                onChange="${(e) => e.target.files[0] && setMedia(slot, e.target.files[0])}" />
+              ${spec.editor === "pci"
+                ? html`<div class="small text-muted">Made in the authoring mode</div>`
+                : html`<input type="file" class="form-control form-control-sm" accept="${(spec.accept || []).join(",")}"
+                    onChange="${(e) => e.target.files[0] && setMedia(slot, e.target.files[0])}" />`}
               ${media
                 ? html`<div class="d-flex align-items-center gap-2 small mt-1">
                     <code class="text-truncate" title="${media.name}">${media.name}</code>
@@ -577,7 +580,7 @@
         renderConfigPanel();
       }
 
-      function finishAuthoring(apply) {
+      async function finishAuthoring(apply) {
         const session = authoringSession;
         if (!session) return;
         if (apply) {
@@ -594,6 +597,17 @@
           }
           localStorage.setItem(currentPciFactory.typeIdentifier + "_props", JSON.stringify(currentPciConfig.properties));
           syncConfigPropertiesToHostDataProperties(currentPciConfig, currentPciHostDataProperties);
+          // the files the authoring mode made, for the slots of authoring.markup, kept as a file chosen here is
+          const slots = authoringDescriptor.authoring.markup || [];
+          if (slots.length && typeof session.instance.getMedia === "function") {
+            const media = (await session.instance.getMedia()) || {};
+            for (const slot of slots) {
+              if (!(slot in media)) continue;
+              const blob = media[slot];
+              const extension = (blob?.type || "").split("/")[1]?.replace(/\W.*$/, "") || "bin";
+              await setMedia(slot, blob ? (blob instanceof File ? blob : new File([blob], `${slot}.${extension}`, { type: blob.type })) : null);
+            }
+          }
         }
         if (typeof session.instance.oncompleted === "function") session.instance.oncompleted();
         authoringSession = null;
@@ -682,7 +696,7 @@
             if (!descriptor) throw new Error("No authoring.json yet: build once");
             const language = (navigator.language || "en").slice(0, 2);
             // as an authoring system: no item while a required slot or setting is empty or a value does not fit
-            const problems = itemProblems(descriptor, { properties: currentPciConfig?.properties || {}, slots: devMedia, language });
+            const problems = itemProblems(descriptor, { properties: currentPciConfig?.properties || {}, slots: devMedia, templateValues: templateValues(), language });
             if (problems.length) {
               downloadStatus = { problems: problems.map((p) => p.message) };
               return renderConfigPanel();
@@ -698,7 +712,7 @@
               correct = correctFromResponse(currentPciFactory.getCorrectResponse(properties));
             }
             // qti3-item: the item as configured here; `tspci --target qti3` writes the same item at the default settings
-            saveFile(`qti3-item-${name}.zip`, zip(qtiPackage(descriptor, { files, slots, properties, correct, ...marginOptions(), language })));
+            saveFile(`qti3-item-${name}.zip`, zip(qtiPackage(descriptor, { files, slots, properties, correct, ...marginOptions(), templateValues: templateValues(), language })));
           }
           downloadStatus = { done: kind };
         } catch (error) {
@@ -771,6 +785,59 @@
         </div>`;
       }
 
+      // Template variables the PCI reads (authoring.json `templateVariables`): a value each, as the author gives one. The
+      // preview declares and binds the ones with a value, so the PCI gets them in configuration.templateVariables, and so
+      // does the QTI 3 item. A list (multiple, ordered) is typed with commas.
+      const templateKey = () => `${authoringDescriptor?.typeIdentifier || "pci"}_templateValues`;
+      // read once authoring.json is there: the values are kept per PCI
+      let storedTemplateText = null;
+      function devTemplateText() {
+        if (!storedTemplateText) {
+          try {
+            storedTemplateText = JSON.parse(localStorage.getItem(templateKey()) || "{}");
+          } catch {
+            storedTemplateText = {};
+          }
+        }
+        return storedTemplateText;
+      }
+
+      /** The values as @citolab/pci-authoring takes them: a string, or a list for multiple and ordered. */
+      function templateValues() {
+        const values = {};
+        for (const [name, variable] of Object.entries(authoringDescriptor?.templateVariables || {})) {
+          const text = String(devTemplateText()[name] ?? "").trim();
+          if (!text) continue;
+          values[name] = (variable.cardinality || "single") === "single" ? text : text.split(",").map((v) => v.trim()).filter(Boolean);
+        }
+        return values;
+      }
+
+      function TemplateControls() {
+        const variables = Object.entries(authoringDescriptor?.templateVariables || {});
+        if (!variables.length) return null;
+        return html`<div class="mb-3 rounded border border-dashed p-2">
+          ${variables.map(
+            ([name, variable]) => html`<div class="mb-2">
+              <label class="form-label text-muted mb-1" for="template-${name}" title="template variable: ${name}">
+                ${authoringText(variable.label, name)}${variable.required ? " *" : ""}
+                <code class="ms-1">${variable.baseType}${(variable.cardinality || "single") === "single" ? "" : ", " + variable.cardinality}</code>
+              </label>
+              <input id="template-${name}" class="form-control form-control-sm" value=${devTemplateText()[name] ?? ""}
+                placeholder=${(variable.cardinality || "single") === "single" ? "" : "a, b, c"}
+                onChange="${(e) => {
+                  devTemplateText()[name] = e.target.value;
+                  try {
+                    localStorage.setItem(templateKey(), JSON.stringify(devTemplateText()));
+                  } catch {}
+                  refreshCurrentPci();
+                }}" />
+            </div>`,
+          )}
+          <p class="small text-muted mb-0">Template variables: declared in the item with this value and bound to the PCI.</p>
+        </div>`;
+      }
+
       function DownloadControls() {
         const busy = downloadStatus?.busy;
         return html`<div class="mb-3">
@@ -817,6 +884,7 @@
                     : ""}`
                 : html`No <code>authoring.json</code> yet: build once, or see AUTHORING.md`}
             </p>
+            <${TemplateControls} />
             <${CorrectControls} />
             <${DownloadControls} />
             <${MediaControls} />
@@ -1183,7 +1251,7 @@
         qtiItem.innerHTML = `
           <qti-assessment-item identifier="PREVIEW-ITEM" title="${escapedTypeIdentifier}" adaptive="false" time-dependent="false">
             ${responseDeclarationXml()}
-            <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"></qti-outcome-declaration>
+            <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"></qti-outcome-declaration>${templateXml().declarations}
             <qti-item-body>
               <qti-portable-custom-interaction response-identifier="RESPONSE" module="pci" custom-interaction-type-identifier="${escapedTypeIdentifier}"
                 data-require-js-url="${escapeHtmlAttribute(QTI_COMPONENTS.requireJs)}" data-components-cdn-url="${escapeHtmlAttribute(QTI_COMPONENTS.bundle)}"
@@ -1193,7 +1261,7 @@
                 </qti-interaction-modules>
                 <qti-interaction-markup>
                   <div data-qti-pci-runtime-host style="height:100%"></div>${mediaMarkupHtml()}
-                </qti-interaction-markup>
+                </qti-interaction-markup>${templateXml().bindings}
               </qti-portable-custom-interaction>
             </qti-item-body>
           </qti-assessment-item>
@@ -1214,8 +1282,23 @@
       // The libraries the build put in modules of their own (authoring.json `modules`, config.tspci.bundle.modules): the
       // bundle loads them by AMD id, so this page and the item both map each id to its file, as an authoring system does
       // in qti-interaction-modules.
+      /** The template variables with a value, declared in the preview item and bound to the PCI. */
+      function templateXml() {
+        const values = templateValues();
+        const variables = Object.entries(authoringDescriptor?.templateVariables || {}).filter(([name]) => name in values);
+        const declarations = variables
+          .map(([name, variable]) => {
+            const list = Array.isArray(values[name]) ? values[name] : [values[name]];
+            return `\n            <qti-template-declaration identifier="${escapeHtmlAttribute(name)}" cardinality="${escapeHtmlAttribute(variable.cardinality || "single")}" base-type="${escapeHtmlAttribute(variable.baseType)}"><qti-default-value>${list.map((v) => `<qti-value>${escapeHtml(v)}</qti-value>`).join("")}</qti-default-value></qti-template-declaration>`;
+          })
+          .join("");
+        const bindings = variables.map(([name]) => `\n                <qti-template-variable template-identifier="${escapeHtmlAttribute(name)}"></qti-template-variable>`).join("");
+        return { declarations, bindings };
+      }
+
       function splitModules() {
-        return Object.entries(authoringDescriptor?.modules || {}).map(([id, m]) => ({ id, path: `./${String(m.file).replace(/\.js$/, "")}` }));
+        // a QTI 3 module resolution configuration: id → path relative to the module, without .js
+        return Object.entries(authoringDescriptor?.modules?.paths || {}).map(([id, path]) => ({ id, path: `./${path}` }));
       }
       function splitModulesXml() {
         return splitModules()

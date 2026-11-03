@@ -22,6 +22,11 @@ profile on top of QTI 3 PCIs, with QTI's own names and neutral names in item mar
   records in the preview (qti-components 9.6.2)
 - `version` and `baseUrl` are reserved (players and authoring systems set `data-version` and `data-base-url`): a
   setting with one of those names stops the build
+- a markup slot with `"editor": "pci"` is made by the authoring mode: `getMedia()` on the authoring instance returns
+  its file, which the dev page, the reference frame and pci-showcase store as item media in that slot
+- `config.tspci.templateVariables`: the template variables your PCI reads; the dev page has a field per variable,
+  declares and binds them in the preview and the QTI 3 item
+- the dev page reads the `modules` of a tspci 3 descriptor (`modules.paths`)
 - fix: fixed media under `src/assets` are no longer copied to `dist/assets` as well
 
 # 2.15.0

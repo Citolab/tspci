@@ -9,7 +9,12 @@ fill in two files.
 
 Every key is a setting of your PCI. In an item it becomes a `data-` attribute, the name in kebab-case (`width` →
 `data-width`, `gridDivisions` → `data-grid-divisions`), and your PCI receives it in `config.properties` under its
-own name (always as a string, as attributes are). Two names are taken: players and authoring systems set
+own name (always as a string, as attributes are).
+
+**Template variables.** An item can also give your PCI values from its template processing
+(`configuration.templateVariables`). List the ones you read in `config.tspci.templateVariables`
+(`{ "seed": { "baseType": "integer", "label": { "en": "Seed" } } }`); an authoring system declares the ones an author
+gives a value and binds them to your PCI. Work without them, as with a missing setting. Two names are taken: players and authoring systems set
 `data-version` and `data-base-url` themselves, so a setting cannot be called `version` or `baseUrl`, and your PCI
 ignores properties it does not declare.
 
@@ -253,7 +258,18 @@ getAuthoringInstance = (dom: HTMLElement, config: PciAuthoringConfiguration<Prop
 
 The authoring system runs this in a sandboxed iframe (TAO calls it directly in its creator page) and owns the
 Done and Cancel buttons. Done writes what
-`getProperties()` returns as `data-` attributes, and delivery reads them like any other setting. Two rules:
+`getProperties()` returns as `data-` attributes, and delivery reads them like any other setting.
+
+**A file made in the authoring mode** (a drawing, a recording) goes in a markup slot with `"editor": "pci"`:
+`"markup": { "drawing": { "editor": "pci", "element": "img", "accept": ["image/png"] } }`. Return it from
+`getMedia()` (also a promise); the authoring system stores it as item media in that slot, and your PCI finds it with
+`slot("drawing", dom)` like a file an author picks:
+
+```ts
+getMedia: () => new Promise((resolve) => canvas.toBlob((png) => resolve({ drawing: png }), "image/png")),
+```
+
+TAO's creator (tspci-tao) does not store such files. Two rules:
 
 - **Delivery must not need authoring mode.** Without the attribute, or with one it cannot read, your PCI uses its
   default. Other players and authoring systems never call `getAuthoringInstance`, and an authoring system that does

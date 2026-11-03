@@ -271,9 +271,7 @@ wrapper to the store as if it were the state. It now unwraps it.
 3. Is one button per PCI enough, or do we need several authoring "pages" (`authoring: [{ properties, label }]`)?
 4. TAO has the "Configure…" button now (see "TAO" above), tested with stubbed TAO modules in a browser. Does Done in a
    real TAO creator mark the item as changed and undo in one step, as the form fields do?
-5. **Files made in the authoring mode** (a recording, a drawn image). Today a PCI can only return strings, so it puts
-   a file in a `data-` attribute as a data URL, which makes the item large and is never packaged as media. A setting
-   with `editor: "media"` would not help: a URL in a `data-` attribute is not rewritten or packaged by an authoring
-   system either. A better shape: `getProperties()` may also return files for the descriptor's `markup` slots
-   (`{ config, media: { slot: Blob } }`), and the host stores each as item media and places it in the markup, as it
-   does for a file the author picks. Recording needs a host that allows the microphone (see section 7).
+5. **Files made in the authoring mode** (a recording, a drawn image): decided in the PCI authoring profile (docs/spec
+   3.7, 4.2). A markup slot with `editor: "pci"` is made by the authoring mode; the authoring instance's `getMedia()`
+   returns its file, and the host stores it as item media in that slot, as a file the author picks. The reference frame
+   sends it with `pci-authoring:config` (`media`). Recording still needs a host that allows the microphone (section 7).

@@ -56,6 +56,8 @@ most 70% of the window height). The PCI gets all current settings of the interac
   `getProperties()` returns (only the `pci` ones) are written to the interaction and passed to the PCI's `trigger`,
   like a change in the form, and the dialog closes.
 - **Cancel**, the close button or Escape close it without changes.
+- Files the authoring mode makes (`getMedia()`, markup slots with `editor: "pci"`) are not stored: TAO's creator has no
+  place for them in the interaction markup.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/Citolab/tspci/main/lib/tspci-tao/readme-images/configure.png" alt="the authoring mode of a PCI in TAO's modal" width="700">
