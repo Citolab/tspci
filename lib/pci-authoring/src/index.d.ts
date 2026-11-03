@@ -48,6 +48,8 @@ export interface ItemOptions {
   scoring?: Scoring;
   identifier?: string;
   title?: string;
+  /** The label attribute of the qti-assessment-item. */
+  label?: string;
   /** More attributes on qti-portable-custom-interaction, such as a player's data-base-url. */
   interactionAttributes?: Record<string, string>;
   /** false for an item inside a page: no XML declaration and namespaces. */
@@ -61,6 +63,8 @@ export interface PackageOptions extends Omit<ItemOptions, "resolve" | "slots" | 
   files: Record<string, FileData>;
   /** The author's file per markup slot; it goes in items/media/. */
   slots?: Record<string, { name: string; data: FileData; alt?: string }>;
+  /** Other files of the item, by their path in the package ("assets/logo.png"), listed with the item. */
+  itemFiles?: Record<string, FileData>;
 }
 
 export declare const PACKAGE_PCI_FOLDER: "resources/pci/";

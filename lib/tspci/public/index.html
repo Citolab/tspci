@@ -707,7 +707,7 @@
             if (descriptor.correctResponse === "properties" && typeof currentPciFactory?.getCorrectResponse === "function") {
               correct = qtiValues(currentPciFactory.getCorrectResponse(properties));
             }
-            // qti3-item: the item as configured here, not the sample package of @citolab/tspci-qti3 (qti3-pci-…)
+            // qti3-item: the item as configured here; `tspci --target qti3` writes the same item at the default settings
             saveFile(`qti3-item-${name}.zip`, zip(qtiPackage(descriptor, { files, slots, properties, correct, language })));
           }
           downloadStatus = { done: kind };

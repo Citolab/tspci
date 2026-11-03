@@ -1,9 +1,16 @@
 # @citolab/tspci-qti3
 
 Builds a QTI 3 package zip that contains:
-- 1 assessment item with identifier `ITM-PCI`
+- 1 assessment item with identifier `ITM-PCI`, with your PCI at its default settings
 - 1 assessment test with a single testPart, section, and the item reference
 - a QTI 3 manifest
+
+The item is written by [`@citolab/pci-authoring`](../pci-authoring), as the
+[PCI Authoring Profile](../../docs/spec/README.md) says an authoring system writes it: every setting as a `data-`
+attribute, the fixed media hidden in the markup (`data-pci-media`), further modules as `qti-interaction-module`s, and
+the scoring of `config.tspci.scoring`. It is the same item the tspci dev page downloads as "QTI 3 item" for the settings
+and media you choose there, which is why the dev page shows no separate button for this target. A required markup slot
+or setting cannot be filled from the command line: the build warns, and an authoring system asks the author.
 
 ## Usage
 
