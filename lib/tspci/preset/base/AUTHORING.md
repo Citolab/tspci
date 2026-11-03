@@ -9,7 +9,9 @@ fill in two files.
 
 Every key is a setting of your PCI. In an item it becomes a `data-` attribute, the name in kebab-case (`width` →
 `data-width`, `gridDivisions` → `data-grid-divisions`), and your PCI receives it in `config.properties` under its
-own name (always as a string, as attributes are).
+own name (always as a string, as attributes are). Two names are taken: players and authoring systems set
+`data-version` and `data-base-url` themselves, so a setting cannot be called `version` or `baseUrl`, and your PCI
+ignores properties it does not declare.
 
 A value can be a plain default, as in every tspci project:
 

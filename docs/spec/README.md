@@ -91,6 +91,11 @@ these names from the `data-` attributes by the rules of `element.dataset`, so th
 `gridDivisions` as `data-grid-divisions`. Names MUST be camelCase (`^[a-z][A-Za-z0-9]*$`), so the mapping goes both
 ways.
 
+**Reserved names.** Players and authoring systems put attributes of their own on the interaction, and QTI 3 passes
+those to the PCI as properties too: `data-version` (the version of the PCI an item was written with) and
+`data-base-url` (where a player found the module). A descriptor MUST NOT declare the properties `version` and
+`baseUrl`. A PCI MUST ignore properties its descriptor does not declare.
+
 | Field | | Meaning |
 | --- | --- | --- |
 | `editor` | required | How the author edits it (table below) |
@@ -240,6 +245,9 @@ See 5.3.
 text of the button that opens it, and `width`/`height` the size in CSS pixels the PCI would like. The authoring system
 MAY give less.
 
+A PCI has one authoring mode. A PCI with several settings that need its own editor shows them all in that editor (as
+tabs or steps, for example), and `properties` lists them all.
+
 ## 4. Factory extensions
 
 A QTI 3 PCI module registers one object with `qtiCustomInteractionContext.register()`, and that object has
@@ -264,8 +272,10 @@ delivery, with status `solution`, the delivery engine passes that correct respon
 `configuration.responseDeclaration.correctResponse` (agreed by the QTI workgroup, 1EdTech qti-project-management
 issue 210: optional, camelCase names, every field optional), and the PCI shows it. The two use different formats:
 `getCorrectResponse` returns Appendix C JSON (`{ "base": { "integer": 30 } }`), as `getResponse()` does, while
-`responseDeclaration.correctResponse` carries the values (`{ "value": 30 }`). A PCI that shows its solution MUST show
-the same answer for both.
+`responseDeclaration.correctResponse` carries the values, as QTI literals: one for a single response
+(`{ "value": "30" }`), a list for multiple and ordered (`{ "value": ["A", "B"] }`), and for a record an object of field
+→ value (`{ "value": { "time": "4.1", "point": "455 250" } }`), the fields of the item's `qti-correct-response`. A PCI
+that shows its solution MUST show the same answer for both.
 
 ### 4.2 `getAuthoringInstance(dom, configuration)`
 
@@ -434,26 +444,22 @@ The item an authoring system writes with it:
   fixed media. TAO receives the same PCIs through its own package format (`tspci --target tao`), which this profile
   does not cover.
 
-## 9. Open issues
+## 9. Versioning and known limitations
 
-1. **Reserved `data-` attributes.** QTI 3 passes every `data-` attribute to the PCI as a property. Authoring systems
-   and players also put their own there (`data-version`, `data-base-url`), which then reach the PCI and can collide
-   with a property of the same name. Should the profile reserve a prefix for system attributes, or ask systems to put
-   them elsewhere?
-2. **Discovering the descriptor.** It is found next to the primary module (3.1). Should the package manifest point to it
-   explicitly, for example as QTI metadata on the PCI's resource?
-3. **Files made in authoring mode** (a recording, a drawn image). `getProperties()` returns strings only, so such a file
-   ends up as a data URL in an attribute, which no system packages as media. A shape to consider:
-   `getProperties()` returning `{ properties, media: { slot: Blob } }`, the authoring system storing each file as item
-   media and placing it in that slot (5.1).
-4. **Live properties.** The authoring mode gets the other properties once, at the start. Should the authoring system
-   call the instance again when the author changes one of them while the editor is open?
-5. **Several authoring pages** (`authoring: [{ properties, label }]`) for a PCI with more than one complex setting.
-6. **The correct response of a record in delivery.** Issue 210 passes `correctResponse.value` to the PCI, but does not
-   say what `value` is for a record (a PCI that reports a moment and a position). Appendix C JSON
-   (`{ "record": [...] }`) would fit what `getResponse()` and `getCorrectResponse` already use.
-7. **Correct responses that answering cannot produce.** A free-form area drawn on the PCI's own surface, or a set of
-   accepted answers the PCI cannot show at once, needs the PCI's interface in authoring. A shape to consider: the
-   authoring mode (4.2) also returns a correct response and margins. No PCI needs it yet.
-8. **Template variables.** QTI 3 also configures a PCI through `qti-template-variable` (3.7.19.6). The descriptor
-   cannot yet say which template variables a PCI reads.
+### 9.1 Versioning
+
+`descriptorVersion` is `major.minor`. A minor version (1.1, 1.2) only adds optional fields to the descriptor and optional
+methods to the factory and the authoring instance. Systems that know an older minor version ignore what they do not
+know (3.2), and a PCI without the additions behaves as in the older version. Anything else, such as a field that
+changes meaning, a required field or a renamed method, is a new major version.
+
+### 9.2 Known limitations
+
+What profile 1.0 does not do, and the optional addition a later minor version would make for it:
+
+| Limitation | A later minor version |
+| --- | --- |
+| **Files made in the authoring mode.** `getProperties()` returns strings, so a file the author makes there (a recording, a drawn image) can only become a data URL in an attribute, which no system packages as media. | An optional `getMedia()` on the authoring instance, returning a file per markup slot; the authoring system stores each as item media and places it in that slot (5.1). |
+| **Changes while the authoring mode is open.** The authoring mode gets the other properties once, when it opens. | An optional `setProperties(properties)` on the authoring instance, which the authoring system calls when the author changes another property. |
+| **Correct responses that answering cannot produce.** A free-form area drawn on the PCI's own surface, or a set of accepted answers the PCI cannot show at once (3.6.1). | An optional `getCorrectResponse()` on the authoring instance, returning a correct response and its margins. |
+| **Template variables.** QTI 3 also configures a PCI through `qti-template-variable` (Implementation Guide 3.7.19.6). The descriptor cannot say which template variables a PCI reads. | An optional `templateVariables` field in the descriptor, with the variables a PCI reads and their base types. |

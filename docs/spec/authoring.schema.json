@@ -17,7 +17,7 @@
     "properties": {
       "type": "object",
       "description": "The configuration properties: one data- attribute each on qti-portable-custom-interaction.",
-      "propertyNames": { "pattern": "^[a-z][A-Za-z0-9]*$" },
+      "propertyNames": { "pattern": "^[a-z][A-Za-z0-9]*$", "not": { "enum": ["version", "baseUrl"] } },
       "additionalProperties": { "$ref": "#/definitions/property" }
     },
     "response": { "$ref": "#/definitions/response" },

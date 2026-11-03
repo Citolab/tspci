@@ -23,6 +23,8 @@ read their descriptors, need changes.
 | `"correctResponse": "settings"` | `"correctResponse": "properties"` |
 
 The build fails on `score`, `role` and `"correctResponse": "settings"`, and its message gives the `scoring` to write.
+It also fails on a setting in `config.json` named `version` or `baseUrl`: players and authoring systems set
+`data-version` and `data-base-url` themselves, so rename such a setting.
 
 `NONE` used to mean "never scored" for a tool and "scored by a person" for a question. The two now have their own values,
 `none` and `human`. For TAO nothing changes: `tspci --target tao` turns `match_correct` into TAO's `MATCH_CORRECT`,

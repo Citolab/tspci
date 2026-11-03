@@ -20,6 +20,8 @@ profile on top of QTI 3 PCIs, with QTI's own names and neutral names in item mar
 - the dev page's QTI 3 item gets a correct response: "Use the response" takes the answer in the preview, with a margin
   for a response or record field with `tolerance` (± a number, a radius around a point); records are declared as
   records in the preview (qti-components 9.6.2)
+- `version` and `baseUrl` are reserved (players and authoring systems set `data-version` and `data-base-url`): a
+  setting with one of those names stops the build
 - fix: fixed media under `src/assets` are no longer copied to `dist/assets` as well
 
 # 2.15.0
