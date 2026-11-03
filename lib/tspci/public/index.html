@@ -217,7 +217,7 @@
         useRef,
       } from "preact/hooks";
       import htm from "htm";
-      import { itemProblems, pciFiles, qtiPackage, zip } from "@citolab/pci-authoring";
+      import { appliedFields, correctFromResponse, itemProblems, pciFiles, qtiPackage, zip } from "@citolab/pci-authoring";
       // Initialize htm with Preact
       const html = htm.bind(h);
 
@@ -652,17 +652,6 @@
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
 
-      /** A response as QTI values: { base: { integer: 30 } } → "30", a point → "3 4", a list → ["a", "b"]. */
-      function qtiValues(response) {
-        const value = (base) => {
-          const v = Object.values(base || {})[0];
-          return Array.isArray(v) ? v.join(" ") : v === undefined || v === null ? undefined : String(v);
-        };
-        if (response?.base) return value(response.base);
-        const list = Object.values(response?.list || {})[0];
-        return Array.isArray(list) ? list.map((v) => (Array.isArray(v) ? v.join(" ") : String(v))) : undefined;
-      }
-
       async function bytesOf(url) {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`${url}: ${response.status} ${response.statusText}`);
@@ -703,18 +692,83 @@
             const slots = {};
             for (const [slot, media] of Object.entries(devMedia)) slots[slot] = { name: media.name, data: await bytesOf(media.url) };
             const properties = { ...(currentPciConfig?.properties || {}) };
-            let correct;
-            if (descriptor.correctResponse === "properties" && typeof currentPciFactory?.getCorrectResponse === "function") {
-              correct = qtiValues(currentPciFactory.getCorrectResponse(properties));
+            // the response taken as correct, else the one the PCI derives from its settings
+            let correct = devCorrect;
+            if (correct === undefined && descriptor.correctResponse === "properties" && typeof currentPciFactory?.getCorrectResponse === "function") {
+              correct = correctFromResponse(currentPciFactory.getCorrectResponse(properties));
             }
             // qti3-item: the item as configured here; `tspci --target qti3` writes the same item at the default settings
-            saveFile(`qti3-item-${name}.zip`, zip(qtiPackage(descriptor, { files, slots, properties, correct, language })));
+            saveFile(`qti3-item-${name}.zip`, zip(qtiPackage(descriptor, { files, slots, properties, correct, ...marginOptions(), language })));
           }
           downloadStatus = { done: kind };
         } catch (error) {
           downloadStatus = { error: String(error?.message || error) };
         }
         renderConfigPanel();
+      }
+
+      // The correct response of the QTI 3 item: the response given in the preview ("Use the response"), with a margin for a
+      // response or record field with tolerance; without one, getCorrectResponse when the PCI has it. As an authoring
+      // system offers it (the PCI authoring profile, docs/spec 3.6.1).
+      let devCorrect; // a QTI value, a list, or a record as field → value
+      const devMargins = {}; // field ('' for a single response) → the margin as typed
+
+      function currentResponse() {
+        const item = getQtiAssessmentItemElement();
+        const variables = item?.variables;
+        return Array.isArray(variables) ? variables.find((v) => v?.identifier === "RESPONSE")?.value : undefined;
+      }
+
+      /** Where a margin fits: the response ('') or the record fields with tolerance whose `when` holds. */
+      function marginTargets() {
+        const response = authoringDescriptor?.response;
+        if (!response) return [];
+        if (response.cardinality !== "record") return response.tolerance ? [{ key: "", label: "Response", tolerance: response.tolerance }] : [];
+        return appliedFields(authoringDescriptor, currentPciConfig?.properties || {}).flatMap((name) => {
+          const field = response.fields[name];
+          return field?.tolerance ? [{ key: name, label: authoringText(field.label, name), tolerance: field.tolerance }] : [];
+        });
+      }
+
+      /** The margins as numbers: `margin` for a single response, `margins` per record field. */
+      function marginOptions() {
+        const numbers = Object.fromEntries(
+          marginTargets().flatMap(({ key }) => (String(devMargins[key] ?? "").trim() && Number.isFinite(Number(devMargins[key])) ? [[key, Number(devMargins[key])]] : [])),
+        );
+        const { "": margin, ...margins } = numbers;
+        return { margin, margins };
+      }
+
+      function CorrectControls() {
+        if (!authoringDescriptor || authoringDescriptor.scoring?.[0] === "none") return null;
+        const targets = devCorrect === undefined ? [] : marginTargets();
+        return html`<div class="mb-3">
+          <div class="small text-muted mb-1">Correct response of the QTI 3 item</div>
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <code class="small text-truncate" style="max-width: 14rem" title=${devCorrect === undefined ? "" : JSON.stringify(devCorrect)}>
+              ${devCorrect === undefined
+                ? authoringDescriptor.correctResponse === "properties" ? "from getCorrectResponse" : "none"
+                : JSON.stringify(devCorrect)}
+            </code>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+              title="Answer the PCI in the preview, then take that answer as the correct response"
+              onClick="${() => {
+                const value = currentResponse();
+                devCorrect = value === null ? undefined : value;
+                renderConfigPanel();
+              }}">Use the response</button>
+            ${devCorrect !== undefined
+              ? html`<button type="button" class="btn btn-sm btn-link p-0" onClick="${() => { devCorrect = undefined; renderConfigPanel(); }}">clear</button>`
+              : ""}
+          </div>
+          ${targets.map(
+            ({ key, label, tolerance }) => html`<div class="d-flex align-items-center gap-2 mt-1">
+              <label class="small text-muted" for="margin-${key}" style="min-width: 7rem">${tolerance === "range" ? `${label} ±` : `${label} radius`}</label>
+              <input id="margin-${key}" type="number" min="0" step="any" placeholder="exact" class="form-control form-control-sm" style="width: 7rem"
+                value=${devMargins[key] ?? ""} onInput="${(e) => (devMargins[key] = e.target.value)}" />
+            </div>`,
+          )}
+        </div>`;
       }
 
       function DownloadControls() {
@@ -763,6 +817,7 @@
                     : ""}`
                 : html`No <code>authoring.json</code> yet: build once, or see AUTHORING.md`}
             </p>
+            <${CorrectControls} />
             <${DownloadControls} />
             <${MediaControls} />
             <${AuthoringControls} />
@@ -1086,11 +1141,15 @@
       }
 
       // Declare the response as config.tspci.response describes it (authoring.json), so the preview reports an integer
-      // as an integer; a record, or no authoring.json yet, falls back to single/string.
+      // as an integer and a record as a record (field → value, which "Use the response" takes as the correct response);
+      // without authoring.json yet, single/string.
       function responseDeclarationXml() {
         const response = authoringDescriptor?.response;
-        const cardinality = response && response.cardinality !== "record" ? response.cardinality : "single";
-        const baseType = response && response.cardinality !== "record" && response.baseType ? response.baseType : "string";
+        if (response?.cardinality === "record") {
+          return `<qti-response-declaration identifier="RESPONSE" cardinality="record"></qti-response-declaration>`;
+        }
+        const cardinality = response?.cardinality || "single";
+        const baseType = response?.baseType || "string";
         return `<qti-response-declaration identifier="RESPONSE" cardinality="${escapeHtmlAttribute(cardinality)}" base-type="${escapeHtmlAttribute(baseType)}"></qti-response-declaration>`;
       }
       function createQtiPciHost(item, dataProperties = {}) {

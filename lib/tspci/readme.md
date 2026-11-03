@@ -383,8 +383,9 @@ Add a `tsconfig.json` to your project for type checking
 **Try it out** by running `tspci --dev` (`tspci --dev --no-open` opens no browser window). The config panel of the dev
 page has **Download**: always the **PCI files** (the module, `authoring.json`, fixed media, further modules and the SBOM,
 as an authoring system takes the PCI in) and a **QTI 3 item** as you configured it there (properties, the media of the
-slots, the correct response from `getCorrectResponse`), both written by `@citolab/pci-authoring`; and a button per
-exporter your project depends on.
+slots, and the correct response: the answer you give in the preview with "Use the response", with a margin where
+the response has `tolerance`, or else `getCorrectResponse`), both written by `@citolab/pci-authoring`; and a button
+per exporter your project depends on.
 
 **Exporters.** What `tspci --target <name>` and `tspci --targetExt <package>` run is an exporter: a package with
 `src/createPackage.mjs` that exports `bundle()`. `@citolab/tspci-tao`, `-qti3` and `-qbci` are exporters, and you can
