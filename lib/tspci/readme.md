@@ -396,6 +396,8 @@ Available Commands
   --no-include-sbom  Keep the SBOM out of the exported package (included by default)
   --no-sbom          Do not generate an SBOM for this build
   --no-authoring     Keep authoring.json out of the exported package (included by default)
+  --media=<mode>     Put every fixed media file in the bundle (inline), next to it (file) or by size (auto)
+  --no-split         Keep the libraries of config.tspci.bundle.modules in the bundle
 
 Examples package.json scripts
 	$ "dev": "tspci --dev",
@@ -501,18 +503,92 @@ module.exports = {
 };
 ```
 
-### Bundle all your images
+### Media and bundle size
 
-Images are bundled in the js by importing them in code:
-imports JPG, PNG, GIF, SVG, and WebP files (`global.d.ts` declares the types for `.png`, `.jpg` and `.svg`)
+Delivery platforms refuse large JavaScript files, and an image or video imported into the bundle makes `index.js`
+grow by a third more than the file. tspci separates two kinds of media:
 
-```ts
-import logo from "./assets/logo.png"; // a data URL
-<img src={logo} alt="" />;
+- **Media an author chooses** per item (a video for this question) stay in `config.tspci.markup` slots (see
+  [AUTHORING.md](preset/base/AUTHORING.md)): the authoring system puts them in the item's `qti-interaction-markup`.
+- **Fixed media** belong to the PCI itself (a tutorial video, sprites, sounds). Declare them in `package.json`, and the
+  build decides per file whether it goes into the bundle or next to it:
+
+```jsonc
+"config": { "tspci": {
+  "media": {
+    "intro":  "src/assets/intro.mp4",                                  // by size (mode auto)
+    "sprite": { "file": "src/assets/sprite.png", "mode": "inline" }    // always in the bundle
+  },
+  "mediaOptions": { "mode": "auto", "inlineLimit": 8192 },             // the defaults
+  "bundle": { "warnSize": 1048576 }                                    // warn above 1 MB (the default)
+} }
 ```
 
-The build also copies `src/assets` to `dist`. The demo has no images: it draws its circle as SVG from its settings,
-so an author can change it without a new image.
+| mode | where the file goes |
+|---|---|
+| `inline` | a data URL in `index.js` |
+| `file` | `dist/media/<name><ext>`, listed in `dist/authoring.json` under `media` |
+| `auto` | `inline` up to `inlineLimit` bytes, `file` above it |
+
+`tspci --media=inline` (or `file`, `auto`) overrides the mode of every entry for one build.
+
+In your code you ask for a URL by name. The call is the same whatever the build did with the file:
+
+```ts
+import { media } from "@citolab/tspci/media";
+
+getInstance(dom, config, state) {
+  const intro = media("intro", dom); // before you render into dom: a render may remove the markup's elements
+  ...
+}
+```
+
+How a `file` reaches the PCI:
+
+1. **In the item.** An authoring system puts each file in the interaction's markup, hidden:
+   `<video data-tspci-media="intro" class="qti-hidden" src="...">`. Because it is item content, every QTI player
+   resolves and packages it. `tspci --target qti3` writes its sample item this way, and qti-construction does it when an
+   author inserts the PCI (and replaces them on a new version).
+2. **Next to the module**, when the markup has no such element. The bundle remembers the URL of the script that loaded
+   it, and `media()` resolves `media/intro.mp4` against that URL (or uses RequireJS `toUrl` under the
+   `typeIdentifier`, as TAO registers it). `tspci --target tao` ships the files that way (`runtime.src` and
+   `runtime.mediaFiles` in `imsPciCreator.json`).
+
+In TAO this works in the item preview and the classic runtime. TAO CE's delivery app (deliver-fe) ships only
+`index.js`, so to deliver there put the media in the bundle: `tspci --target tao --media=inline` (a `--target` builds
+first, so the option goes in the same command).
+
+When `index.js` is larger than `bundle.warnSize` (in a production build), the build warns and lists what makes it big:
+inline media, the largest modules and the largest libraries.
+
+#### Large libraries in modules of their own
+
+When a library makes the bundle too big (three.js is about 650 kB minified), put it in an AMD module of its own:
+
+```jsonc
+"config": { "tspci": { "bundle": { "modules": ["three"] } } }
+```
+
+- Your code stays the same: `import * as THREE from "three"`.
+- The bundle loads the library as an AMD dependency, `<typeIdentifier>/modules/three`, and the build writes it to
+  `dist/modules/three.js` (minified, with its own dependencies). `dist/authoring.json` lists it under `modules`.
+- QTI 3 lists it as one more `qti-interaction-module` (`id="myPci/modules/three"`), which the player maps to the file.
+  `tspci --target qti3` writes the sample item that way, and qti-construction takes it over when you upload the PCI.
+  The dev page loads it too.
+- Only the package's main entry is split. Other files of the package (`three/examples/jsm/…`) stay in the bundle and
+  use the split module. A split library is not tree-shaken, so it can be bigger than its share of the bundle was: it
+  is about the size of each file, not the total.
+- Split self-contained libraries. A library that imports preact or another library you also bundle gets a copy of
+  its own.
+- The SBOM still lists the split libraries.
+- `tspci --no-split` keeps every library in the bundle for one build.
+
+TAO's own runtime loads every module in `runtime.modules`, which `tspci --target tao` writes. TAO CE (its item preview
+and delivery app) loads only the PCI's own module, so build for it with `tspci --target tao --no-split`.
+
+Images can still be imported directly, which always bundles them:
+`import logo from "./assets/logo.png"` gives a data URL (`global.d.ts` declares `.png`, `.jpg` and `.svg`). The build
+also copies `src/assets` to `dist`.
 
 ### Create advanced PCIs with 3D libraries
 

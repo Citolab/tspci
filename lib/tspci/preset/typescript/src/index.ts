@@ -21,7 +21,8 @@ import * as ctx from "qtiCustomInteractionContext"; // provided by the delivery 
 import configProps from "./config.json"; // the settings; the build passes only their defaults (AUTHORING.md)
 import style from "./styles.css"; // bundled as a string, added to the shadow root below
 import { escapeHtml, pieSettings, pieSvg } from "./pie";
-// Images are bundled too: `import logo from "./assets/logo.png"` gives a data URL for <img src>.
+// Images are bundled too: `import logo from "./assets/logo.png"` gives a data URL for <img src>. Larger media (video,
+// sound): declare them in config.tspci.media and use `media(name, dom)` from "@citolab/tspci/media" (readme, "Media").
 
 // Like every data- attribute, each setting arrives as a string.
 type PropTypes = PciProperties<typeof configProps>;

@@ -1004,7 +1004,7 @@
                 data-require-js-url="${escapeHtmlAttribute(QTI_COMPONENTS.requireJs)}" data-components-cdn-url="${escapeHtmlAttribute(QTI_COMPONENTS.bundle)}"
                 data-components-css-url="${escapeHtmlAttribute(QTI_COMPONENTS.css)}"${dataAttributes}>
                 <qti-interaction-modules>
-                  <qti-interaction-module id="pci" primary-path="./index"></qti-interaction-module>
+                  <qti-interaction-module id="pci" primary-path="./index"></qti-interaction-module>${splitModulesXml()}
                 </qti-interaction-modules>
                 <qti-interaction-markup>
                   <div data-qti-pci-runtime-host style="height:100%"></div>${mediaMarkupHtml()}
@@ -1026,7 +1026,21 @@
         return { register: (ctxA) => register(ctxA) };
       });
 
+      // The libraries the build put in modules of their own (authoring.json `modules`, config.tspci.bundle.modules): the
+      // bundle loads them by AMD id, so this page and the item both map each id to its file, as an authoring system does
+      // in qti-interaction-modules.
+      function splitModules() {
+        return Object.entries(authoringDescriptor?.modules || {}).map(([id, m]) => ({ id, path: `./${String(m.file).replace(/\.js$/, "")}` }));
+      }
+      function splitModulesXml() {
+        return splitModules()
+          .map((m) => `\n                  <qti-interaction-module id="${escapeHtmlAttribute(m.id)}" primary-path="${escapeHtmlAttribute(m.path)}"></qti-interaction-module>`)
+          .join("");
+      }
+
       function loadItem() {
+        const modules = splitModules();
+        if (modules.length) requirejs.config({ paths: Object.fromEntries(modules.map((m) => [m.id, m.path])) });
         requirejs(["index.js"], (itemInstance) => {
           currentAssessmentItem = null;
           if (!currentPciFactory) {

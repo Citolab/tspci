@@ -4,7 +4,8 @@ import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import configProps from "./config.json";
 import { Pie } from "./pie";
 import { Actions, StateModel } from "./store";
-// Images are bundled too: `import logo from "./assets/logo.png"` gives a data URL for <img src={logo} />.
+// Images are bundled too: `import logo from "./assets/logo.png"` gives a data URL for <img src={logo} />. Larger media
+// (video, sound): declare them in config.tspci.media and use `media(name, dom)` from "@citolab/tspci/media" (readme, "Media").
 
 type PropTypes = PciProperties<typeof configProps>;
 

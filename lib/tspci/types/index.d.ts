@@ -110,6 +110,24 @@ export interface AuthoringDescriptor {
   correctResponse?: "settings";
   /** Present when the PCI has an authoring mode: properties with editor "pci", plus config.tspci.authoring. */
   authoring?: AuthoringMode;
+  /**
+   * The fixed media the build put next to the bundle (config.tspci.media, mode "file"). An authoring system places each
+   * one in qti-interaction-markup, hidden and not editable: `<video data-tspci-media="intro" src="..." hidden>`, the
+   * src being the file (relative to the module) taken into the item's media. On a new version of the PCI it replaces them.
+   */
+  media?: Record<string, AuthoringMedia>;
+}
+
+/** A fixed media file of the PCI, in the descriptor. */
+export interface AuthoringMedia {
+  /** The path relative to the module, e.g. "media/intro.mp4". */
+  file: string;
+  /** The media type, e.g. "video/mp4". */
+  type: string;
+  /** The element to write: img, audio, video, or object (with data= instead of src=). */
+  element: string;
+  /** Bytes. */
+  size: number;
 }
 
 /** The authoring mode in the descriptor. The authoring system shows one button that opens it. */

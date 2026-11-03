@@ -102,6 +102,16 @@ video, go in `markup`: `"markup": { "video": { "editor": "media", "accept": ["vi
 
 ## 3. What the build makes of it
 
+Media that belong to the PCI itself, and that an author never chooses, are not markup slots but fixed media
+(`config.tspci.media`, see the tspci readme "Media and bundle size"). The ones the build keeps out of the bundle are
+listed in `authoring.json` under `media`: `{ "intro": { "file": "media/intro.mp4", "type": "video/mp4", "element": "video", "size": 812345 } }`.
+An authoring system places each one in the interaction markup, hidden: `<video data-tspci-media="intro" class="qti-hidden" src="...">`,
+and replaces them when the author switches to a new version of the PCI.
+
+Libraries the build puts in modules of their own (`config.tspci.bundle.modules`) are listed under `modules`:
+`{ "myPci/modules/three": { "file": "modules/three.js", "package": "three", "version": "0.170.0" } }`. An authoring
+system writes each one as a `qti-interaction-module` with that id next to the PCI's own module.
+
 `tspci` (and `tspci --dev`) writes `dist/authoring.json`, generated from both files, and warns about what an
 authoring system could not use (an unknown editor, an enum default that is not one of its options, a record field
 without a base type). `tspci --target qti3` puts it in the package next to the bundle, as a file of the PCI resource
