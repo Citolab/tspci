@@ -381,9 +381,24 @@ Add a `tsconfig.json` to your project for type checking
 ```
 
 **Try it out** by running `tspci --dev` (`tspci --dev --no-open` opens no browser window). The config panel of the dev
-page has **Download**: a QTI 3 package with the item as you configured it there (properties, the media of the slots,
-the correct response from `getCorrectResponse`), written by `@citolab/pci-authoring`, and the TAO package that
-`@citolab/tspci-tao` builds when it is installed.
+page has **Download**: always the **PCI files** (the module, `authoring.json`, fixed media, further modules and the SBOM,
+as an authoring system takes the PCI in) and a **QTI 3 item** as you configured it there (properties, the media of the
+slots, the correct response from `getCorrectResponse`), both written by `@citolab/pci-authoring`; and a button per
+exporter your project depends on.
+
+**Exporters.** What `tspci --target <name>` and `tspci --targetExt <package>` run is an exporter: a package with
+`src/createPackage.mjs` that exports `bundle()`. `@citolab/tspci-tao`, `-qti3` and `-qbci` are exporters, and you can
+write your own for another platform. The dev page shows a Download button for every exporter in your `dependencies` or
+`devDependencies`, when its `bundle()` returns the path of the file it wrote:
+
+```js
+// my-exporter/src/createPackage.mjs: `tspci --targetExt my-exporter`, and "My platform" on the dev page
+export const label = "My platform"; // the button text; the package name without it
+export const bundle = async () => {
+  // read dist/ (index.js, authoring.json, media/), write your package, and return its path
+  return path.join(process.cwd(), "dist", "my-platform.zip");
+};
+```
 
 The dev page needs no internet connection: it loads RequireJS, Bootstrap, preact/htm and qti-components (which runs the PCI the way a QTI 3 player does) from tspci's own dependencies, served under `/vendor/<package>`. The PCI's iframe gets those copies too, so nothing comes from a public CDN.
 

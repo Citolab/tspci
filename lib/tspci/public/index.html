@@ -624,11 +624,24 @@
         </div>`;
       }
 
-      // Download: the item as it is configured here. The QTI 3 package is written in this page by @citolab/pci-authoring
+      // Download: the PCI's own files (always), the item as it is configured here (always), and the exporters. The PCI
+      // files and the QTI 3 package are written in this page by @citolab/pci-authoring
       // (the same code an authoring system such as pci-showcase uses): these properties, the media of the slots, the
-      // correct response from getCorrectResponse, and the PCI's files. The TAO package is built by the dev server with
-      // @citolab/tspci-tao, as `tspci --target tao` does; TAO gets the PCI itself, its settings are made in TAO.
+      // correct response from getCorrectResponse, and the PCI's files. Next to it, a button per exporter the project
+      // depends on (@citolab/tspci-tao, -qti3, -qbci, or one of your own: src/dev-exporters.js), which the dev server
+      // runs as `tspci --target` does; those package the PCI itself, not these settings.
       let downloadStatus = null; // { busy } or { error } or { done }
+      let exporters = []; // [{ name, label }]
+      // written in this page; never an exporter's name (those are package names)
+      const PCI_FILES = "pci-files";
+      const IN_PAGE = "@citolab/pci-authoring";
+      fetch("/__tspci/exporters")
+        .then((response) => (response.ok ? response.json() : []))
+        .then((list) => {
+          exporters = Array.isArray(list) ? list : [];
+          renderConfigPanel();
+        })
+        .catch(() => {});
 
       function saveFile(name, data) {
         const url = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type: "application/zip" }));
@@ -662,11 +675,20 @@
         try {
           const descriptor = authoringDescriptor;
           const name = `${descriptor?.typeIdentifier || "pci"}_${descriptor?.version || "dev"}`;
-          if (kind === "tao") {
-            const response = await fetch("/__tspci/tao-package");
+          if (kind === PCI_FILES) {
+            // the PCI as an authoring system takes it in: module, descriptor, fixed media, further modules, SBOM
+            if (!descriptor) throw new Error("No authoring.json yet: build once");
+            const files = {};
+            for (const file of pciFiles(descriptor)) files[`${descriptor.typeIdentifier}/${file}`] = await bytesOf(file);
+            const sbom = await fetch("sbom.cdx.json");
+            if (sbom.ok) files[`${descriptor.typeIdentifier}/sbom.cdx.json`] = new Uint8Array(await sbom.arrayBuffer());
+            saveFile(`pci-${name}.zip`, zip(files));
+          } else if (kind !== IN_PAGE) {
+            // an exporter, by its package name
+            const response = await fetch(`/__tspci/export?name=${encodeURIComponent(kind)}`);
             if (!response.ok) throw new Error(await response.text());
             const fileName = (response.headers.get("Content-Disposition") || "").match(/filename="([^"]+)"/)?.[1];
-            saveFile(fileName || `tao-pci-${name}.zip`, await response.blob());
+            saveFile(fileName || `${name}.zip`, await response.blob());
           } else {
             if (!descriptor) throw new Error("No authoring.json yet: build once");
             const files = {};
@@ -679,7 +701,8 @@
               correct = qtiValues(currentPciFactory.getCorrectResponse(properties));
             }
             const language = (navigator.language || "en").slice(0, 2);
-            saveFile(`qti3-pci-${name}.zip`, zip(qtiPackage(descriptor, { files, slots, properties, correct, language })));
+            // qti3-item: the item as configured here, not the sample package of @citolab/tspci-qti3 (qti3-pci-…)
+            saveFile(`qti3-item-${name}.zip`, zip(qtiPackage(descriptor, { files, slots, properties, correct, language })));
           }
           downloadStatus = { done: kind };
         } catch (error) {
@@ -691,13 +714,18 @@
       function DownloadControls() {
         const busy = downloadStatus?.busy;
         return html`<div class="mb-3">
-          <div class="d-flex gap-2">
+          <div class="d-flex flex-wrap gap-2">
             <button type="button" class="btn btn-sm btn-outline-primary" disabled=${!!busy || !authoringDescriptor}
-              title="These settings and media, as an item in a QTI 3 package (@citolab/pci-authoring)"
-              onClick="${() => downloadPackage("qti3")}">${busy === "qti3" ? "Packaging…" : "QTI 3 package"}</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" disabled=${!!busy}
-              title="The PCI for TAO (@citolab/tspci-tao); its settings are made in TAO"
-              onClick="${() => downloadPackage("tao")}">${busy === "tao" ? "Packaging…" : "TAO package"}</button>
+              title="The PCI as an authoring system takes it in: its module, authoring.json, fixed media, further modules"
+              onClick="${() => downloadPackage(PCI_FILES)}">${busy === PCI_FILES ? "Packaging…" : "PCI files"}</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" disabled=${!!busy || !authoringDescriptor}
+              title="An item with these settings and media, in a QTI 3 package (@citolab/pci-authoring)"
+              onClick="${() => downloadPackage(IN_PAGE)}">${busy === IN_PAGE ? "Packaging…" : "QTI 3 item"}</button>
+            ${exporters.map(
+              (exporter) => html`<button type="button" class="btn btn-sm btn-outline-secondary" disabled=${!!busy}
+                title="The PCI as ${exporter.name} packages it (tspci --target)"
+                onClick="${() => downloadPackage(exporter.name)}">${busy === exporter.name ? "Packaging…" : exporter.label}</button>`,
+            )}
           </div>
           ${downloadStatus?.error ? html`<div class="small text-danger mt-1">${downloadStatus.error}</div>` : ""}
         </div>`;
