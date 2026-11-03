@@ -1,6 +1,6 @@
 {
   "name": "@citolab/pci-authoring",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "write QTI 3 items and packages with a PCI of the PCI Authoring Profile, in a browser or in Node",
   "author": "Marcel Hoekstra <marcel.hoekstra@cito.nl>",
   "license": "MIT",

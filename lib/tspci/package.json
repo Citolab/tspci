@@ -1,6 +1,6 @@
 {
   "name": "@citolab/tspci",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "an opiniated typescript ims-pci builder with tao integration",
   "author": "patrick <patrick.deklein@cito.nl>",
   "repository": {
@@ -22,7 +22,7 @@
   "type": "module",
   "types": "types/index.d.ts",
   "dependencies": {
-    "@citolab/pci-authoring": "^3.0.0",
+    "@citolab/pci-authoring": "^3.0.1",
     "@citolab/qti-components": "^9.6.2",
     "@compodoc/live-server": "^1.2.3",
     "@inquirer/prompts": "^8.2.0",

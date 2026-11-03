@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.1](https://github.com/Citolab/tspci/compare/v3.0.0...v3.0.1) (2026-11-03)
+
+
+### Features
+
+* **init): a new project has the QTI 3 target; fix(test:** init tests for tspci 3 ([8c208aa](https://github.com/Citolab/tspci/commit/8c208aa2825927f1d82347516178c09b91345825))
+
+
+
+
+
 # [3.0.0](https://github.com/Citolab/tspci/compare/v2.16.1...v3.0.0) (2026-11-03)
 
 
