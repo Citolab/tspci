@@ -39,6 +39,7 @@
     "test:init:matrix": "npm --prefix lib/tspci run test:init:matrix"
   },
   "workspaces": [
+    "lib/pci-authoring",
     "lib/preact-store",
     "lib/tspci",
     "lib/tspci-qbci",

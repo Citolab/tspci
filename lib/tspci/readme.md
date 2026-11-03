@@ -380,7 +380,10 @@ Add a `tsconfig.json` to your project for type checking
 }
 ```
 
-**Try it out** by running `tspci --dev`.
+**Try it out** by running `tspci --dev` (`tspci --dev --no-open` opens no browser window). The config panel of the dev
+page has **Download**: a QTI 3 package with the item as you configured it there (properties, the media of the slots,
+the correct response from `getCorrectResponse`), written by `@citolab/pci-authoring`, and the TAO package that
+`@citolab/tspci-tao` builds when it is installed.
 
 The dev page needs no internet connection: it loads RequireJS, Bootstrap, preact/htm and qti-components (which runs the PCI the way a QTI 3 player does) from tspci's own dependencies, served under `/vendor/<package>`. The PCI's iframe gets those copies too, so nothing comes from a public CDN.
 

@@ -13,7 +13,8 @@
         "imports": {
           "preact": "/vendor/preact/dist/preact.module.js",
           "preact/hooks": "/vendor/preact/hooks/dist/hooks.module.js",
-          "htm": "/vendor/htm/dist/htm.module.js"
+          "htm": "/vendor/htm/dist/htm.module.js",
+          "@citolab/pci-authoring": "/vendor/@citolab/pci-authoring/src/index.js"
         }
       }
     </script>
@@ -216,6 +217,7 @@
         useRef,
       } from "preact/hooks";
       import htm from "htm";
+      import { pciFiles, qtiPackage, zip } from "@citolab/pci-authoring";
       // Initialize htm with Preact
       const html = htm.bind(h);
 
@@ -622,6 +624,85 @@
         </div>`;
       }
 
+      // Download: the item as it is configured here. The QTI 3 package is written in this page by @citolab/pci-authoring
+      // (the same code an authoring system such as pci-showcase uses): these properties, the media of the slots, the
+      // correct response from getCorrectResponse, and the PCI's files. The TAO package is built by the dev server with
+      // @citolab/tspci-tao, as `tspci --target tao` does; TAO gets the PCI itself, its settings are made in TAO.
+      let downloadStatus = null; // { busy } or { error } or { done }
+
+      function saveFile(name, data) {
+        const url = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type: "application/zip" }));
+        const link = Object.assign(document.createElement("a"), { href: url, download: name });
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      /** A response as QTI values: { base: { integer: 30 } } → "30", a point → "3 4", a list → ["a", "b"]. */
+      function qtiValues(response) {
+        const value = (base) => {
+          const v = Object.values(base || {})[0];
+          return Array.isArray(v) ? v.join(" ") : v === undefined || v === null ? undefined : String(v);
+        };
+        if (response?.base) return value(response.base);
+        const list = Object.values(response?.list || {})[0];
+        return Array.isArray(list) ? list.map((v) => (Array.isArray(v) ? v.join(" ") : String(v))) : undefined;
+      }
+
+      async function bytesOf(url) {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`${url}: ${response.status} ${response.statusText}`);
+        return new Uint8Array(await response.arrayBuffer());
+      }
+
+      async function downloadPackage(kind) {
+        downloadStatus = { busy: kind };
+        renderConfigPanel();
+        try {
+          const descriptor = authoringDescriptor;
+          const name = `${descriptor?.typeIdentifier || "pci"}_${descriptor?.version || "dev"}`;
+          if (kind === "tao") {
+            const response = await fetch("/__tspci/tao-package");
+            if (!response.ok) throw new Error(await response.text());
+            const fileName = (response.headers.get("Content-Disposition") || "").match(/filename="([^"]+)"/)?.[1];
+            saveFile(fileName || `tao-pci-${name}.zip`, await response.blob());
+          } else {
+            if (!descriptor) throw new Error("No authoring.json yet: build once");
+            const files = {};
+            for (const file of pciFiles(descriptor)) files[file] = await bytesOf(file);
+            const slots = {};
+            for (const [slot, media] of Object.entries(devMedia)) slots[slot] = { name: media.name, data: await bytesOf(media.url) };
+            const properties = { ...(currentPciConfig?.properties || {}) };
+            let correct;
+            if (descriptor.correctResponse === "properties" && typeof currentPciFactory?.getCorrectResponse === "function") {
+              correct = qtiValues(currentPciFactory.getCorrectResponse(properties));
+            }
+            const language = (navigator.language || "en").slice(0, 2);
+            saveFile(`qti3-pci-${name}.zip`, zip(qtiPackage(descriptor, { files, slots, properties, correct, language })));
+          }
+          downloadStatus = { done: kind };
+        } catch (error) {
+          downloadStatus = { error: String(error?.message || error) };
+        }
+        renderConfigPanel();
+      }
+
+      function DownloadControls() {
+        const busy = downloadStatus?.busy;
+        return html`<div class="mb-3">
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-primary" disabled=${!!busy || !authoringDescriptor}
+              title="These settings and media, as an item in a QTI 3 package (@citolab/pci-authoring)"
+              onClick="${() => downloadPackage("qti3")}">${busy === "qti3" ? "Packaging…" : "QTI 3 package"}</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" disabled=${!!busy}
+              title="The PCI for TAO (@citolab/tspci-tao); its settings are made in TAO"
+              onClick="${() => downloadPackage("tao")}">${busy === "tao" ? "Packaging…" : "TAO package"}</button>
+          </div>
+          ${downloadStatus?.error ? html`<div class="small text-danger mt-1">${downloadStatus.error}</div>` : ""}
+        </div>`;
+      }
+
       function ConfigPanel() {
         const configSource = currentPciConfig;
         const properties = authoringDescriptor?.properties || {};
@@ -642,6 +723,7 @@
                     : ""}`
                 : html`No <code>authoring.json</code> yet: build once, or see AUTHORING.md`}
             </p>
+            <${DownloadControls} />
             <${MediaControls} />
             <${AuthoringControls} />
             <fieldset disabled=${!!authoringSession}>

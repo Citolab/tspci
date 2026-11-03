@@ -1,0 +1,33 @@
+{
+  "name": "@citolab/pci-authoring",
+  "version": "2.16.1",
+  "description": "write QTI 3 items and packages with a PCI of the PCI Authoring Profile, in a browser or in Node",
+  "author": "Marcel Hoekstra <marcel.hoekstra@cito.nl>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Citolab/tspci.git",
+    "directory": "lib/pci-authoring"
+  },
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "readme.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

@@ -22,6 +22,7 @@
   "type": "module",
   "types": "types/index.d.ts",
   "dependencies": {
+    "@citolab/pci-authoring": "^2.16.1",
     "@citolab/qti-components": "^9.5.0",
     "@compodoc/live-server": "^1.2.3",
     "@inquirer/prompts": "^8.2.0",
