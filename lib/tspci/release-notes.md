@@ -14,6 +14,9 @@ profile on top of QTI 3 PCIs, with QTI's own names and neutral names in item mar
   reference frame, the dev page and tspci-tao call the new names
 - tspci-tao maps `scoring` to TAO's `MATCH_CORRECT`, `CUSTOM` and `NONE`; `tspci init --target tao` asks for `scoring`
 - the descriptor schema `docs/spec/authoring.schema.json`; the tests check every descriptor the build makes against it
+- the correct response comes from the settings (`getCorrectResponse`), from answering the PCI, or from answering with a
+  margin (`tolerance`); a record field can depend on the settings with `when: { "<setting>": ["value"] }`. The build
+  warns about `editor`, `media`, `frameField` and `coordinates` on a response field (the author answers the PCI instead)
 - fix: fixed media under `src/assets` are no longer copied to `dist/assets` as well
 
 # 2.15.0

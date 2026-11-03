@@ -65,9 +65,12 @@ export interface AuthoringProperty {
 /** A field of a record response (several values in one response variable). */
 export interface AuthoringResponseField {
   baseType: string;
-  /** How the authoring system edits the correct value (e.g. "mediaTime", "mediaPoint"); a text field by default. */
-  editor?: string;
   label?: AuthoringText;
+  /**
+   * The field is only part of the response for these setting values, e.g. `{ "task": ["momentAndPlace"] }`. The author
+   * sets its correct value by answering the PCI (the PCI authoring profile, docs/spec 3.6.1).
+   */
+  when?: Record<string, string[]>;
   /** The kind of margin a score rule may give it: "range" (numbers), "area" (points). */
   tolerance?: AuthoringTolerance;
   [hint: string]: unknown;

@@ -105,14 +105,16 @@ QTI binds a PCI to exactly one response variable, and a record has named fields 
   "cardinality": "record",
   "fields": {
     "time":  { "baseType": "float", "tolerance": "range", "label": { "en": "Moment" } },
-    "point": { "baseType": "point", "tolerance": "area",  "label": { "en": "Position" } }
+    "point": { "baseType": "point", "tolerance": "area",  "label": { "en": "Position" },
+               "when": { "task": ["momentAndPlace"] } }
   }
 }
 ```
 
 `getResponse()` then returns `{ record: [{ name: "time", base: { float: 4.1 } }, { name: "point", base: { point: [455, 250] } }] }`.
 `tolerance` tells the authoring system what kind of margin a score rule may give a field: `range` (between two
-numbers) or `area` (a point inside a shape).
+numbers) or `area` (a point inside a shape). `when` makes a field part of the response only for some settings: here the
+position only counts when the `task` setting is `momentAndPlace`.
 
 Elements the author puts in your `qti-interaction-markup`, such as a video, go in `markup`:
 `"markup": { "video": { "editor": "media", "accept": ["video/*"], "required": true } }`. The authoring system marks the
@@ -145,8 +147,17 @@ settings form from the same `config.json`.
 
 ## 4. Correct answers: what your PCI must do
 
-Authors set the correct answer **by answering your PCI** in a preview ("answer in preview"): whatever `getResponse()`
-reports becomes the correct response, or one of several accepted answers. Scoring then compares responses, so:
+An authoring system gets the correct response in one of three ways (the PCI authoring profile, `docs/spec` 3.6.1):
+
+| Way | The correct value | Compared |
+| --- | --- | --- |
+| **From the settings** | your `getCorrectResponse(properties)` (below): 3 of 10 slices coloured → 30 | exactly |
+| **By answering** | the author answers your PCI in a preview; what `getResponse()` reports becomes the correct response | exactly |
+| **By answering, with a margin** | the author answers, then gives a margin for a response or field with `tolerance`: ± seconds around a moment, a radius around a point | within the margin |
+
+Your PCI is the editor for its own answers: a video PCI needs no video editor in the authoring system, as the author
+pauses the video and clicks, and your PCI reports `{ time: 4.1, point: [455, 250] }` in its own units. So answering
+your PCI must give the response you mean:
 
 - **One answer, one response.** Report the meaning, not the route: two ways to build the same thing must give the
   same response (sort lists, round numbers, leave out ids, order and timestamps). A response that differs in a

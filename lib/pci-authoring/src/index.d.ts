@@ -12,7 +12,10 @@ export interface AuthoringDescriptor {
   properties: Record<string, { editor: string; default: string; label?: AuthoringText; [hint: string]: unknown }>;
   response:
     | { cardinality: "single" | "multiple" | "ordered"; baseType: string; tolerance?: "range" | "area" }
-    | { cardinality: "record"; fields: Record<string, { baseType: string; tolerance?: "range" | "area"; [hint: string]: unknown }> };
+    | {
+        cardinality: "record";
+        fields: Record<string, { baseType: string; tolerance?: "range" | "area"; label?: AuthoringText; when?: Record<string, string[]> }>;
+      };
   scoring: Scoring[];
   correctResponse?: "properties";
   markup?: Record<string, MarkupSlot>;

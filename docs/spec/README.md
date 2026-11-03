@@ -123,12 +123,22 @@ The response variable the PCI fills with `getResponse()`, in the terms of a `qti
 ```jsonc
 { "cardinality": "single", "baseType": "integer" }
 { "cardinality": "record", "fields": { "time": { "baseType": "float", "tolerance": "range" },
-                                       "point": { "baseType": "point", "tolerance": "area" } } }
+                                       "point": { "baseType": "point", "tolerance": "area",
+                                                  "when": { "task": ["momentAndPlace"] } } } }
 ```
 
-`cardinality` is `single`, `multiple`, `ordered` or `record`. A record has `fields` (each with a `baseType`, and
-optionally `label`, `tolerance` and `editor`, a hint for how the author edits the correct value) and no `baseType` of
-its own. QTI binds a PCI to exactly one response variable, so a PCI that reports several values uses a record.
+`cardinality` is `single`, `multiple`, `ordered` or `record`. A record has `fields` and no `baseType` of its own. QTI
+binds a PCI to exactly one response variable, so a PCI that reports several values uses a record. A field has:
+
+| Field | | Meaning |
+| --- | --- | --- |
+| `baseType` | required | Its QTI base type |
+| `label` | | A text for the author |
+| `tolerance` | | The kind of margin a scoring rule may give it (below) |
+| `when` | | The field is only part of the response for these property values: `{ "<property>": ["value", …] }`, every property listed having one of its values. Without `when` the field is always part of it. |
+
+For an item whose properties do not meet a field's `when`, the field is not part of the correct response nor of the
+scoring, and the PCI MAY leave it out of its response.
 
 `tolerance` says which kind of margin a scoring rule may give the response (on a `single` response or on a record
 field). The margin itself is response processing that the authoring system writes from the author's rule. The PCI only
@@ -152,6 +162,31 @@ says which kind fits:
 
 `none` MUST NOT be combined with other values. A response with base type `file` (also as a record field) cannot be
 compared, so `match_correct` SHOULD NOT be listed for it.
+
+#### 3.6.1 Where the correct response comes from
+
+For `match_correct`, an authoring system needs the item's correct response. The PCI is its own best editor for that:
+whatever the author can answer in the PCI, the PCI can report. The profile knows three ways, and they combine:
+
+| Way | The correct value comes from | Compared |
+| --- | --- | --- |
+| **From the properties** | `getCorrectResponse(properties)` (4.1), when the descriptor has `correctResponse: "properties"`: the answer follows from the settings, such as 3 of 10 slices coloured → 30 | exactly |
+| **By answering** | the author answers the PCI in a preview, and its `getResponse()` becomes the correct response (or one of several accepted ones). Every PCI supports this. | exactly |
+| **By answering, with a margin** | the author answers the PCI as above; for a response or record field with `tolerance` the author then gives a margin around that value: a range for a number (± a value, or a minimum and a maximum), an area for a point (a radius around it, `qti-inside` a circle) | within the margin |
+
+An authoring system:
+
+- SHOULD fill the correct response from `getCorrectResponse` when the PCI has it, keep it in line when the author changes
+  a property, and let the author choose another one. When it returns `undefined` (no single answer for these
+  properties), it asks the author to answer;
+- MUST otherwise let the author answer the PCI to set the correct response;
+- MAY offer a margin for a response or field with `tolerance`, and then writes the response processing of 3.5 instead of
+  the exact `match_correct` comparison. It needs nothing else from the PCI: the value comes from answering, and the
+  margin is a number.
+
+A PCI does not prescribe how the author enters a correct value. Its own interface, answered in a preview, is that
+editor, so a video PCI needs no video editor in the authoring system: the author pauses the video and clicks, and the
+PCI reports `{ "time": 4.1, "point": [455, 250] }` in its own units.
 
 ### 3.7 Markup slots
 
@@ -361,7 +396,10 @@ For a PCI with a descriptor, a conforming authoring system:
   "markup": { "video": { "editor": "media", "element": "video", "accept": ["video/*"], "required": true, "label": { "en": "Video" } } },
   "response": {
     "cardinality": "record",
-    "fields": { "time": { "baseType": "float", "tolerance": "range" }, "point": { "baseType": "point", "tolerance": "area" } }
+    "fields": {
+      "time": { "baseType": "float", "tolerance": "range", "label": { "en": "Moment" } },
+      "point": { "baseType": "point", "tolerance": "area", "label": { "en": "Position" }, "when": { "task": ["momentAndPlace"] } }
+    }
   },
   "scoring": ["match_correct", "human"],
   "media": { "intro": { "file": "media/intro.mp4", "type": "video/mp4", "element": "video", "size": 812345 } }
@@ -414,5 +452,8 @@ The item an authoring system writes with it:
 6. **The correct response of a record in delivery.** Issue 210 passes `correctResponse.value` to the PCI, but does not
    say what `value` is for a record (a PCI that reports a moment and a position). Appendix C JSON
    (`{ "record": [...] }`) would fit what `getResponse()` and `getCorrectResponse` already use.
-7. **Template variables.** QTI 3 also configures a PCI through `qti-template-variable` (3.7.19.6). The descriptor
+7. **Correct responses that answering cannot produce.** A free-form area drawn on the PCI's own surface, or a set of
+   accepted answers the PCI cannot show at once, needs the PCI's interface in authoring. A shape to consider: the
+   authoring mode (4.2) also returns a correct response and margins. No PCI needs it yet.
+8. **Template variables.** QTI 3 also configures a PCI through `qti-template-variable` (3.7.19.6). The descriptor
    cannot yet say which template variables a PCI reads.

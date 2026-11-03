@@ -124,7 +124,12 @@
         "baseType": { "$ref": "#/definitions/baseType" },
         "tolerance": { "$ref": "#/definitions/tolerance" },
         "label": { "$ref": "#/definitions/text" },
-        "editor": { "type": "string" }
+        "when": {
+          "type": "object",
+          "description": "The field is only part of the response for these property values: property → the values.",
+          "minProperties": 1,
+          "additionalProperties": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+        }
       }
     },
     "response": {
