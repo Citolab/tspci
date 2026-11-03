@@ -3,6 +3,41 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.0.0](https://github.com/Citolab/tspci/compare/v2.16.1...v3.0.0) (2026-11-03)
+
+
+### Bug Fixes
+
+* **package:** update gitHead to latest commit hash ([fceaa88](https://github.com/Citolab/tspci/commit/fceaa883a9c0af46640581ce8b87738eb3c77503))
+
+
+* feat(tspci-qti3)!: write the item with @citolab/pci-authoring ([5c4fa26](https://github.com/Citolab/tspci/commit/5c4fa2694b16df8db92c7e5fe9bddbb379b4c7a6))
+* feat!: PCI Authoring Profile 1.0 (docs/spec) as the authoring.json contract ([6dbc022](https://github.com/Citolab/tspci/commit/6dbc022b80d44a9a32146f7e70fbe0e6d829c43d))
+
+
+### Features
+
+* add media handling and module splitting for PCI ([754f1cd](https://github.com/Citolab/tspci/commit/754f1cd97337efa99619637a713c745366a8b247))
+* **authoring:** map split modules in the authoring frame, derive authoring properties ([72e18bb](https://github.com/Citolab/tspci/commit/72e18bb77def68ad41dc9f0d2c263c37dc584cb9))
+* **dev:** Download shows the PCI files, the QTI 3 item, and a button per exporter ([b0d9a11](https://github.com/Citolab/tspci/commit/b0d9a115abbddd0d5bacd9633bfbc2194f191737))
+
+
+### BREAKING CHANGES
+
+* tspci-qti3 needs the authoring.json of tspci 3 next to the bundle, writes every setting as a
+data- attribute, and no longer puts a <div> (or the prompt setting) in the interaction markup.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+* authoring.json follows the PCI Authoring Profile 1.0. PCIs move score/role to scoring,
+correctResponse "settings" to "properties", and getConfig/destroy to getProperties/oncompleted; authoring
+systems read scoring, modules.paths, data-pci-media and data-pci-slot. See docs/spec/MIGRATION.md.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+
+
+
+
 ## [2.16.1](https://github.com/Citolab/tspci/compare/v2.16.0...v2.16.1) (2026-11-02)
 
 **Note:** Version bump only for package @citolab/tspci-qti3

@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.0.0](https://github.com/Citolab/tspci/compare/v2.16.1...v3.0.0) (2026-11-03)
+
+
+### Bug Fixes
+
+* **package:** update gitHead to latest commit hash ([fceaa88](https://github.com/Citolab/tspci/commit/fceaa883a9c0af46640581ce8b87738eb3c77503))
+
+
+### Features
+
+* **dev:** Download shows the PCI files, the QTI 3 item, and a button per exporter ([b0d9a11](https://github.com/Citolab/tspci/commit/b0d9a115abbddd0d5bacd9633bfbc2194f191737))
+
+
+
+
+
 ## [2.16.1](https://github.com/Citolab/tspci/compare/v2.16.0...v2.16.1) (2026-11-02)
 
 **Note:** Version bump only for package @citolab/tspci-qbci
