@@ -8,12 +8,14 @@
   "dependencies": {},
   "devDependencies": {
     "@citolab/tspci": "latest",
+    "@citolab/tspci-qti3": "latest",
     "tslib": "^2.8.1"
   },
   "scripts": {
     "dev": "tspci --dev",
     "prod": "tspci",
-    "tspci": "tspci"
+    "tspci": "tspci",
+    "package:qti3": "tspci --target qti3"
   },
   "config": {
     "tspci": {

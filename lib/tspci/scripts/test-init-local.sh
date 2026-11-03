@@ -19,8 +19,12 @@ rm -f "${PKG_DIR}"/citolab-*.tgz
 echo "Packing local @citolab/tspci package..."
 PACK_TGZ="$(cd "${PKG_DIR}" && npm pack --silent --ignore-scripts --cache "${NPM_CACHE_DIR}" | tail -n 1)"
 PACK_PATH="${PKG_DIR}/${PACK_TGZ}"
+# tspci depends on @citolab/pci-authoring: the local one through an override, so the test does not depend on the registry
+AUTHORING_DIR="${PKG_DIR}/../pci-authoring"
+AUTHORING_TGZ="$(cd "${AUTHORING_DIR}" && npm pack --silent --ignore-scripts --cache "${NPM_CACHE_DIR}" | tail -n 1)"
+AUTHORING_PATH="${AUTHORING_DIR}/${AUTHORING_TGZ}"
 cleanup() {
-  rm -f "${PACK_PATH}" 2>/dev/null || true
+  rm -f "${PACK_PATH}" "${AUTHORING_PATH}" 2>/dev/null || true
 }
 trap cleanup EXIT
 
@@ -43,8 +47,9 @@ node -e "
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   pkg.devDependencies = pkg.devDependencies || {};
   pkg.devDependencies['@citolab/tspci'] = localDep;
+  pkg.overrides = { ...(pkg.overrides || {}), '@citolab/pci-authoring': process.argv[3] };
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
-" "${TARGET_DIR}/package.json" "file:${PACK_PATH}"
+" "${TARGET_DIR}/package.json" "file:${PACK_PATH}" "file:${AUTHORING_PATH}"
 
 echo "Verifying generated package.json contains required dev dependencies..."
 node -e "
@@ -124,7 +129,9 @@ node -e "
   const path = require('path');
   const dir = process.argv[1];
   const d = JSON.parse(fs.readFileSync(path.join(dir, 'dist', 'authoring.json'), 'utf8'));
-  if (d.descriptorVersion !== '0' || !d.typeIdentifier || !d.properties.size || d.properties.size.editor !== 'integer' || d.properties.color.editor !== 'color') {
+  // the PCI authoring profile 1.0 (docs/spec): scoring and the correct response from the properties, as the template sets them
+  const scored = Array.isArray(d.scoring) && d.scoring[0] === 'match_correct' && d.correctResponse === 'properties';
+  if (d.descriptorVersion !== '1.0' || !scored || !d.typeIdentifier || !d.properties.size || d.properties.size.editor !== 'integer' || d.properties.color.editor !== 'color') {
     console.error('ERROR: unexpected dist/authoring.json', JSON.stringify(d));
     process.exit(1);
   }

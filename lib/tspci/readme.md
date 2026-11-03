@@ -89,7 +89,8 @@ You can also export a QTI 3 package zip containing:
 - one assessment test with a single testPart, section, and that item
 - a QTI 3 manifest
 
-To add QTI 3 support using the cli run:
+A project made with `tspci init` has it: `@citolab/tspci-qti3` and the script `npm run package:qti3`. To add QTI 3
+support to an older project using the cli run:
 
 ```sh
   npm run tspci -- add --target qti3

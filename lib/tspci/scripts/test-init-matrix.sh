@@ -59,6 +59,8 @@ QBCI_TGZ="$(pack_local_pkg "${REPO_ROOT}/lib/tspci-qbci" "@citolab/tspci-qbci")"
 QTI3_TGZ="$(pack_local_pkg "${REPO_ROOT}/lib/tspci-qti3" "@citolab/tspci-qti3")"
 TAO_TGZ="$(pack_local_pkg "${REPO_ROOT}/lib/tspci-tao" "@citolab/tspci-tao")"
 PREACT_STORE_TGZ="$(pack_local_pkg "${REPO_ROOT}/lib/preact-store" "@citolab/preact-store")"
+# tspci and tspci-qti3 depend on it: the local one through an override, so the test does not depend on the registry
+PCI_AUTHORING_TGZ="$(pack_local_pkg "${REPO_ROOT}/lib/pci-authoring" "@citolab/pci-authoring")"
 
 create_project() {
   local project_name="$1"
@@ -79,14 +81,18 @@ create_project() {
     const pkgPath = process.argv[1];
     const tspciTar = process.argv[2];
     const preactStoreTar = process.argv[3];
+    const pciAuthoringTar = process.argv[4];
     const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
     pkg.devDependencies = pkg.devDependencies || {};
     pkg.devDependencies["@citolab/tspci"] = `file:${tspciTar}`;
+    // a new project has the QTI 3 target: the local one
+    if (pkg.devDependencies["@citolab/tspci-qti3"]) pkg.devDependencies["@citolab/tspci-qti3"] = `file:${process.argv[5]}`;
+    pkg.overrides = { ...(pkg.overrides || {}), "@citolab/pci-authoring": `file:${pciAuthoringTar}` };
     if (pkg.dependencies && pkg.dependencies["@citolab/preact-store"]) {
       pkg.dependencies["@citolab/preact-store"] = `file:${preactStoreTar}`;
     }
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
-  ' "${project_dir}/package.json" "$(npm_path "${TSPCI_TGZ}")" "$(npm_path "${PREACT_STORE_TGZ}")"
+  ' "${project_dir}/package.json" "$(npm_path "${TSPCI_TGZ}")" "$(npm_path "${PREACT_STORE_TGZ}")" "$(npm_path "${PCI_AUTHORING_TGZ}")" "$(npm_path "${QTI3_TGZ}")"
 
   node -e '
     const fs = require("fs");
@@ -166,6 +172,9 @@ echo "Scenario 1: vanilla PCI creates and builds"
 create_project "VanillaPci" "javascript" "Vanilla PCI matrix test"
 assert_file "${TEST_ROOT}/VanillaPci/src/index.js"
 run_base_build "${TEST_ROOT}/VanillaPci"
+# a new project has the QTI 3 target and its script
+(cd "${TEST_ROOT}/VanillaPci" && npm run package:qti3)
+ls "${TEST_ROOT}/VanillaPci/qti3-dist/qti3-pci-"*.zip >/dev/null
 
 echo "Scenario 2: TypeScript PCI (without tailwind/preact) creates and builds"
 create_project "TypeScriptPci" "typescript" "TypeScript PCI matrix test"
@@ -222,8 +231,8 @@ node -e '
   pkg.config.tspci = pkg.config.tspci || {};
   if (!pkg.config.tspci.label) pkg.config.tspci.label = pkg.config.tspci.typeIdentifier || "tao";
   if (!pkg.config.tspci.short) pkg.config.tspci.short = String(pkg.config.tspci.label).slice(0, 5);
-  if (!Array.isArray(pkg.config.tspci.score) || pkg.config.tspci.score.length === 0) {
-    pkg.config.tspci.score = ["MATCH_CORRECT", "NONE"];
+  if (!Array.isArray(pkg.config.tspci.scoring) || pkg.config.tspci.scoring.length === 0) {
+    pkg.config.tspci.scoring = ["match_correct", "human"];
   }
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
 ' "${TEST_ROOT}/TaoPci/package.json"
