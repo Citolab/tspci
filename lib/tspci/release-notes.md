@@ -1,3 +1,21 @@
+# 3.0.0
+
+**Breaking.** `authoring.json` is the descriptor of the PCI Authoring Profile 1.0 (`docs/spec/README.md`), an optional
+profile on top of QTI 3 PCIs, with QTI's own names and neutral names in item markup. See `docs/spec/MIGRATION.md`.
+
+- `config.tspci.scoring` (`match_correct`, `custom`, `human`, `none`) replaces `score` and `role`; `none` is a tool.
+  The build stops on `score`, `role` and `correctResponse: "settings"`, with what to write instead
+- `correctResponse: "properties"` (was `"settings"`)
+- `descriptorVersion` is `"1.0"`; `modules` is a QTI 3 module resolution configuration (`{ paths: { id: "modules/three" } }`)
+- fixed media are marked `data-pci-media` in the markup (was `data-tspci-media`)
+- markup slots: an authoring system marks the author's element `data-pci-slot="<slot>"`; `slot(name, dom)` from
+  `@citolab/tspci/media` finds it (the dev page writes it too)
+- authoring mode: the instance has `getProperties()` and `oncompleted()` (were `getConfig()` and `destroy()`); the
+  reference frame, the dev page and tspci-tao call the new names
+- tspci-tao maps `scoring` to TAO's `MATCH_CORRECT`, `CUSTOM` and `NONE`; `tspci init --target tao` asks for `scoring`
+- the descriptor schema `docs/spec/authoring.schema.json`; the tests check every descriptor the build makes against it
+- fix: fixed media under `src/assets` are no longer copied to `dist/assets` as well
+
 # 2.15.0
 
 - `getCorrectResponse(properties)` on the registered object (typed on `IMSpciFactory`): the correct response for the item's settings, so an authoring system can fill the correct response and keep it in line when the author changes a setting; `config.tspci.correctResponse: "settings"` puts it in `authoring.json`

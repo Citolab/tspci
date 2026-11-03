@@ -462,7 +462,10 @@
         refreshCurrentPci();
       }
 
-      /** The chosen files as the elements an authoring system writes: its `element`, else what `accept` asks for. */
+      /**
+       * The chosen files as the elements an authoring system writes: its `element`, else what `accept` asks for, marked
+       * with data-pci-slot so the PCI finds it (`slot()` from "@citolab/tspci/media").
+       */
       function mediaMarkupHtml() {
         return mediaSlots()
           .map(([slot, spec]) => {
@@ -471,9 +474,10 @@
             const element =
               spec.element || (spec.accept || []).map((type) => type.split("/")[0]).find((kind) => kind === "video" || kind === "audio") || "img";
             const src = escapeHtmlAttribute(media.url);
+            const marked = `data-pci-slot="${escapeHtmlAttribute(slot)}"`;
             return element === "img"
-              ? `<img src="${src}" alt="${escapeHtmlAttribute(media.name.replace(/\.[^.]*$/, ""))}">`
-              : `<${element} src="${src}" controls></${element}>`;
+              ? `<img ${marked} src="${src}" alt="${escapeHtmlAttribute(media.name.replace(/\.[^.]*$/, ""))}">`
+              : `<${element} ${marked} src="${src}" controls></${element}>`;
           })
           .join("");
       }
@@ -581,7 +585,7 @@
             renderConfigPanel();
             return;
           }
-          const values = session.instance.getConfig() || {};
+          const values = session.instance.getProperties() || {};
           // only the properties the descriptor says the PCI manages
           for (const key of authoringDescriptor.authoring.properties) {
             if (key in values) currentPciConfig.properties[key] = String(values[key]);
@@ -589,7 +593,7 @@
           localStorage.setItem(currentPciFactory.typeIdentifier + "_props", JSON.stringify(currentPciConfig.properties));
           syncConfigPropertiesToHostDataProperties(currentPciConfig, currentPciHostDataProperties);
         }
-        if (typeof session.instance.destroy === "function") session.instance.destroy();
+        if (typeof session.instance.oncompleted === "function") session.instance.oncompleted();
         authoringSession = null;
         refreshCurrentPci();
         renderConfigPanel();

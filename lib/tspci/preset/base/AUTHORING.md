@@ -71,7 +71,7 @@ type PropTypes = PciProperties<typeof configProps>; // { width: string; mode: st
     "typeIdentifier": "myPci",
     "label": "My PCI",
     "response": { "cardinality": "single", "baseType": "integer" },
-    "score": ["MATCH_CORRECT", "NONE"]
+    "scoring": ["match_correct", "human"]
   }
 }
 ```
@@ -79,24 +79,23 @@ type PropTypes = PciProperties<typeof configProps>; // { width: string; mode: st
 - **`response`** is the response variable your PCI fills with `getResponse()`. It must be what your code returns:
   `{ base: { integer: 30 } }` is `single` / `integer`. The package's item declares it, and an authoring system uses it
   for every new item with your PCI.
-- **`score`** lists the scoring your PCI is made for: `MATCH_CORRECT` (the response equals the correct one) and/or
-  `NONE` (not scored automatically). TAO offers exactly these. The first one is the default. Whether `NONE` means
-  "never scored" or "scored by a person" follows from `role` (see the table below).
-- **`correctResponse: "settings"`** says your PCI can tell the correct response from its settings
+- **`scoring`** lists how an item with your PCI may be scored, the first being the default (`["match_correct"]`
+  without it):
+
+  | `scoring` | the PCI is | in the item (QTI 3) |
+  | --- | --- | --- |
+  | `match_correct` | scored automatically: the response equals the correct one | `qti-correct-response` and a score rule |
+  | `custom` | scored by response processing the author writes | the author's `qti-response-processing` |
+  | `human` | scored by a person | `external-scored="human"` on the outcome |
+  | `none` | a tool, never scored (section 5); only on its own | no contribution to `SCORE` |
+
+  `["human", "match_correct"]` means: by a person by default, and the author may choose automatic. A response with
+  `baseType: "file"` (also as a record field) cannot be compared, so give it `human`. TAO gets `MATCH_CORRECT` for
+  `match_correct`, `CUSTOM` for `custom` and `NONE` for the others.
+- **`correctResponse: "properties"`** says your PCI can tell the correct response from its settings
   (`getCorrectResponse`, section 4). Leave it out when the correct answer is not in the settings.
 - **`tolerance`** on a `single` response (or on a record field) says which margin a score rule may give it: `range`
   for an `integer` or `float`, `area` for a `point` (section 4).
-- **`role: "tool"`** (or a `score` of only `["NONE"]`) makes your PCI a tool that is never scored (section 5).
-
-How an authoring system scores your PCI follows from `role`, `score` and the response:
-
-| `config.tspci` | the PCI is | in the item (QTI 3) |
-| --- | --- | --- |
-| `role: "tool"`, or no `role` and a `score` of only `["NONE"]` | never scored (section 5) | no contribution to `SCORE` |
-| `role: "question"` and a `score` of only `["NONE"]` | scored by a person | `external-scored="human"` on the outcome |
-| a response with `baseType: "file"` (also as a record field) | scored by a person: a file cannot be compared | `external-scored="human"` |
-| a `score` that starts with `MATCH_CORRECT` | scored automatically | `qti-correct-response` and a score rule |
-| a `score` that starts with `NONE` and also has `MATCH_CORRECT` | scored by a person by default; the author may choose automatic | the author's choice |
 
 A PCI that reports several values (a moment and a position, say) uses one variable with **record** cardinality:
 QTI binds a PCI to exactly one response variable, and a record has named fields of their own type.
@@ -113,24 +112,34 @@ QTI binds a PCI to exactly one response variable, and a record has named fields 
 
 `getResponse()` then returns `{ record: [{ name: "time", base: { float: 4.1 } }, { name: "point", base: { point: [455, 250] } }] }`.
 `tolerance` tells the authoring system what kind of margin a score rule may give a field: `range` (between two
-numbers) or `area` (a point inside a shape). Elements the author puts in your `qti-interaction-markup`, such as a
-video, go in `markup`: `"markup": { "video": { "editor": "media", "accept": ["video/*"], "required": true } }`.
+numbers) or `area` (a point inside a shape).
+
+Elements the author puts in your `qti-interaction-markup`, such as a video, go in `markup`:
+`"markup": { "video": { "editor": "media", "accept": ["video/*"], "required": true } }`. The authoring system marks the
+element with the slot's name, `<video data-pci-slot="video" src="...">`; find it with `slot()`, before you render:
+
+```ts
+import { slot } from "@citolab/tspci/media";
+const video = slot("video", dom) as HTMLVideoElement | null;
+```
 
 ## 3. What the build makes of it
 
 Media that belong to the PCI itself, and that an author never chooses, are not markup slots but fixed media
 (`config.tspci.media`, see the tspci readme "Media and bundle size"). The ones the build keeps out of the bundle are
 listed in `authoring.json` under `media`: `{ "intro": { "file": "media/intro.mp4", "type": "video/mp4", "element": "video", "size": 812345 } }`.
-An authoring system places each one in the interaction markup, hidden: `<video data-tspci-media="intro" class="qti-hidden" src="...">`,
+An authoring system places each one in the interaction markup, hidden: `<video data-pci-media="intro" class="qti-hidden" src="...">`,
 and replaces them when the author switches to a new version of the PCI.
 
-Libraries the build puts in modules of their own (`config.tspci.bundle.modules`) are listed under `modules`:
-`{ "myPci/modules/three": { "file": "modules/three.js", "package": "three", "version": "0.170.0" } }`. An authoring
-system writes each one as a `qti-interaction-module` with that id next to the PCI's own module.
+Libraries the build puts in modules of their own (`config.tspci.bundle.modules`) are listed under `modules`, as a QTI 3
+module resolution configuration: `{ "paths": { "myPci/modules/three": "modules/three" } }`. An authoring system writes
+each one as a `qti-interaction-module` with that id next to the PCI's own module.
 
-`tspci` (and `tspci --dev`) writes `dist/authoring.json`, generated from both files, and warns about what an
-authoring system could not use (an unknown editor, an enum default that is not one of its options, a record field
-without a base type). `tspci --target qti3` puts it in the package next to the bundle, as a file of the PCI resource
+`tspci` (and `tspci --dev`) writes `dist/authoring.json`, generated from both files, as the PCI Authoring Profile 1.0
+describes it (`docs/spec` in the tspci repository). It warns about what an authoring system could not use (an unknown
+editor, an enum default that is not one of its options, a record field without a base type), and stops on the keys
+tspci 3 renamed (`score`, `role`, `correctResponse: "settings"`) with what to write instead. `tspci --target qti3`
+puts it in the package next to the bundle, as a file of the PCI resource
 (`resources/pci/authoring.json`), like the SBOM; `--no-authoring` leaves it out. `tspci --target tao` builds TAO's
 settings form from the same `config.json`.
 
@@ -170,7 +179,7 @@ const factory: IMSpciFactory<PropTypes> = {
 };
 ```
 
-and set `"correctResponse": "settings"` in `config.tspci`. An authoring system that supports it fills the item's
+and set `"correctResponse": "properties"` in `config.tspci`. An authoring system that supports it fills the item's
 correct response with it and keeps it in line when the author changes a setting; the author can still choose another
 answer. Players never call it. Rules:
 
@@ -188,10 +197,10 @@ answer. Players never call it. Rules:
 ## 5. A tool: never scored
 
 Not every PCI is a question. A ruler, a protractor, a calculator or a scratch number line helps the student, and its
-use is never scored. Mark it with `"role": "tool"` (or a `score` of only `["NONE"]`) in `config.tspci`:
+use is never scored. Mark it with `"scoring": ["none"]` in `config.tspci`:
 
 ```json
-"config": { "tspci": { "typeIdentifier": "ruler", "role": "tool", "score": ["NONE"],
+"config": { "tspci": { "typeIdentifier": "ruler", "scoring": ["none"],
   "response": { "cardinality": "single", "baseType": "string" } } }
 ```
 
@@ -220,9 +229,9 @@ calls it:
 getAuthoringInstance = (dom: HTMLElement, config: PciAuthoringConfiguration<PropTypes>): PciAuthoringInstance => {
   // render your editor into dom, starting from config.properties; call config.onchange?.() after each change
   const instance = {
-    getConfig: () => ({ partition: JSON.stringify(shape) }), // only the "pci" properties, as strings
+    getProperties: () => ({ partition: JSON.stringify(shape) }), // only the "pci" properties, as strings
     validate: () => (shape.parts < 2 ? ["Draw at least one line"] : []), // optional: what keeps Done from finishing
-    destroy: () => { /* unmount */ },
+    oncompleted: () => { /* unmount: the authoring system calls it before it removes your editor */ },
   };
   config.onready?.(instance);
   return instance;
@@ -231,7 +240,7 @@ getAuthoringInstance = (dom: HTMLElement, config: PciAuthoringConfiguration<Prop
 
 The authoring system runs this in a sandboxed iframe (TAO calls it directly in its creator page) and owns the
 Done and Cancel buttons. Done writes what
-`getConfig()` returns as `data-` attributes, and delivery reads them like any other setting. Two rules:
+`getProperties()` returns as `data-` attributes, and delivery reads them like any other setting. Two rules:
 
 - **Delivery must not need authoring mode.** Without the attribute, or with one it cannot read, your PCI uses its
   default. Other players and authoring systems never call `getAuthoringInstance`, and an authoring system that does
@@ -248,8 +257,9 @@ the property. See `docs/authoring-mode.md` in the tspci repository for the proto
 - [ ] `config.tspci.response` matches what `getResponse()` returns
 - [ ] `getResponse()` gives the same response for the same answer, and `undefined` without one
 - [ ] `setResponse()` / `boundTo` and `status: "solution"` show a given response
-- [ ] when the correct answer follows from the settings: `getCorrectResponse` and `"correctResponse": "settings"`, and
+- [ ] when the correct answer follows from the settings: `getCorrectResponse` and `"correctResponse": "properties"`, and
       every setting that changes the correct answer is visible to the student
-- [ ] a tool: `"role": "tool"`, no correct response
+- [ ] a tool: `"scoring": ["none"]`, no correct response
+- [ ] a markup slot: the PCI finds its element with `slot(name, dom)`
 - [ ] `npm run prod` writes `dist/authoring.json` without warnings
 - [ ] with an authoring mode: delivery works without the `pci` properties (it uses the defaults)

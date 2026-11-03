@@ -1,7 +1,7 @@
 # Authoring mode: a PCI that configures itself
 
-Status: proposal with a working prototype (tspci `feat/authoring-descriptor`, tspci-examples
-`tspci-color-proportions`, qti-construction `feat/pci-record-responses`). Nothing here changes QTI delivery.
+Status: part of the PCI Authoring Profile 1.0 (`docs/spec/README.md`, section 4.2), which is the normative text. This
+document keeps the design and the reasons behind it. Nothing here changes QTI delivery.
 
 ## The problem
 
@@ -16,10 +16,10 @@ authoring system only hosts it.
    `dist/authoring.json` under `authoring`, with an optional button label and size from `package.json`
    (`config.tspci.authoring`).
 2. Next to `getInstance`, the object the PCI registers with `qtiCustomInteractionContext` has an optional
-   `getAuthoringInstance(dom, configuration)`. It returns `{ getConfig(), validate?(), destroy?() }`.
+   `getAuthoringInstance(dom, configuration)`. It returns `{ getProperties(), validate?(), oncompleted?() }`.
 3. The authoring system shows a "Configure…" button for a PCI whose descriptor has `authoring`. The button opens a
    dialog with a sandboxed iframe. A small host page (the shim) in that iframe loads the PCI's module, calls
-   `getAuthoringInstance`, and talks to the dialog by postMessage. Done asks the PCI for `getConfig()` and writes
+   `getAuthoringInstance`, and talks to the dialog by postMessage. Done asks the PCI for `getProperties()` and writes
    the managed values as `data-` attributes, the same way a typed setting is written. Cancel writes nothing.
    TAO's creator (tspci-tao) has the same button but calls the method directly, without iframe or messages.
 4. Delivery stays as it is. A player sees ordinary `data-` attributes and calls `getInstance`, nothing else.
@@ -49,7 +49,7 @@ authoring system only hosts it.
 
 ```jsonc
 {
-  "descriptorVersion": "0",
+  "descriptorVersion": "1.0",
   "properties": {
     "colors": { "editor": "colorList", "default": "#dc2626, #2563eb, #16a34a" },
     "partition": { "editor": "pci", "default": "", "label": { "en": "Shape to colour", "nl": "Vorm om te kleuren" } }
@@ -65,7 +65,7 @@ authoring system only hosts it.
 - `config.tspci.authoring` without any `pci` property is a build warning. The build does not check that the bundle
   really has `getAuthoringInstance`, because it cannot see that. The host reports a missing method when it opens the
   dialog.
-- `descriptorVersion` stays `"0"`, because every field is additive and optional.
+- `authoring` is optional in the descriptor of profile 1.0 (`descriptorVersion "1.0"`).
 
 ## 2. The runtime API on the PCI
 
@@ -81,9 +81,9 @@ interface PciAuthoringConfiguration<T> {
   onchange?: () => void;           // after every change by the author
 }
 interface PciAuthoringInstance {
-  getConfig(): Record<string, string>;   // the managed properties, as data- attribute strings
+  getProperties(): Record<string, string>;   // the managed properties, as data- attribute strings
   validate?(): string[];                 // what keeps Done from finishing; [] = fine
-  destroy?(): void;
+  oncompleted?(): void;                     // called before the host removes the editor
 }
 ```
 
@@ -95,9 +95,9 @@ getAuthoringInstance = (dom, config) => {
   const shadow = dom.attachShadow({ mode: "closed" });
   // … render <Authoring initial={partition} onChange={(p) => { partition = p; config.onchange?.(); }} />
   const instance = {
-    getConfig: () => ({ partition: serializePartition(partition) }),
+    getProperties: () => ({ partition: serializePartition(partition) }),
     validate: () => authoringProblems(partition, language),
-    destroy: () => render(null, host),
+    oncompleted: () => render(null, host),
   };
   config.onready?.(instance);
   return instance;
@@ -126,7 +126,7 @@ and the decision to write. So:
 
 - a PCI developer writes plain functions and can test them without an iframe (the tspci dev page does exactly that);
 - every PCI's dialog looks and behaves the same in one authoring system;
-- the host asks for the configuration once (`getConfig()` on Done), and `onchange` is only a hint (for example to
+- the host asks for the properties once (`getProperties()` on Done), and `onchange` is only a hint (for example to
   warn about unsaved work).
 
 ## 3. The host side: shim and messages
@@ -176,9 +176,9 @@ the first managed setting, and the code behind it to `interaction/creator/widget
    value has no `getAuthoringInstance` falls back to the hook it registered with TAO's
    `qtiCustomInteractionContext` (`window._pciHooks`). If neither has it, the dialog says so and Done stays off.
 3. Done calls `validate()`. Problems are shown and the dialog stays open. Otherwise each name in
-   `authoring.properties` that `getConfig()` returns is written as a string with `interaction.prop(name, value)` and
+   `authoring.properties` that `getProperties()` returns is written as a string with `interaction.prop(name, value)` and
    `interaction.triggerPci(name, value)`, exactly what the form's own fields do, and the text field is updated.
-   Cancel, the close button and Escape write nothing. Every way out calls `destroy()`.
+   Cancel, the close button and Escape write nothing. Every way out calls `oncompleted()`.
 
 Why no iframe here: TAO already runs the PCI's code in its creator page with the same RequireJS (that is how the
 item preview renders it), so a sandbox would not keep anything out that is not already in. Calling the method
@@ -274,6 +274,6 @@ wrapper to the store as if it were the state. It now unwraps it.
 5. **Files made in the authoring mode** (a recording, a drawn image). Today a PCI can only return strings, so it puts
    a file in a `data-` attribute as a data URL, which makes the item large and is never packaged as media. A setting
    with `editor: "media"` would not help: a URL in a `data-` attribute is not rewritten or packaged by an authoring
-   system either. A better shape: `getConfig()` may also return files for the descriptor's `markup` slots
+   system either. A better shape: `getProperties()` may also return files for the descriptor's `markup` slots
    (`{ config, media: { slot: Blob } }`), and the host stores each as item media and places it in the markup, as it
    does for a file the author picks. Recording needs a host that allows the microphone (see section 7).

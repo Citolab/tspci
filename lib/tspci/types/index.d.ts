@@ -80,42 +80,53 @@ export interface AuthoringResponseField {
  */
 export type AuthoringTolerance = "range" | "area";
 
-/** "question" is scored; a "tool" (a ruler, a protractor, a calculator) never counts towards the score. */
-export type PciRole = "question" | "tool";
+/**
+ * How an item with the PCI may be scored: "match_correct" (QTI's match_correct template), "custom" (the author writes
+ * the response processing), "human" (a person scores it, external-scored="human") or "none" (a tool such as a ruler or
+ * a calculator, never scored, only on its own).
+ */
+export type PciScoring = "match_correct" | "custom" | "human" | "none";
 
 /**
  * dist/authoring.json, generated from src/config.json and package.json config.tspci, and shipped next to the bundle.
- * See AUTHORING.md.
+ * The descriptor of the PCI authoring profile (docs/spec/README.md in the tspci repository); see AUTHORING.md.
  */
 export interface AuthoringDescriptor {
-  descriptorVersion: string;
+  descriptorVersion: "1.0";
   typeIdentifier: string;
   version: string;
   label: string;
   properties: Record<string, AuthoringProperty>;
-  /** Elements the item puts in qti-interaction-markup, e.g. `{ "video": { "editor": "media", "accept": ["video/*"] } }`. */
+  /**
+   * Elements the author puts in qti-interaction-markup, e.g. `{ "video": { "editor": "media", "accept": ["video/*"] } }`.
+   * The authoring system marks each with `data-pci-slot="<name>"` (find it with `slot()` from "@citolab/tspci/media").
+   */
   markup: Record<string, { editor: string; element?: string; accept?: string[]; required?: boolean; label?: AuthoringText }>;
   response:
     | { cardinality: "single"; baseType: string; tolerance?: AuthoringTolerance }
     | { cardinality: "multiple" | "ordered"; baseType: string }
     | { cardinality: "record"; fields: Record<string, AuthoringResponseField> };
-  /** config.tspci.role; a score of only ["NONE"] makes a tool. */
-  role: PciRole;
-  /** The response processing templates the PCI is meant for (TAO's score setting), e.g. ["MATCH_CORRECT", "NONE"]. */
-  score?: string[];
+  /** How an item with the PCI may be scored, the first being the default; ["none"] is a tool. */
+  scoring: PciScoring[];
   /**
-   * "settings": the registered object has getCorrectResponse(properties), so an authoring system can fill the correct
-   * response from the item's settings (and keep it in line when they change). Never on a tool.
+   * "properties": the registered object has getCorrectResponse(properties), so an authoring system can fill the correct
+   * response from the item's properties (and keep it in line when they change). Never on a tool.
    */
-  correctResponse?: "settings";
+  correctResponse?: "properties";
   /** Present when the PCI has an authoring mode: properties with editor "pci", plus config.tspci.authoring. */
   authoring?: AuthoringMode;
   /**
    * The fixed media the build put next to the bundle (config.tspci.media, mode "file"). An authoring system places each
-   * one in qti-interaction-markup, hidden and not editable: `<video data-tspci-media="intro" src="..." hidden>`, the
+   * one in qti-interaction-markup, hidden and not editable: `<video data-pci-media="intro" src="..." hidden>`, the
    * src being the file (relative to the module) taken into the item's media. On a new version of the PCI it replaces them.
    */
   media?: Record<string, AuthoringMedia>;
+  /**
+   * The libraries the build put in AMD modules of their own (config.tspci.bundle.modules), as a QTI 3 module resolution
+   * configuration: id → path relative to the PCI's module, without ".js". An authoring system writes each one as a
+   * qti-interaction-module with that id next to the PCI's own module.
+   */
+  modules?: { paths: Record<string, string> };
 }
 
 /** A fixed media file of the PCI, in the descriptor. */
@@ -156,13 +167,14 @@ export interface PciAuthoringConfiguration<T> {
   onchange?: () => void;
 }
 
-/** A PCI in authoring mode: the author shapes its configuration, the host asks for it when the author is done. */
+/** A PCI in authoring mode: the author shapes its properties, the host asks for them when the author is done. */
 export interface PciAuthoringInstance {
   /** The managed properties (descriptor authoring.properties) as data- attribute strings; others are ignored. */
-  getConfig: () => Record<string, string>;
-  /** What keeps the configuration from being used (shown to the author, "Done" waits for an empty list). */
+  getProperties: () => Record<string, string>;
+  /** What keeps the properties from being used (shown to the author, "Done" waits for an empty list). */
   validate?: () => string[];
-  destroy?: () => void;
+  /** Called by the host before it removes the authoring UI, as a delivery engine calls a PCI instance's oncompleted. */
+  oncompleted?: () => void;
 }
 
 
@@ -250,8 +262,8 @@ export interface IMSpciFactory<T> {
   typeIdentifier: string;
   getInstance: (dom: HTMLElement, configuration: ConfigProperties<T>, state?: string) => IMSpci<T>;
   /**
-   * Not part of QTI 3: the correct response for these settings, for an authoring system (config.tspci.correctResponse
-   * "settings"). Gets the item's data- properties as strings (a missing one means its default) and returns what
+   * PCI authoring profile, not QTI 3 itself: the correct response for these properties, for an authoring system
+   * (config.tspci.correctResponse "properties"). Gets the item's data- properties as strings (a missing one means its default) and returns what
    * getResponse() reports for the correct answer, or undefined when these settings have no single correct answer.
    * Players never call it. It must not touch the DOM: it may run without an instance, in another frame.
    */

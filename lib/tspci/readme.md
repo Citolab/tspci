@@ -106,7 +106,9 @@ For more info: [@citolab/tspci-qti3](https://github.com/Citolab/tspci/tree/main/
 ### Authoring systems
 
 An item author places your PCI in an item in an authoring system (qti-construction, TAO), sets it up and decides what
-counts as a correct answer. tspci tells the authoring system how, in `authoring.json`: a build output, written to
+counts as a correct answer. tspci tells the authoring system how, in `authoring.json`, the descriptor of the
+[PCI Authoring Profile 1.0](../../docs/spec/README.md) (an optional profile on top of QTI 3 PCIs; coming from tspci 2,
+see [MIGRATION.md](../../docs/spec/MIGRATION.md)). It is a build output, written to
 `dist/` by every build and packaged next to the bundle (`resources/pci/authoring.json` in a qti3 package, a file of
 the PCI resource in the manifest, like the SBOM). You write nothing extra; it is generated from two files you already
 have:
@@ -117,13 +119,13 @@ have:
   defaults, so `import configProps from "./config.json"` keeps working; type it as `PciProperties<typeof configProps>`.
 - **`package.json` `config.tspci`, the response.** `response` is the variable `getResponse()` fills
   (`{ "cardinality": "single", "baseType": "integer" }`, or a `record` with typed `fields` for a PCI that reports
-  several values), `score` the scoring it is made for (`MATCH_CORRECT`, `NONE`), `markup` the elements an author puts
-  in the interaction markup (a video, an image).
+  several values), `scoring` how it may be scored (`match_correct`, `human`, or `none` for a tool), `markup` the
+  elements an author puts in the interaction markup (a video, an image).
 
 ```jsonc
 // dist/authoring.json (generated)
 {
-  "descriptorVersion": "0",
+  "descriptorVersion": "1.0",
   "typeIdentifier": "blocks",
   "version": "1.0.0",
   "label": "3d blocks",
@@ -133,14 +135,14 @@ have:
   },
   "markup": {},
   "response": { "cardinality": "single", "baseType": "string" },
-  "role": "question",
-  "score": ["MATCH_CORRECT", "NONE"]
+  "scoring": ["match_correct", "human"]
 }
 ```
 
 The qti3 export declares the item's response from `config.tspci.response` (it used to be `single`/`string` always),
 and the build warns about what an authoring system could not use: an unknown editor, an enum default that is not one
 of its options, a record field without a base type, a margin on a type it cannot measure, a correct response on a tool.
+It stops on the keys tspci 3 renamed (`score`, `role`, `correctResponse: "settings"`), with what to write instead.
 
 **Scoring.** Authors set the correct answer by answering your PCI in a preview: what `getResponse()` reports becomes
 the correct response, or one of several accepted answers, and scoring compares responses. So report the meaning,
@@ -152,15 +154,18 @@ fits.
 
 **The correct response from the settings.** When the correct answer follows from the settings (3 of 10 slices → 30),
 the registered object gets `getCorrectResponse(properties)` next to `getInstance`, and `config.tspci.correctResponse`
-is `"settings"`. An authoring system fills the item's correct response with it and keeps it in line when the author
+is `"properties"`. An authoring system fills the item's correct response with it and keeps it in line when the author
 changes a setting. Every setting that changes the correct answer must be visible to the student, or the question
 cannot be answered. Players never call it; the templates `tspci init` makes have one.
 
-**Tools.** A PCI that helps the student but is never scored (a ruler, a calculator) has `config.tspci.role: "tool"`
-(or a `score` of only `["NONE"]`). It still has a response variable, as QTI requires, but no correct response.
+**Tools.** A PCI that helps the student but is never scored (a ruler, a calculator) has `config.tspci.scoring:
+["none"]`. It still has a response variable, as QTI requires, but no correct response.
+
+**Markup slots.** The authoring system marks the element it puts in a slot with its name,
+`<video data-pci-slot="video" src>`; `slot("video", dom)` from `@citolab/tspci/media` finds it.
 
 **Authoring mode.** A setting with `"editor": "pci"` is edited by the PCI itself: next to `getInstance`, the registered
-object has `getAuthoringInstance(dom, config)`, which returns `{ getConfig, validate?, destroy? }`. An authoring
+object has `getAuthoringInstance(dom, config)`, which returns `{ getProperties, validate?, oncompleted? }`. An authoring
 system shows a "Configure…" button and runs it in a sandboxed iframe with a small host page
 (`src/authoring-frame.js`). Delivery never calls it and sees ordinary `data-` attributes. The proposal is in
 [`docs/authoring-mode.md`](../../docs/authoring-mode.md).
@@ -546,7 +551,7 @@ getInstance(dom, config, state) {
 How a `file` reaches the PCI:
 
 1. **In the item.** An authoring system puts each file in the interaction's markup, hidden:
-   `<video data-tspci-media="intro" class="qti-hidden" src="...">`. Because it is item content, every QTI player
+   `<video data-pci-media="intro" class="qti-hidden" src="...">`. Because it is item content, every QTI player
    resolves and packages it. `tspci --target qti3` writes its sample item this way, and qti-construction does it when an
    author inserts the PCI (and replaces them on a new version).
 2. **Next to the module**, when the markup has no such element. The bundle remembers the URL of the script that loaded

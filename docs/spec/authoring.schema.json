@@ -1,0 +1,164 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/Citolab/tspci/docs/spec/authoring.schema.json",
+  "title": "PCI authoring descriptor 1.0",
+  "description": "authoring.json: what an authoring system needs to know to configure and score a QTI 3 Portable Custom Interaction. See README.md (PCI authoring profile).",
+  "type": "object",
+  "required": ["descriptorVersion", "typeIdentifier", "properties", "response", "scoring"],
+  "properties": {
+    "descriptorVersion": { "const": "1.0" },
+    "typeIdentifier": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The custom-interaction-type-identifier of the PCI, the same value its registered object has as typeIdentifier."
+    },
+    "version": { "type": "string", "description": "The version of the PCI module (semver recommended)." },
+    "label": { "$ref": "#/definitions/text" },
+    "properties": {
+      "type": "object",
+      "description": "The configuration properties: one data- attribute each on qti-portable-custom-interaction.",
+      "propertyNames": { "pattern": "^[a-z][A-Za-z0-9]*$" },
+      "additionalProperties": { "$ref": "#/definitions/property" }
+    },
+    "response": { "$ref": "#/definitions/response" },
+    "scoring": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["match_correct", "custom", "human", "none"] },
+      "description": "How an item with the PCI may be scored, the first being the default. [\"none\"] is a tool, never scored.",
+      "if": { "contains": { "const": "none" } },
+      "then": { "maxItems": 1 }
+    },
+    "correctResponse": {
+      "const": "properties",
+      "description": "The registered object has getCorrectResponse(properties)."
+    },
+    "markup": {
+      "type": "object",
+      "description": "Slots the author fills in qti-interaction-markup; each element gets data-pci-slot=\"<name>\".",
+      "propertyNames": { "pattern": "^[A-Za-z][A-Za-z0-9_-]*$" },
+      "additionalProperties": { "$ref": "#/definitions/slot" }
+    },
+    "media": {
+      "type": "object",
+      "description": "Fixed media of the PCI, next to its module; each placed in qti-interaction-markup with data-pci-media=\"<name>\".",
+      "propertyNames": { "pattern": "^[A-Za-z0-9_-]+$" },
+      "additionalProperties": { "$ref": "#/definitions/media" }
+    },
+    "modules": {
+      "type": "object",
+      "description": "Further AMD modules of the PCI, as a QTI 3 module resolution configuration (paths relative to the PCI's module, without .js).",
+      "required": ["paths"],
+      "properties": {
+        "paths": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/relativePath" }
+        }
+      }
+    },
+    "authoring": {
+      "type": "object",
+      "description": "The PCI has an authoring mode (getAuthoringInstance) that fills these properties.",
+      "required": ["properties"],
+      "properties": {
+        "properties": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+        "label": { "$ref": "#/definitions/text" },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    }
+  },
+  "definitions": {
+    "text": {
+      "description": "A text in one language, or per BCP 47 language tag.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } }
+      ]
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z][A-Za-z0-9+.-]*:)(?!.*(^|/)\\.\\.(/|$)).*$",
+      "description": "A path relative to the PCI's module: no scheme, no leading /, no .. segment."
+    },
+    "baseType": {
+      "enum": ["boolean", "directedPair", "duration", "file", "float", "identifier", "integer", "pair", "point", "string", "uri"]
+    },
+    "tolerance": {
+      "enum": ["range", "area"],
+      "description": "range: a number between two values (qti-gte/qti-lte, or qti-equal with a tolerance). area: a point inside a shape (qti-inside)."
+    },
+    "property": {
+      "type": "object",
+      "required": ["editor", "default"],
+      "properties": {
+        "editor": {
+          "type": "string",
+          "description": "text, textarea, integer, number, boolean, enum, color, colorList, hidden, pci; an unknown editor is shown as a text field."
+        },
+        "default": { "type": "string" },
+        "label": { "$ref": "#/definitions/text" },
+        "hint": { "$ref": "#/definitions/text" },
+        "unit": { "type": "string" },
+        "required": { "type": "boolean" },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["value"],
+            "properties": { "value": { "type": "string" }, "label": { "$ref": "#/definitions/text" } }
+          }
+        }
+      },
+      "if": { "properties": { "editor": { "const": "enum" } } },
+      "then": { "required": ["options"] }
+    },
+    "field": {
+      "type": "object",
+      "required": ["baseType"],
+      "properties": {
+        "baseType": { "$ref": "#/definitions/baseType" },
+        "tolerance": { "$ref": "#/definitions/tolerance" },
+        "label": { "$ref": "#/definitions/text" },
+        "editor": { "type": "string" }
+      }
+    },
+    "response": {
+      "type": "object",
+      "required": ["cardinality"],
+      "properties": {
+        "cardinality": { "enum": ["single", "multiple", "ordered", "record"] },
+        "baseType": { "$ref": "#/definitions/baseType" },
+        "tolerance": { "$ref": "#/definitions/tolerance" },
+        "fields": { "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "#/definitions/field" } }
+      },
+      "if": { "properties": { "cardinality": { "const": "record" } } },
+      "then": { "required": ["fields"], "not": { "anyOf": [{ "required": ["baseType"] }, { "required": ["tolerance"] }] } },
+      "else": { "required": ["baseType"], "not": { "required": ["fields"] } }
+    },
+    "slot": {
+      "type": "object",
+      "properties": {
+        "editor": { "type": "string", "description": "media: a file the author picks (the default)." },
+        "element": { "enum": ["img", "audio", "video", "object"] },
+        "accept": { "type": "array", "items": { "type": "string" }, "description": "As <input type=file accept>: image/*, image/png, .svg" },
+        "required": { "type": "boolean" },
+        "label": { "$ref": "#/definitions/text" }
+      }
+    },
+    "media": {
+      "type": "object",
+      "required": ["file", "type", "element"],
+      "properties": {
+        "file": { "$ref": "#/definitions/relativePath" },
+        "type": { "type": "string", "pattern": "^[a-z]+/[A-Za-z0-9.+-]+$" },
+        "element": { "enum": ["img", "audio", "video", "object"] },
+        "size": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

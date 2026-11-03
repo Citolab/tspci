@@ -53,7 +53,7 @@ The button opens TAO's modal with the PCI's authoring UI in it, sized after `con
 most 70% of the window height). The PCI gets all current settings of the interaction and TAO's UI language.
 
 - **Done** asks the PCI to `validate()`. Problems are shown, and the dialog stays open. Otherwise the settings that
-  `getConfig()` returns (only the `pci` ones) are written to the interaction and passed to the PCI's `trigger`,
+  `getProperties()` returns (only the `pci` ones) are written to the interaction and passed to the PCI's `trigger`,
   like a change in the form, and the dialog closes.
 - **Cancel**, the close button or Escape close it without changes.
 
@@ -174,12 +174,12 @@ Other config properties should be placed under: config -> tspci:
 - typeIdentifier: a field 'typeIdentifier' should be added. This should match the 'typeIdentifier' value in the PCI entry file (The one that implements IMSPci). Only (alpha)numeric values are allowed. This because a hyphen in the identifier causes an error in TAO. To be sure, only alphanumeric are allowed.
 - label: used as label in TAO
 - short: short name used in TAO to label the PCI where you can drag it in an item.
-- score: Array of: "MATCH_CORRECT", "CUSTOM" or "NONE". Can contain one or all three values. The first provided value will be used as default.
-  - MATCH_CORRECT: If the item author should be able to set the correct response in TAO; MATCH_CORRECT is the only option. With the MATCH_CORRECT, the item author can interact with the PCI to provide the correct answer. 
-  - CUSTOM: "CUSTOM" allows to add custom response processing in TAO. This is needed if a string comparison is not possible. The item author cannot interact with the PCI to provided the correct answer. The correct answer should in the response processing template.
-  - NONE: if the PCI is used as a tool and/or scoring is not needed the scoring method should be set to NONE.
+- scoring: Array of "match_correct", "custom", "human" or "none" (the PCI Authoring Profile, `docs/spec` in the tspci repository). The first value is the default. TAO gets its own names for them:
+  - match_correct → MATCH_CORRECT: the item author sets the correct response in TAO by interacting with the PCI.
+  - custom → CUSTOM: custom response processing in TAO, for when a comparison is not possible. The item author cannot interact with the PCI to provide the correct answer; it goes in the response processing.
+  - human, none → NONE: scored by a person, or a tool that is not scored. `none` can only stand on its own.
 
-With MATCH_CORRECT the item author switches the interaction to **Response** and answers the PCI; that response becomes the correct response.
+With match_correct the item author switches the interaction to **Response** and answers the PCI; that response becomes the correct response.
 
 ![provide scoring for the PCI in TAO](https://raw.githubusercontent.com/Citolab/tspci/main/lib/tspci-tao/readme-images/score.png)
 
