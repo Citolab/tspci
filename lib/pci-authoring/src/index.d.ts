@@ -45,8 +45,12 @@ export interface ItemOptions {
   module?: string;
   /** The author's file per markup slot, src as the item refers to it. */
   slots?: Record<string, { src: string; alt?: string }>;
-  /** The correct response: one QTI value, or several for multiple/ordered. */
-  correct?: string | string[];
+  /** The correct response as QTI values: one (single), several (multiple, ordered), or per field (record). */
+  correct?: string | string[] | Record<string, string>;
+  /** For a single response with `tolerance`: ± a number or { min, max } (range), or a radius (area). */
+  margin?: Margin;
+  /** Per record field with `tolerance`, as `margin`. */
+  margins?: Record<string, Margin>;
   /** One of the descriptor's scoring; its first by default. */
   scoring?: Scoring;
   identifier?: string;
@@ -58,6 +62,9 @@ export interface ItemOptions {
   /** false for an item inside a page: no XML declaration and namespaces. */
   standalone?: boolean;
 }
+
+/** A range: ± a number around the correct value, or { min, max }. An area: a radius around the correct point. */
+export type Margin = number | { min: number; max: number };
 
 export type FileData = Uint8Array | string;
 
@@ -98,7 +105,11 @@ export declare function itemProblems(
 ): ItemProblem[];
 /** A text of the descriptor in `language`, else any, else `fallback`. */
 export declare function localized(text: AuthoringText | undefined, language: string, fallback?: string): string;
-/** The scoring an item gets for `asked`: offered by the descriptor, else its first; match_correct on a record → human. */
+/** What getResponse() reports (QTI Appendix C JSON) as correct-response values: one, a list, or per record field. */
+export declare function correctFromResponse(response: unknown): string | string[] | Record<string, string> | undefined;
+/** The record fields that are part of the response for these properties (`when`). */
+export declare function appliedFields(descriptor: AuthoringDescriptor, properties?: Record<string, string>): string[];
+/** The scoring an item gets for `asked`: offered by the descriptor, else its first. */
 export declare function itemScoring(descriptor: AuthoringDescriptor, asked?: Scoring): Scoring;
 /** The element of a markup slot: its element, else what accept asks for, else img. */
 export declare function slotElement(slot: MarkupSlot): "img" | "audio" | "video" | "object";
