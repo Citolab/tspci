@@ -76,6 +76,7 @@ A delivery engine ignores the file. All paths in the descriptor are relative to 
 | `media` | | The PCI's own media files (3.8). |
 | `modules` | | Further AMD modules of the PCI (3.9). |
 | `authoring` | | The PCI has an authoring mode (3.10). |
+| `templateVariables` | | Template variables the PCI reads (3.11). |
 
 An authoring system MUST ignore fields it does not know, at every level. Such fields MAY appear in later minor versions.
 
@@ -203,7 +204,7 @@ Elements the author places in `qti-interaction-markup`, typically a file from th
 
 | Field | Meaning |
 | --- | --- |
-| `editor` | `media` (the default): a file the author picks. Other values are reserved. |
+| `editor` | `media` (the default): a file the author picks. `pci`: a file the PCI's authoring mode makes (a recording, a drawing; 4.2). Other values are reserved. |
 | `element` | `img`, `audio`, `video` or `object`; without it, what `accept` asks for, else `img` |
 | `accept` | as `<input type="file" accept>`: `image/*`, `image/png`, `.svg` |
 | `required` | the item needs one |
@@ -241,12 +242,47 @@ See 5.3.
 "authoring": { "properties": ["partition"], "label": { "en": "Draw the shape…" }, "width": 960, "height": 760 }
 ```
 
-`properties` lists the properties the PCI's authoring mode (4.2) fills, exactly those with editor `pci`. `label` is the
-text of the button that opens it, and `width`/`height` the size in CSS pixels the PCI would like. The authoring system
-MAY give less.
+`properties` lists the properties the PCI's authoring mode (4.2) fills, exactly those with editor `pci`, and `markup`
+the markup slots it makes a file for, exactly the slots with editor `pci` (`"markup": ["recording"]`, when there are
+any). `label` is the text of the button that opens it, and `width`/`height` the size in CSS pixels the PCI would like.
+The authoring system MAY give less.
 
 A PCI has one authoring mode. A PCI with several settings that need its own editor shows them all in that editor (as
 tabs or steps, for example), and `properties` lists them all.
+
+### 3.11 Template variables
+
+QTI 3 can configure a PCI with template variables too (Implementation Guide 3.7.19.6): the item binds one to the
+interaction with `qti-template-variable`, and the PCI gets its value in `configuration.templateVariables` under its
+identifier. `templateVariables` lists the ones the PCI reads, by that identifier:
+
+```json
+"templateVariables": { "seed": { "baseType": "integer", "cardinality": "single", "label": { "en": "Random seed" } } }
+```
+
+| Field | | Meaning |
+| --- | --- | --- |
+| `baseType` | required | Its QTI base type |
+| `cardinality` | | `single` (the default), `multiple` or `ordered` |
+| `label`, `hint` | | Texts for the author |
+| `required` | | The PCI needs a value |
+
+For each one the author gives a value (or template processing, in an authoring system that has it), the authoring
+system declares the template variable in the item and binds it:
+
+```xml
+<qti-template-declaration identifier="seed" cardinality="single" base-type="integer">
+  <qti-default-value><qti-value>42</qti-value></qti-default-value>
+</qti-template-declaration>
+…
+<qti-portable-custom-interaction …>
+  <qti-interaction-modules>…</qti-interaction-modules>
+  <qti-interaction-markup>…</qti-interaction-markup>
+  <qti-template-variable template-identifier="seed"/>
+</qti-portable-custom-interaction>
+```
+
+A PCI MUST work without a template variable it does not get, as with a property it does not get (3.4).
 
 ## 4. Factory extensions
 
@@ -300,11 +336,14 @@ The authoring instance:
 | Member | |
 | --- | --- |
 | **getProperties()** | The properties of `authoring.properties`, as strings keyed by name. The authoring system writes these, and only these, as `data-` attributes. |
+| **getMedia()** | *OPTIONAL*, required when `authoring.markup` is not empty. The files the authoring mode made, keyed by markup slot of `authoring.markup`: a `File` (with its name and type) or a `Blob`, or `null` to remove the slot's file. A slot it leaves out keeps its file. It MAY return a promise. The authoring system stores each file as item media and writes it in its slot (5.1), as a file the author picks. |
 | **validate()** | *OPTIONAL*. A list of texts saying what keeps the properties from being used; an empty list when there is none. The authoring system shows them and does not write while the list is not empty. |
 | **oncompleted** | *OPTIONAL*. As on a PCI instance: the authoring system MUST call it before it removes the editor, whether the author finished or cancelled. |
 
 The PCI MUST NOT show its own Done or Cancel buttons and MUST NOT communicate with the authoring system in other ways.
-The authoring system owns the dialog and decides when to ask for `getProperties()`. An authoring instance takes no
+The authoring system owns the dialog and decides when to ask for `getProperties()` and `getMedia()`. The authoring mode
+is modal: while it is open the author cannot change the item's other properties, so the properties it got when it
+opened stay current. An authoring instance takes no
 `state`: there is nothing to resume. Delivery MUST NOT need the authoring mode. Without the properties, or with values it
 cannot read, the PCI uses their defaults.
 
@@ -377,10 +416,12 @@ For a PCI with a descriptor, a conforming authoring system:
 3. declares the response variable as `response` says (3.5);
 4. writes scoring as the author chose from `scoring` (3.6), with the correct response from the author, or from
    `getCorrectResponse` (4.1) when present;
-5. writes on Done of an authoring mode only the properties of `authoring.properties` (4.2);
-6. puts the module, the descriptor, the fixed media and the further modules in the package as one `webcontent`
+5. writes on Done of an authoring mode only the properties of `authoring.properties`, and stores the files of
+   `getMedia()` as item media in the slots of `authoring.markup` (4.2);
+6. binds each template variable the author gives a value or template processing for (3.11);
+7. puts the module, the descriptor, the fixed media and the further modules in the package as one `webcontent`
    resource that the item depends on (3.1);
-7. SHOULD NOT write the item, and SHOULD tell the author why, while a `required` markup slot has no file, a `required`
+8. SHOULD NOT write the item, and SHOULD tell the author why, while a `required` markup slot has no file, a `required`
    property has no value, an `enum` value is not one of its options, or an `integer`/`number` value is not a number or
    lies outside `min`/`max`.
 
@@ -459,7 +500,4 @@ What profile 1.0 does not do, and the optional addition a later minor version wo
 
 | Limitation | A later minor version |
 | --- | --- |
-| **Files made in the authoring mode.** `getProperties()` returns strings, so a file the author makes there (a recording, a drawn image) can only become a data URL in an attribute, which no system packages as media. | An optional `getMedia()` on the authoring instance, returning a file per markup slot; the authoring system stores each as item media and places it in that slot (5.1). |
-| **Changes while the authoring mode is open.** The authoring mode gets the other properties once, when it opens. | An optional `setProperties(properties)` on the authoring instance, which the authoring system calls when the author changes another property. |
-| **Correct responses that answering cannot produce.** A free-form area drawn on the PCI's own surface, or a set of accepted answers the PCI cannot show at once (3.6.1). | An optional `getCorrectResponse()` on the authoring instance, returning a correct response and its margins. |
-| **Template variables.** QTI 3 also configures a PCI through `qti-template-variable` (Implementation Guide 3.7.19.6). The descriptor cannot say which template variables a PCI reads. | An optional `templateVariables` field in the descriptor, with the variables a PCI reads and their base types. |
+| **Correct responses that answering cannot produce.** A free-form area drawn on the PCI's own surface, or a set of accepted answers the PCI cannot show at once (3.6.1). No PCI needs it yet, so its shape (areas as polygons, several accepted answers) is left until one does. | An optional `getCorrectResponse()` on the authoring instance, returning a correct response and its margins. |

@@ -130,6 +130,11 @@ export interface AuthoringDescriptor {
    * qti-interaction-module with that id next to the PCI's own module.
    */
   modules?: { paths: Record<string, string> };
+  /**
+   * The template variables the PCI reads, by the identifier it gets them under in configuration.templateVariables
+   * (config.tspci.templateVariables). An authoring system declares and binds the ones the author gives a value.
+   */
+  templateVariables?: Record<string, { baseType: string; cardinality?: "single" | "multiple" | "ordered"; label?: AuthoringText; hint?: AuthoringText; required?: boolean }>;
 }
 
 /** A fixed media file of the PCI, in the descriptor. */
@@ -148,6 +153,8 @@ export interface AuthoringMedia {
 export interface AuthoringMode {
   /** The properties the PCI fills itself (editor "pci"), in config.json order. */
   properties: string[];
+  /** The markup slots the authoring mode makes a file for (editor "pci"), through getMedia(). */
+  markup?: string[];
   /** The text of the button, e.g. `{ "en": "Draw the shape…", "nl": "Vorm tekenen…" }`. */
   label?: AuthoringText;
   /** The size (px) the authoring UI would like; the authoring system may give less. */
@@ -174,6 +181,12 @@ export interface PciAuthoringConfiguration<T> {
 export interface PciAuthoringInstance {
   /** The managed properties (descriptor authoring.properties) as data- attribute strings; others are ignored. */
   getProperties: () => Record<string, string>;
+  /**
+   * The files the authoring mode made, by markup slot of descriptor authoring.markup (slots with editor "pci"): a File
+   * (name and type) or Blob, or null to remove the slot's file; a slot left out keeps its file. May return a promise.
+   * The authoring system stores each as item media and places it in its slot.
+   */
+  getMedia?: () => Record<string, Blob | null> | Promise<Record<string, Blob | null>>;
   /** What keeps the properties from being used (shown to the author, "Done" waits for an empty list). */
   validate?: () => string[];
   /** Called by the host before it removes the authoring UI, as a delivery engine calls a PCI instance's oncompleted. */
@@ -212,7 +225,8 @@ export type PciAuthoringFrameMessage = Versioned<
   | { type: "pci-authoring:hello" }
   | { type: "pci-authoring:ready" }
   | { type: "pci-authoring:change" }
-  | { type: "pci-authoring:config"; config: Record<string, string>; problems: string[] }
+  /** `media`: what getMedia() returned (markup slot → File, Blob or null), when the PCI has it. */
+  | { type: "pci-authoring:config"; config: Record<string, string>; media?: Record<string, Blob | null>; problems: string[] }
   /** The module did not load, has no getAuthoringInstance, or the host speaks another protocol version. */
   | { type: "pci-authoring:error"; message: string }
 >;

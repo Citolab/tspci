@@ -21,7 +21,8 @@ export interface AuthoringDescriptor {
   markup?: Record<string, MarkupSlot>;
   media?: Record<string, { file: string; type: string; element: "img" | "audio" | "video" | "object"; size?: number }>;
   modules?: { paths: Record<string, string> };
-  authoring?: { properties: string[]; label?: AuthoringText; width?: number; height?: number };
+  authoring?: { properties: string[]; markup?: string[]; label?: AuthoringText; width?: number; height?: number };
+  templateVariables?: Record<string, { baseType: string; cardinality?: "single" | "multiple" | "ordered"; label?: AuthoringText; hint?: AuthoringText; required?: boolean }>;
 }
 
 export type Scoring = "match_correct" | "custom" | "human" | "none";
@@ -51,6 +52,8 @@ export interface ItemOptions {
   margin?: Margin;
   /** Per record field with `tolerance`, as `margin`. */
   margins?: Record<string, Margin>;
+  /** A value (or list) per template variable of the descriptor; each one given is declared and bound in the item. */
+  templateValues?: Record<string, string | string[]>;
   /** One of the descriptor's scoring; its first by default. */
   scoring?: Scoring;
   identifier?: string;
@@ -101,7 +104,7 @@ export interface ItemProblem {
  */
 export declare function itemProblems(
   descriptor: AuthoringDescriptor,
-  options?: { properties?: Record<string, string>; slots?: Record<string, unknown>; language?: string }
+  options?: { properties?: Record<string, string>; slots?: Record<string, unknown>; templateValues?: Record<string, unknown>; language?: string }
 ): ItemProblem[];
 /** A text of the descriptor in `language`, else any, else `fallback`. */
 export declare function localized(text: AuthoringText | undefined, language: string, fallback?: string): string;
