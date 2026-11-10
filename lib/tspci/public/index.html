@@ -251,15 +251,23 @@
         return document.querySelector("#pciContainer qti-assessment-item");
       }
 
+      // A property's data- attribute without the "data-": gridPaper → grid-paper. HTML lowercases attribute names, so
+      // data-gridPaper would arrive at the PCI as "gridpaper"; the host reads the properties from the element's
+      // dataset, which turns data-grid-paper back into gridPaper, as in a QTI item.
+      function dataAttributeName(key) {
+        return String(key || "")
+          .trim()
+          .replace(/^data-/, "")
+          .replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
+      }
+
       function applyDataPropertiesToQtiHost(dataProperties = {}) {
         const host = getQtiPortableCustomInteractionElement();
         if (!host) {
           return;
         }
         Object.keys(dataProperties || {}).forEach((key) => {
-          const normalizedKey = String(key || "")
-            .trim()
-            .replace(/^data-/, "");
+          const normalizedKey = dataAttributeName(key);
           if (!normalizedKey) {
             return;
           }
@@ -1233,9 +1241,7 @@
         const escapedTypeIdentifier = escapeHtmlAttribute(typeIdentifier);
         const dataAttributes = Object.keys(dataProperties || {})
           .map((key) => {
-            const normalizedKey = String(key || "")
-              .trim()
-              .replace(/^data-/, "");
+            const normalizedKey = dataAttributeName(key);
             if (!normalizedKey) {
               return "";
             }
