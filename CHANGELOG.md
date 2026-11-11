@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.2](https://github.com/Citolab/qti-pci-bundler/compare/v3.0.1...v3.0.2) (2026-11-11)
+
+
+### Bug Fixes
+
+* **dev:** camelCase settings reach the PCI on the dev page ([9eb36f3](https://github.com/Citolab/qti-pci-bundler/commit/9eb36f3ccd1414aab93def2a4311cc5386c6fb8e))
+* **dev:** the dev page survives an emptied dist ("Cannot GET /") ([fd40ec0](https://github.com/Citolab/qti-pci-bundler/commit/fd40ec0895351609d0aaad68a567dcddb726a3cd))
+
+
+
+
+
 ## [3.0.1](https://github.com/Citolab/qti-pci-bundler/compare/v3.0.0...v3.0.1) (2026-11-03)
 
 
