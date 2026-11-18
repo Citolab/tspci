@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.3](https://github.com/Citolab/tspci/compare/v3.0.2...v3.0.3) (2026-11-18)
+
+
+### Bug Fixes
+
+* **dev:** Ctrl+C stops the dev server ([ddddc89](https://github.com/Citolab/tspci/commit/ddddc897c359b1ee028a132e55b26b5db3ba7071))
+
+
+### Features
+
+* **init:** --ci for a non-interactive init ([0cf993c](https://github.com/Citolab/tspci/commit/0cf993c33396ccce609cd39c70e57e43e4a7d213))
+
+
+
+
+
 ## [3.0.2](https://github.com/Citolab/tspci/compare/v3.0.1...v3.0.2) (2026-11-11)
 
 
