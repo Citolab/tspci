@@ -116,7 +116,8 @@ have:
 
 - **`src/config.json`, the settings.** A value is a plain default (as always), or an object with a `default` and
   hints for the author's form: `editor` (`text`, `textarea`, `integer`, `number`, `boolean`, `enum` with `options`,
-  `color`, `colorList`, `hidden`), `label` (one string or one per language), `min`/`max`. The bundle gets only the
+  `color`, `colorList`, `date`, `time`, `datetime`, `duration`, `hidden`), `label` (one string or one per language),
+  `min`/`max`. The bundle gets only the
   defaults, so `import configProps from "./config.json"` keeps working; type it as `PciProperties<typeof configProps>`.
 - **`package.json` `config.tspci`, the response.** `response` is the variable `getResponse()` fills
   (`{ "cardinality": "single", "baseType": "integer" }`, or a `record` with typed `fields` for a PCI that reports

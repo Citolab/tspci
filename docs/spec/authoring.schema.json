@@ -128,15 +128,15 @@
       "properties": {
         "editor": {
           "type": "string",
-          "description": "text, textarea, integer, number, boolean, enum, color, colorList, hidden, pci; an unknown editor is shown as a text field."
+          "description": "text, textarea, integer, number, boolean, enum, color, colorList, date, time, datetime, duration, hidden, pci; an unknown editor is shown as a text field."
         },
         "default": { "type": "string" },
         "label": { "$ref": "#/definitions/text" },
         "hint": { "$ref": "#/definitions/text" },
         "unit": { "type": "string" },
         "required": { "type": "boolean" },
-        "min": { "type": "number" },
-        "max": { "type": "number" },
+        "min": { "type": ["number", "string"], "description": "A number for integer and number; for date, time, datetime and duration a value of that editor." },
+        "max": { "type": ["number", "string"], "description": "As min." },
         "options": {
           "type": "array",
           "items": {
@@ -146,9 +146,50 @@
           }
         }
       },
-      "if": { "properties": { "editor": { "const": "enum" } } },
-      "then": { "required": ["options"] }
+      "allOf": [
+        { "if": { "properties": { "editor": { "const": "enum" } } }, "then": { "required": ["options"] } },
+        {
+          "if": { "properties": { "editor": { "enum": ["integer", "number"] } } },
+          "then": { "properties": { "min": { "type": "number" }, "max": { "type": "number" } } }
+        },
+        {
+          "if": { "properties": { "editor": { "const": "date" } } },
+          "then": { "properties": { "default": { "$ref": "#/definitions/dateOrEmpty" }, "min": { "$ref": "#/definitions/date" }, "max": { "$ref": "#/definitions/date" } } }
+        },
+        {
+          "if": { "properties": { "editor": { "const": "time" } } },
+          "then": { "properties": { "default": { "$ref": "#/definitions/timeOrEmpty" }, "min": { "$ref": "#/definitions/time" }, "max": { "$ref": "#/definitions/time" } } }
+        },
+        {
+          "if": { "properties": { "editor": { "const": "datetime" } } },
+          "then": {
+            "properties": { "default": { "$ref": "#/definitions/datetimeOrEmpty" }, "min": { "$ref": "#/definitions/datetime" }, "max": { "$ref": "#/definitions/datetime" } }
+          }
+        },
+        {
+          "if": { "properties": { "editor": { "const": "duration" } } },
+          "then": {
+            "properties": { "default": { "$ref": "#/definitions/durationOrEmpty" }, "min": { "$ref": "#/definitions/duration" }, "max": { "$ref": "#/definitions/duration" } }
+          }
+        }
+      ]
     },
+    "date": { "type": "string", "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$", "description": "ISO 8601, no time zone: 2026-11-24" },
+    "dateOrEmpty": { "anyOf": [{ "const": "" }, { "$ref": "#/definitions/date" }] },
+    "time": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d(:[0-5]\\d(\\.\\d+)?)?$", "description": "ISO 8601, no time zone: 14:30 or 14:30:00" },
+    "timeOrEmpty": { "anyOf": [{ "const": "" }, { "$ref": "#/definitions/time" }] },
+    "datetime": {
+      "type": "string",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d(:[0-5]\\d(\\.\\d+)?)?$",
+      "description": "ISO 8601, no time zone (the local date and time): 2026-11-24T14:30"
+    },
+    "datetimeOrEmpty": { "anyOf": [{ "const": "" }, { "$ref": "#/definitions/datetime" }] },
+    "duration": {
+      "type": "string",
+      "pattern": "^P(?!$)(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$",
+      "description": "ISO 8601 in days, hours, minutes and seconds (no months or years): PT1M30S, P1DT2H"
+    },
+    "durationOrEmpty": { "anyOf": [{ "const": "" }, { "$ref": "#/definitions/duration" }] },
     "field": {
       "type": "object",
       "required": ["baseType"],

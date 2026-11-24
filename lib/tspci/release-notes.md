@@ -1,3 +1,10 @@
+# 3.0.4
+
+- settings editors `date`, `time`, `datetime` and `duration`, with ISO 8601 values (`"2026-11-24"`, `"14:30"`,
+  `"2026-11-24T14:30"`, `"PT1M30S"`) and `min`/`max` in the same format. The build checks the format and the order
+  of `min`, `default` and `max`; the dev page shows a date or time picker, and hours, minutes and seconds for a duration.
+  In the spec (3.4) and the schema
+
 # 3.0.0
 
 **Breaking.** `authoring.json` is the descriptor of the PCI Authoring Profile 1.0 (`docs/spec/README.md`), an optional

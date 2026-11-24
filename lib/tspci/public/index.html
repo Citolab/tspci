@@ -564,9 +564,44 @@
               <button type="button" class="btn btn-sm btn-outline-secondary" title="remove" disabled=${colors.length < 2} onClick="${() => write(colors.slice(0, -1))}">−</button>
             </div>`;
           }
+          // ISO 8601 without a time zone, as these inputs give it; a time with seconds keeps a seconds field
+          case "date":
+          case "time":
+          case "datetime": {
+            const type = spec.editor === "datetime" ? "datetime-local" : spec.editor;
+            const seconds = spec.editor !== "date" && /T?\d\d:\d\d:/.test(value || spec.default || "") ? 1 : undefined;
+            return html`<input type="${type}" class="form-control" value="${value}" min="${spec.min ?? ""}" max="${spec.max ?? ""}"
+              step="${seconds ?? ""}" onInput="${(e) => set(e.target.value)}" />`;
+          }
+          case "duration": {
+            const parts = durationParts(value);
+            const write = (unit, v) => set(toDuration({ ...parts, [unit]: Math.max(0, Number(v) || 0) }));
+            return html`<div class="d-flex gap-1 align-items-center" title="${value}">
+              ${[["h", "hours"], ["m", "minutes"], ["s", "seconds"]].map(
+                ([unit, name]) => html`<input type="number" class="form-control" min="0" step="${unit === "s" ? "any" : 1}"
+                  aria-label="${name}" value="${parts[unit]}" onInput="${(e) => write(unit, e.target.value)}" /><span class="text-muted">${unit}</span>`,
+              )}
+            </div>`;
+          }
           default:
             return html`<input type="text" class="form-control" value="${value}" onInput="${(e) => set(e.target.value)}" />`;
         }
+      }
+
+      // An ISO 8601 duration in days, hours, minutes and seconds ("PT1M30S"); days are shown as hours.
+      function durationParts(value) {
+        const match = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:([\d.]+)S)?)?$/.exec(String(value || ""));
+        if (!match) return { h: 0, m: 0, s: 0 };
+        const [, d = 0, h = 0, m = 0, s = 0] = match;
+        return { h: Number(d) * 24 + Number(h), m: Number(m), s: Number(s) };
+      }
+      function toDuration({ h, m, s }) {
+        const total = Math.round((h * 3600 + m * 60 + s) * 1000) / 1000;
+        const hours = Math.floor(total / 3600);
+        const minutes = Math.floor((total % 3600) / 60);
+        const seconds = Math.round((total % 60) * 1000) / 1000;
+        const text = (hours ? `${hours}H` : "") + (minutes ? `${minutes}M` : "") + (seconds ? `${seconds}S` : "");
+        return `PT${text || "0S"}`;
       }
 
       // Authoring mode (AUTHORING.md): the PCI's own editor for the properties with editor "pci". An authoring system runs

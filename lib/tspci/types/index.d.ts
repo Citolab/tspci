@@ -47,7 +47,8 @@ export type AuthoringText = string | Record<string, string>;
  * `pci`: the PCI fills it itself in its authoring mode (see IMSpciAuthoringFactory).
  */
 export type AuthoringPropertyEditor =
-  | "text" | "textarea" | "integer" | "number" | "boolean" | "enum" | "color" | "colorList" | "hidden" | "pci";
+  | "text" | "textarea" | "integer" | "number" | "boolean" | "enum" | "color" | "colorList"
+  | "date" | "time" | "datetime" | "duration" | "hidden" | "pci";
 
 export interface AuthoringProperty {
   editor: AuthoringPropertyEditor;
@@ -56,9 +57,12 @@ export interface AuthoringProperty {
   label?: AuthoringText;
   /** enum: the values to choose from. */
   options?: { value: string; label?: AuthoringText }[];
-  /** integer / number */
-  min?: number;
-  max?: number;
+  /**
+   * integer / number: a number. date, time, datetime, duration: a value in the editor's ISO 8601 format
+   * ("2026-01-01", "08:00", "2026-01-01T08:00", "PT30S").
+   */
+  min?: number | string;
+  max?: number | string;
   [hint: string]: unknown;
 }
 

@@ -1,5 +1,7 @@
 # Unreleased
 
+- the properties form has a date, time or date-and-time picker for the editors `date`, `time` and `datetime`, and
+  hours, minutes and seconds for `duration` (needs `@citolab/tspci` with these editors)
 - `imsPciCreator.json` declares the PCI's own response from `config.tspci.response` (as in `dist/authoring.json`):
   a `file`, `integer` or `multiple` response, or a `record` (without a base type). It was always `single` / `string`,
   so TAO gave a new interaction the wrong response declaration. A PCI without `config.tspci.response` keeps

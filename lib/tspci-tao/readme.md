@@ -27,6 +27,8 @@ tooltip, and a control for its `editor`:
 | `enum` | a dropdown with the labels of the `options` | the option's value |
 | `color` | a colour picker and a hex field, kept in sync | `"#4b9f4a"` |
 | `colorList` | a colour picker per colour, with a button to add one and one to remove each (at least one stays) | `"#c91a09, #0055bf"` |
+| `date`, `time`, `datetime` | the browser's date, time or date-and-time picker, with `min` and `max` | `"2026-11-24"`, `"14:30"`, `"2026-11-24T14:30"` |
+| `duration` | number fields for hours, minutes and seconds | `"PT1M30S"` |
 | `hidden` | nothing; the interaction keeps the default | the default |
 | `pci` | a text field below the "Configure…" button (see below) | what the PCI's editor writes |
 | another | a text field | the text |

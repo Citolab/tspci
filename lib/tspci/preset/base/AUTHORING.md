@@ -50,8 +50,26 @@ or an object with a `default` plus hints for the author's form:
 | `enum` | a dropdown of `options` | one of the option values |
 | `color` | a colour picker | `"#4b9f4a"` |
 | `colorList` | a list of colour pickers | `"#c91a09, #0055bf"` |
+| `date` | a date picker (`min`, `max`) | `"2026-11-24"` |
+| `time` | a time picker (`min`, `max`); with seconds when the default has them | `"14:30"`, `"14:30:00"` |
+| `datetime` | a date and time picker (`min`, `max`) | `"2026-11-24T14:30"` |
+| `duration` | hours, minutes and seconds (`min`, `max`) | `"PT1M30S"` (ISO 8601) |
 | `hidden` | nothing (set by the system, not the author) | |
 | `pci` | a "Configure…" button that opens your PCI's own editor (section 6) | whatever your editor writes, as a string |
+
+Dates and times are ISO 8601 without a time zone (the local date and time where the item is taken), so
+`new Date("2026-11-24T14:30")` reads a `datetime` as local time. Careful: `new Date("2026-11-24")` reads a `date` as
+UTC midnight; compare dates as strings, or split them. A `duration` has days, hours, minutes and seconds only;
+`durationSeconds` turns it into seconds (`"PT1M30S"` → `90`):
+
+```ts
+const durationSeconds = (value: string) => {
+  const [, d = 0, h = 0, m = 0, s = 0] = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:([\d.]+)S)?)?$/.exec(value) ?? [];
+  return ((+d * 24 + +h) * 60 + +m) * 60 + +s;
+};
+```
+
+The build checks that `default`, `min` and `max` are in the editor's format, and in that order.
 
 A plain value gets an editor from its value: `"true"`/`"false"` a switch, a whole number a number field, the rest a
 text field. `label` is one string or one per language. An authoring system that does not know an editor shows a

@@ -105,7 +105,7 @@ those to the PCI as properties too: `data-version` (the version of the PCI an it
 | `label`, `hint` | | Texts for the form |
 | `unit` | | Shown next to a number (`"px"`) |
 | `required` | | The item needs a value |
-| `min`, `max` | | For `integer` and `number` |
+| `min`, `max` | | For `integer` and `number` a number; for `date`, `time`, `datetime` and `duration` a value in that editor's format |
 | `options` | required for `enum` | `[{ "value": "a", "label": … }]` |
 
 | `editor` | The author gets | The value |
@@ -116,8 +116,19 @@ those to the PCI as properties too: `data-version` (the version of the PCI an it
 | `enum` | a choice of `options` | one of the option values |
 | `color` | a colour picker | `"#4b9f4a"` |
 | `colorList` | a list of colour pickers | `"#c91a09, #0055bf"` |
+| `date` | a date picker | `"2026-11-24"` |
+| `time` | a time picker | `"14:30"` or `"14:30:00"` |
+| `datetime` | a date and time picker | `"2026-11-24T14:30"` |
+| `duration` | fields for hours, minutes and seconds | `"PT1M30S"` |
 | `hidden` | nothing: set by the system, not the author | |
 | `pci` | the PCI's own editor (4.2), or a text field without it | whatever the PCI's editor writes |
+
+The values of `date`, `time`, `datetime` and `duration` are ISO 8601. A date and a time have no time zone: they are
+the local date and time of whoever takes the item (as `<input type="date">`, `"time"` and `"datetime-local"` give
+them). Seconds are optional in a time; an authoring system keeps them when the default has them. A duration is
+`P[nD][T[nH][nM][n[.n]S]]`, in days, hours, minutes and seconds only, since a month or a year has no fixed length;
+an authoring system writes it in hours, minutes and seconds (`"PT1H30M"`, `"PT0S"` for none). An empty value is
+"not set", as for every editor.
 
 An authoring system MUST show an editor it does not know as a text field. A PCI MUST work with the `default` of every
 property whose attribute is missing or unreadable: the item may have been written by hand or by a system that ignores
