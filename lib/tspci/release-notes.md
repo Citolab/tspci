@@ -1,4 +1,4 @@
-# 3.0.4
+# 3.1.0
 
 - settings editors `date`, `time`, `datetime` and `duration`, with ISO 8601 values (`"2026-11-24"`, `"14:30"`,
   `"2026-11-24T14:30"`, `"PT1M30S"`) and `min`/`max` in the same format. The build checks the format and the order
