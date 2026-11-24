@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.1.0](https://github.com/Citolab/tspci/compare/v3.0.3...v3.1.0) (2026-11-24)
+
+
+### Features
+
+* **spec:** date, time, datetime and duration settings editors ([6057165](https://github.com/Citolab/tspci/commit/6057165da75eedd414b5094e93265f8c7426dad8))
+
+
+
+
+
 ## [3.0.3](https://github.com/Citolab/tspci/compare/v3.0.2...v3.0.3) (2026-11-18)
 
 
